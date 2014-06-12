@@ -1,0 +1,15 @@
+body {
+
+}
+
+.container-fluid {
+    padding-right: 0px;
+    padding-left: 0px;
+}
+
+.footer {
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-top: 50px;
+    font-size: 80%;
+}
