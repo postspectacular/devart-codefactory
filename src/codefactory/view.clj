@@ -33,7 +33,7 @@ ga('send', 'pageview');")))
   [:head
    [:meta {:charset "utf-8"}]
    [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge"}]
-   (meta-tag :viewport "width=device-width, initial-scale=1")
+   (meta-tag :viewport "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
    (meta-tag :author (:author config))
    [:title (str (:title-prefix config) title)]
    (apply include-css (concat (get-in config [:includes :css]) css))
@@ -47,21 +47,21 @@ ga('send', 'pageview');")))
    (doctype :html5)
    [:html {:lang "en" :ng-app (name app-id)} body]))
 
-(defn view-home
-  []
-  (let [ng (:angular config/app)]
-    (html-app
-     (:module ng)
-     (head config/app :title "Welcome")
-     [:body
-      {:ng-controller (:controller ng)}
-      [:div.view-container
-       [:div.view-frame {:ng-view true}]]
-      (apply ga (:tracking config/app))])))
+(def main-wrapper
+  (memoize
+   (fn [config]
+     (let [ng (:angular config)]
+       (html-app
+        (:module ng)
+        (head config :title "Welcome")
+        [:body
+         {:ng-controller (:controller ng)}
+         [:div.view-container [:div.view-frame {:ng-view true}]]
+         (when-let [tracking (:tracking config)] (apply ga tracking))])))))
 
 (defn featured-video
-  [id]
-  (let [{:keys [aspect formats]} (:video config/app)]
+  [config id]
+  (let [{:keys [aspect formats]} (:video config)]
     [:video {:autoplay true
              :loop true
              :video-background true
@@ -72,14 +72,32 @@ ga('send', 'pageview');")))
 
 (def template-home
   (memoize
-   (fn [{:keys [video-id]}]
+   (fn [config {:keys [video-id]}]
      (html
       {:mode :html}
       (ie-comment :lt 9 (javascript-tag "document.createElement(\"video\");"))
-      (featured-video video-id)
+      (featured-video config video-id)
       [:div.container-fluid
        [:div.row.home-content
         [:h1.text-center "Welcome to Co(de)Factory"]]
-       [:div.row.home-content.home-footer
+       [:div.row.home-content.footer
         [:div.col-md-6.col-md-offset-3.text-center
          [:a.btn.btn-primary.btn-lg {:href "#/edit/new"} "Start coding"]]]]))))
+
+(def template-editor
+  (memoize
+   (fn [config opts]
+     (html
+      {:mode :html}
+      [:div.container-fluid
+       [:div.row
+        [:div.col-xs-12 [:resizable-canvas {:width 1 :height 0.66}]]]
+       [:div.row {:tool-bar true} "icons"]
+       [:div.row {:tree-map true} "treemap"]
+       [:div.row.footer.editor-footer
+        [:div.col-xs-6 [:a.btn.btn-danger.btn-lg.btn-block {:href "#/"} "Cancel"]]
+        [:div.col-xs-6 [:a.btn.btn-primary.btn-lg.btn-block {:href "#/submit"} "Submit"]]]]))))
+
+(def templates
+  {:home template-home
+   :editor template-editor})

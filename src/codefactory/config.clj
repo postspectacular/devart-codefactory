@@ -19,4 +19,5 @@
    :video {:aspect 1.777777
            :width 1280
            :height 720
-           :formats [{:type "video/webm" :ext ".webm"}]}})
+           :formats [{:type "video/webm" :ext ".webm"}
+                     {:type "video/mp4" :ext ".mp4"}]}})
