@@ -1,8 +1,7 @@
 (ns thi.ng.gae.services.datastore
   (:require
    [thi.ng.gae.services.core :refer [defservice]]
-   [thi.ng.gae.util :as util]
-   [camel-snake-kebab :as csk])
+   [thi.ng.gae.util :as util])
   (:import
    [com.google.appengine.api.datastore
     DatastoreService DatastoreServiceFactory
@@ -56,7 +55,7 @@
      (let [[ns kind] (util/class-name-vec type)]
        (as-entity ns kind e)))
   ([ns kind e]
-     (let [ctor      (->> (csk/->kebab-case kind)
+     (let [ctor      (->> (util/->kebab-case kind)
                           (str "make-")
                           (symbol ns))
            key       (.getKey e)
@@ -89,7 +88,7 @@
 (defmacro defentity
   [name props & {:keys [key parent]}]
   (let [kind      (str name)
-        kind*     (csk/->kebab-case kind)
+        kind*     (util/->kebab-case kind)
         props     (vec props)
         clj-props (->> props
                        (filter #(contains? (meta %) :clj))
@@ -99,7 +98,6 @@
         ->name    (symbol (str "->" kind))
         map->name (symbol (str "map->" kind))
         ctor-name (symbol (str "make-" kind*))]
-    (prn :ctor ctor-name)
     `(do
        (defrecord ~name ~props
          PEntityKeyLookup
@@ -120,7 +118,6 @@
                       (~key e#)
                       (or ~'k (~key e#)))
                key# (generate-key ~kind kn# (or ~'p ~parent))]
-           ;;(prn :key key#)
            (vary-meta e# merge {:key key#}))))))
 
 (def ^:private filter-ops

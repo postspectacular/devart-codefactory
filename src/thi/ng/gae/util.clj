@@ -1,4 +1,8 @@
-(ns thi.ng.gae.util)
+(ns thi.ng.gae.util
+  (:require
+   [camel-snake-kebab :as csk]))
+
+(def ->kebab-case (memoize csk/->kebab-case))
 
 (defn unqualified-name
   "Returns the non-namespaced part of a symbol."
