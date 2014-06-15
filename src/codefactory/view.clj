@@ -78,8 +78,8 @@ ga('send', 'pageview');")))
       (ie-comment :lt 9 (javascript-tag "document.createElement(\"video\");"))
       (featured-video video-id)
       [:div.container-fluid
-       [:div.row
+       [:div.row.home-content
         [:h1.text-center "Welcome to Co(de)Factory"]]
-       [:div.row
+       [:div.row.home-content.home-footer
         [:div.col-md-6.col-md-offset-3.text-center
          [:a.btn.btn-primary.btn-lg {:href "#/edit/new"} "Start coding"]]]]))))

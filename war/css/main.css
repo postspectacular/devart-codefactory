@@ -18,11 +18,17 @@ video#bgvid {
     padding-left: 0px;
 }
 
-.footer {
-    padding-right: 15px;
-    padding-left: 15px;
-    margin-top: 50px;
-    font-size: 80%;
+.home-content {
+    background-color: rgba(0,0,0,0.8);
+    padding: 30px 0 30px 0;
+    margin: 0;
+}
+
+.home-footer {
+    position: fixed;
+    width: 100%;
+    bottom: 0px;
+    left: 0px;
 }
 
 /************** animations *************************************/
