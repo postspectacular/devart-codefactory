@@ -1,8 +1,19 @@
-(ns thi.ng.angular
-  (:require-macros [hiccups.core :as h])
-  (:require
-   [thi.ng.geom.webgl.core :as gl]
-   [hiccups.runtime]))
+(ns thi.ng.angular)
+
+(def event-canvas-ready "canvas-ready")
+(def event-resize-canvas "resize-canvas")
+
+(defn assoc-state
+  [state ks v]
+  (swap! state assoc-in ks v))
+
+(defn update-state
+  [state ks fn]
+  (swap! state update-in ks fn))
+
+(defn merge-state
+  [state props]
+  (swap! state merge props))
 
 (defn parse-int
   [x nf]
@@ -25,40 +36,42 @@
     (module "thi.ng.ngSupport" #js [])
 
     (directive
-     "webglCanvas"
+     "resizableCanvas"
      #js ["$window"
           (fn [$window]
             #js
             {:restrict "E"
              :transclude true
              :scope #js {:width "="
-                         :height "="
-                         :fill "="
-                         :init-hook "&onInit"}
+                         :height "="}
              :link (fn [scope element attribs]
-                     (let [width (parse-int (aget attribs "width") 200)
-                           height (parse-int (aget attribs "height") 200)
-                           fill? (enabled-attrib? attribs "fill")
-                           parent (.-parentNode (aget element 0))]
+                     (let [get-width (fn []
+                                       (let [width (.-width scope)]
+                                         (if (<= width 1)
+                                           (int (* width (.-innerWidth $window)))
+                                           (int width))))
+                           get-height (fn []
+                                        (let [height (.-height scope)]
+                                          (if (<= height 1)
+                                            (int (* height (.-innerHeight $window)))
+                                            (int height))))]
 
-                       (set! (.-init scope)
-                             (fn []
-                               (let [canvas (make-canvas width height)
-                                     ctx (gl/gl-context canvas)]
-                                 (set! (.-canvas scope) canvas)
-                                 (set! (.-ctx scope) ctx)
-                                 (.appendChild (aget element 0) canvas))))
+                       (set! (.-state scope)
+                             (atom
+                              {:init (fn []
+                                       (let [canvas (make-canvas (get-width) (get-height))]
+                                         (assoc-state (.-state scope) [:canvas] canvas)
+                                         (.appendChild (aget element 0) canvas)
+                                         (prn "calling GL init hook...")
+                                         (.$emit scope event-canvas-ready canvas)
+                                         ((:resize @(.-state scope)))))
+                               :resize (fn []
+                                         (let [canvas (:canvas @(.-state scope))]
+                                           (set! (.-width canvas) (get-width))
+                                           (set! (.-height canvas) (get-height))
+                                           (.$emit scope event-resize-canvas canvas)))}))
 
-                       (set! (.-resizeCanvas scope)
-                             (fn []
-                               (let [canvas (.-canvas scope)]
-                                 (set! (.-width canvas)
-                                       (if fill?
-                                         (.-clientWidth parent)
-                                         (.-width canvas)))
-                                 (set! (.-height canvas) (.-height canvas)))))
+                       (.addEventListener $window "resize" (:resize @(.-state scope)) false)
+                       (.$watch scope "width + height" (fn [] (:resize @(.-state scope))))
 
-                       (.addEventListener $window "resize" (.-resizeCanvas scope) false)
-                       (.$watch scope "fill + width + height" (fn [] (.resizeCanvas scope)))
-                       
-                       (.init scope)))})]))
+                       ((:init @(.-state scope)))))})]))

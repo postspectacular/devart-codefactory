@@ -1,5 +1,7 @@
 (ns codefactory.home)
 
+(def controller-id "HomeController")
+
 (def module-spec
   {:directives
    [{:id "videoBackground"
@@ -34,6 +36,7 @@
                          (fn []
                            (.css element #js {:position "fixed" :z-index "-100"})
                            (.resizeBg scope)
+                           (.play (aget element 0))
                            (.addEventListener $window "resize" (.-resizeBg scope) false)))
 
                    (.$on scope "$destroy"
@@ -41,7 +44,7 @@
 
                    (.init scope)))})]}]
    :controllers
-   [{:id "HomeController"
+   [{:id controller-id
      :spec #js ["$scope" "$routeParams" "$window"
                 (fn [$scope $routeParams $window]
                   (prn :init "HomeController" $routeParams))]}]})

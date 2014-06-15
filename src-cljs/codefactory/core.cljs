@@ -27,22 +27,28 @@
                       (fn [$routeProvider $locationProvider]
                         (.. $routeProvider
                             (when "/"
-                              #js {:controller "HomeController"
+                              #js {:controller home/controller-id
                                    :templateUrl "/templates/home"})
                             (when "/edit/:id"
                               #js {:controller editor/controller-id
-                                   :template "<webgl-canvas width=\"640\" height=\"480\" fill></webgl-canvas>"})
+                                   :templateUrl "/templates/editor"})
                             (when "/gallery"
-                              #js {:controller gallery/controller-id})
+                              #js {:controller gallery/controller-id
+                                   :templateUrl "/templates/gallery"})
                             (otherwise #js {:redirectTo "/"}))
                         ;;(.html5Mode $locationProvider true)
                         )])
 
                 (controller
                  "MainController"
-                 #js ["$scope" "$route" "$routeParams" "$location"
-                      (fn [$scope $route $routeParams $location]
-                        (prn :init "MainController" $routeParams))]))]
+                 #js ["$scope" "$routeParams" "$document"
+                      (fn [$scope $routeParams $document]
+                        (prn :init "MainController")
+                        (.on $document "touchmove"
+                             (fn [e]
+                               (when (>= (alength (.-touches e)) 2)
+                                 (.stopPropagation e)
+                                 (.preventDefault e)))))]))]
 
     (-> app
         (add-module-spec home/module-spec)

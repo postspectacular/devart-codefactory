@@ -2,6 +2,8 @@
 
 (def module-name "codefactory")
 
+(def canvas-bg [0.2 0.2 0.211 1])
+
 (def operators
   {:subdiv     {:col [0x56 0xff 0xee] :label "split"}
    :skew       {:col [0xff 0xd6 0x41] :label "tilt"}

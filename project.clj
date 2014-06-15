@@ -11,6 +11,9 @@
                  [camel-snake-kebab "0.1.5"]
                  [garden "1.1.7"]
                  [org.clojure/data.fressian "0.2.0"]
+                 [thi.ng/geom-core "0.3.0-SNAPSHOT"]
+                 [thi.ng/geom-types "0.3.0-SNAPSHOT"]
+                 [thi.ng/morphogen "0.1.0-SNAPSHOT"]
 
                  ;; GAE
                  [javax.servlet/servlet-api "2.5"]
