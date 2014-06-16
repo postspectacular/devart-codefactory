@@ -92,7 +92,12 @@ ga('send', 'pageview');")))
       [:div.container-fluid
        [:div.row
         [:div.col-xs-12 [:resizable-canvas {:width 1 :height 0.66}]]]
-       [:div.row {:tool-bar true} "icons"]
+       [:div.row {:tool-bar true}
+        [:div.col-xs-8.col-xs-offset-2.text-center
+         (map
+          (fn [op]
+            [:button.btn.btn-default.btn-sm op])
+          ["split" "inset" "mirror" "stretch" "scale" "tilt" "delete"])]]
        [:div.row {:tree-map true} "treemap"]
        [:div.row.footer.editor-footer
         [:div.col-xs-6 [:a.btn.btn-danger.btn-lg.btn-block {:href "#/"} "Cancel"]]
