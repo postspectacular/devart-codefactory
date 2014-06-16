@@ -97,9 +97,9 @@
   (get-view [_] view))
 
 (defn make-arcball
-  [& {:keys [dist min-dist max-dist radius center] :or {dist 2}}]
+  [& {:keys [init dist min-dist max-dist radius center] :or {dist 2}}]
   (let [min-dist (or min-dist (/ dist 2))
         max-dist (or max-dist (* dist 2))
-        curr-rot (q/quat-from-axis-angle V3Y m/PI)
+        curr-rot (if init (q/quat init) (q/quat-from-axis-angle V3Y m/PI))
         a (ArcBall. min-dist max-dist radius center dist curr-rot (vec3) nil nil nil)]
     (-> a (resize) (update-view))))
