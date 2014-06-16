@@ -88,6 +88,8 @@ void main() {
     :uniforms {:lightCol [0.75 0.75 0.75] :alpha 0.25}}
    })
 
+;; normal: gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
 (defn prepare-state
   [ctx state]
   (if (:depth-test state)

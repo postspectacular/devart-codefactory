@@ -21,6 +21,8 @@
 (def controller-id "EditObjectController")
 
 (def event-render-gl "render-gl")
+(def event-tree-editor-ready "tree-editor-ready")
+(def event-op-tree-ready "op-tree-ready")
 
 (def seeds
   (->> [(a/aabb 1)
@@ -70,6 +72,23 @@
     :seed-id seed-id
     :selected-path []))
 
+(defn opnode-color
+  [node]
+  (if (nil? node) "#999999" (get-in config/operators [(:op node) :col])))
+
+(defn draw-tree
+  [node ctx x y w]
+  (let [num-children (count (:out node))
+        w' (if (pos? num-children)
+             (/ (- w (* (dec num-children) 5)) num-children))
+        y' (- y 15)]
+    (set! (.-strokeStyle ctx) (opnode-color node))
+    (.strokeRect ctx x (- y 10) w 10)
+    (loop [x x, c (:out node)]
+      (when c
+        (draw-tree (first c) ctx x y' w')
+        (recur (+ (+ x w') 5) (next c))))))
+
 (def module-spec
   {:controllers
    [{:id controller-id
@@ -112,6 +131,11 @@
                            (when-not animating?
                              (ng/assoc-state state [:animating?] true)
                              (render-gl))))))
+                   
+                   :tree-editor-ready
+                   (fn [evt]
+                     (.stopPropagation evt)
+                     (.$broadcast $scope event-op-tree-ready (:tree @state)))
 
                    :render-gl
                    (fn []
@@ -133,7 +157,7 @@
                         (select-keys meshes sel)
                         (:shader shader2)
                         (merge (:uniforms (:preset shader2)) shared-unis
-                               {:lightCol [0.5 (+ 0.75 (* 0.25 (Math/sin (* time 0.5)))) 0.5]}))
+                               {:lightCol (g/mix (vec3 0.5) (vec3 1 0.6 0.2) (+ 0.5 (* 0.5 (Math/sin (* time 0.5)))))}))
 
                        (shader/prepare-state ctx (:state (:preset shader1)))
                        (shader/draw-meshes
@@ -141,8 +165,6 @@
                         (apply dissoc meshes sel)
                         (:shader shader1)
                         (merge (:uniforms (:preset shader1)) shared-unis))
-
-
 
                        (when animating?
                          (ng/update-state state [:time] #(+ % 0.16666))
@@ -175,4 +197,50 @@
 
           (set! (.-state $scope) state)
           (.$on $scope ng/event-canvas-ready (:init @state))
-          (.$on $scope ng/event-resize-canvas (:resize @state))))]}]})
+          (.$on $scope ng/event-resize-canvas (:resize @state))
+          (.$on $scope event-tree-editor-ready (:tree-editor-ready @state))
+          ))]}
+
+    {:id "TreeEditController"
+     :spec
+     #js
+     ["$scope"
+      (fn [$scope]
+        (prn :init "TreeEditController")
+        (let [state (atom nil)]
+          (reset! state
+                  {:init
+                   (fn [evt canvas]
+                     (ng/merge-state
+                      state
+                      {:inited? false
+                       :canvas canvas
+                       :ctx (.getContext canvas "2d")})
+                     (.stopPropagation evt))
+
+                   :resize
+                   (fn [evt canvas]
+                     (let [width (.-width canvas)
+                           height (.-height canvas)]
+                       (ng/merge-state state {:width width :height height})
+                       (.stopPropagation evt)
+                       (if (:inited? @state)
+                         ((:render @state))
+                         (.$emit $scope event-tree-editor-ready))))
+
+                   :render
+                   (fn []
+                     (let [{:keys [tree tree-depth ctx width height]} @state]
+                       (.clearRect ctx 0 0 width height)
+                       (draw-tree tree ctx 15 (dec height) (- width 30))))
+
+                   :tree-ready
+                   (fn [_ tree]
+                     (prn :op-tree-ready)
+                     (ng/merge-state state {:inited? true :tree tree})
+                     ((:render @state)))})
+
+          (set! (.-state $scope) state)
+          (.$on $scope ng/event-canvas-ready (:init @state))
+          (.$on $scope ng/event-resize-canvas (:resize @state))
+          (.$on $scope event-op-tree-ready (:tree-ready @state))))]}]})
