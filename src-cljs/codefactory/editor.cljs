@@ -76,6 +76,14 @@
   [node]
   (if (nil? node) "#999999" (get-in config/operators [(:op node) :col])))
 
+(defn hex->rgb
+  [hex]
+  (let [h (js/parseInt (subs hex 1) 16)
+        i (/ 255.0)]
+    [(* (bit-and (bit-shift-right h 16) 0xff) i)
+     (* (bit-and (bit-shift-right h 8) 0xff) i)
+     (* (bit-and h 0xff) i)]))
+
 (defn draw-tree
   [node ctx x y w]
   (let [num-children (count (:out node))
@@ -132,7 +140,7 @@
                            (when-not animating?
                              (ng/assoc-state state [:animating?] true)
                              (render-gl))))))
-                   
+
                    :tree-editor-ready
                    (fn [evt]
                      (.stopPropagation evt)
@@ -143,13 +151,13 @@
                      (let [{:keys [ctx cam shaders cam proj meshes time animating?]} @state
                            shader1 (shaders 0)
                            shader2 (shaders 1)
-                           ;; view (g/rotate-y (g/rotate-x cam (* time 0.03)) (* time 0.1))
                            view (arcball/get-view cam)
                            shared-unis {:view view
                                         :model M44
                                         :proj proj
                                         :normalMat (-> (g/invert view) (g/transpose))}
-                           sel [[2 0 0 0] [2 0 0 2] [2 1 1 0] [2 1 1 2] [2 2 2 0] [2 2 2 2] [2 3 3 0] [2 3 3 2]]]
+                           sel [[2 0 0 0] [2 0 0 2] [2 1 1 0] [2 1 1 2] [2 2 2 0] [2 2 2 2] [2 3 3 0] [2 3 3 2]]
+                           op-col (hex->rgb (get-in config/operators [:scale-side :col]))]
                        (apply gl/clear-color-buffer ctx config/canvas-bg)
                        (gl/clear-depth-buffer ctx 1.0)
 
@@ -159,7 +167,7 @@
                         (select-keys meshes sel)
                         (:shader shader2)
                         (merge (:uniforms (:preset shader2)) shared-unis
-                               {:lightCol (g/mix (vec3 0.5) (vec3 1 0.6 0.2) (+ 0.5 (* 0.5 (Math/sin (* time 0.5)))))}))
+                               {:lightCol (g/mix (vec3 0.5) op-col (+ 0.5 (* 0.5 (Math/sin (* time 0.5)))))}))
 
                        (shader/prepare-state ctx (:state (:preset shader1)))
                        (shader/draw-meshes
@@ -186,9 +194,11 @@
                                        (reduce
                                         (fn [acc [path node]]
                                           (if (= :leaf (mg/classify-node-at tree path))
-                                            (assoc! acc path (-> (g/into (bm/basic-mesh) (g/faces node))
-                                                                 (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
-                                                                 (buf/make-attribute-buffers-in-spec ctx gl/static-draw)))
+                                            (assoc!
+                                             acc path
+                                             (-> (g/into (bm/basic-mesh) (g/faces node))
+                                                 (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
+                                                 (buf/make-attribute-buffers-in-spec ctx gl/static-draw)))
                                             acc))
                                         (transient meshes))
                                        (persistent!))]
@@ -201,6 +211,10 @@
           (.$on $scope ng/event-canvas-ready (:init @state))
           (.$on $scope ng/event-resize-canvas (:resize @state))
           (.$on $scope event-tree-editor-ready (:tree-editor-ready @state))
+          (.$on $scope "$destroy"
+                (fn []
+                  (arcball/unlisten! (:cam @state))
+                  (ng/assoc-state state [:animating?] false)))
           ))]}
 
     {:id "TreeEditController"
