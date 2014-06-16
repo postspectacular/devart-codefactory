@@ -3,6 +3,7 @@
    [codefactory.config :as config]
    [codefactory.shader :as shader]
    [thi.ng.angular :as ng]
+   [thi.ng.arcball :as arcball]
    [thi.ng.geom.webgl.core :as gl]
    [thi.ng.geom.webgl.animator :as anim]
    [thi.ng.geom.webgl.buffers :as buf]
@@ -60,8 +61,7 @@
 (defn init-camera
   [state]
   (assoc state
-    :cam (mat/look-at (vec3 0 1 2) (vec3) (vec3 0 1 0))
-    :arcball nil))
+    :cam (arcball/make-arcball)))
 
 (defn init-tree
   [state seed-id]
@@ -114,6 +114,7 @@
                                 (init-shaders config/shader-preset-ids)
                                 (init-camera)
                                 (init-tree 0)))
+                           (arcball/listen! (:cam @state) nil)
                            ((:update-meshes @state)))
                          (catch js/Error e
                            (js/alert (str "WebGL not supported: " e)))))
@@ -139,10 +140,11 @@
 
                    :render-gl
                    (fn []
-                     (let [{:keys [ctx shaders cam proj meshes time animating?]} @state
+                     (let [{:keys [ctx cam shaders cam proj meshes time animating?]} @state
                            shader1 (shaders 0)
                            shader2 (shaders 1)
-                           view (g/rotate-y (g/rotate-x cam (* time 0.03)) (* time 0.1))
+                           ;; view (g/rotate-y (g/rotate-x cam (* time 0.03)) (* time 0.1))
+                           view (arcball/get-view cam)
                            shared-unis {:view view
                                         :model M44
                                         :proj proj
