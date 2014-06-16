@@ -42,6 +42,34 @@
             :rows 3 :out {1 (mg/subdiv :cols 3 :out [nil {} nil])})
            module])))
 
+(defn init-shader
+  [ctx preset-id]
+  (let [preset (shader/presets preset-id)
+        shader (sh/make-shader-from-spec ctx (:spec preset))]
+    {:shader shader
+     :preset-id preset-id
+     :preset preset}))
+
+(defn init-shaders
+  [{:keys [ctx] :as state} preset-ids]
+  (let [presets (mapv #(init-shader ctx %) preset-ids)]
+    (assoc state :shaders presets)))
+
+(defn init-camera
+  [state]
+  (assoc state
+    :cam (mat/look-at (vec3 0 1 2) (vec3) (vec3 0 1 0))
+    :arcball nil))
+
+(defn init-tree
+  [state seed-id]
+  (assoc state
+    :tree mg-tree
+    :computed-tree {[] (seeds seed-id)}
+    :meshes {}
+    :seed-id seed-id
+    :selected-path []))
+
 (def module-spec
   {:controllers
    [{:id controller-id
@@ -54,24 +82,19 @@
           (reset! state
                   {:init
                    (fn [evt canvas]
-                     (let [desktop? (.-matches (.matchMedia $window "(min-width: 800px)"))]
+                     (let [desktop? (.-matches (.matchMedia $window "(min-width: 480px)"))]
                        (try
-                         (let [ctx (gl/gl-context canvas {:antialias desktop?})
-                               shader (sh/make-shader-from-spec ctx shader/lambert-shader-spec)]
+                         (let [ctx (gl/gl-context canvas {:antialias desktop?})]
                            (ng/merge-state
                             state
-                            {:inited? true
-                             :canvas canvas
-                             :ctx ctx
-                             :shader shader
-                             :cam (mat/look-at (vec3 0 1 2) (vec3) (vec3 0 1 0))
-                             :tree mg-tree
-                             :computed-tree {[] (seeds 0)}
-                             :meshes {}
-                             :seed-id 0
-                             :selected-path []
-                             :time 0
-                             :animating? false})
+                            (-> {:inited? true
+                                 :animating? false
+                                 :canvas canvas
+                                 :ctx ctx
+                                 :time 0}
+                                (init-shaders config/shader-preset-ids)
+                                (init-camera)
+                                (init-tree 0)))
                            ((:update-meshes @state)))
                          (catch js/Error e
                            (js/alert (str "WebGL not supported: " e)))))
@@ -92,20 +115,35 @@
 
                    :render-gl
                    (fn []
-                     (let [{:keys [ctx shader cam proj meshes time animating?]} @state]
+                     (let [{:keys [ctx shaders cam proj meshes time animating?]} @state
+                           shader1 (shaders 0)
+                           shader2 (shaders 1)
+                           view (g/rotate-y (g/rotate-x cam (* time 0.03)) (* time 0.1))
+                           shared-unis {:view view
+                                        :model M44
+                                        :proj proj
+                                        :normalMat (-> (g/invert view) (g/transpose))}
+                           sel [[2 0 0 0] [2 0 0 2] [2 1 1 0] [2 1 1 2] [2 2 2 0] [2 2 2 2] [2 3 3 0] [2 3 3 2]]]
                        (apply gl/clear-color-buffer ctx config/canvas-bg)
                        (gl/clear-depth-buffer ctx 1.0)
-                       (gl/enable ctx gl/depth-test)
+
+                       (shader/prepare-state ctx (:state (:preset shader2)))
                        (shader/draw-meshes
-                        ctx (vals meshes) shader
-                        {:view (g/rotate-y cam (* time 0.1))
-                         :model M44
-                         :proj proj
-                         :normalMat (-> (g/invert cam) (g/transpose))
-                         :ambientCol [0.3 0.3 0.3]
-                         :lightCol [0.8 0.8 0.8]
-                         :lightDir (g/normalize (vec3 0 1 1))
-                         :alpha 1.0})
+                        ctx
+                        (select-keys meshes sel)
+                        (:shader shader2)
+                        (merge (:uniforms (:preset shader2)) shared-unis
+                               {:lightCol [0.5 (+ 0.75 (* 0.25 (Math/sin (* time 0.5)))) 0.5]}))
+
+                       (shader/prepare-state ctx (:state (:preset shader1)))
+                       (shader/draw-meshes
+                        ctx
+                        (apply dissoc meshes sel)
+                        (:shader shader1)
+                        (merge (:uniforms (:preset shader1)) shared-unis))
+
+
+
                        (when animating?
                          (ng/update-state state [:time] #(+ % 0.16666))
                          (anim/animframe-provider (:render-gl @state)))))
@@ -132,7 +170,8 @@
                                        (persistent!))]
                        (ng/merge-state state
                                        {:computed-tree (merge computed-tree branch)
-                                        :meshes meshes})))})
+                                        :meshes meshes})
+                       (prn :mkeys (sort (keys meshes)))))})
 
           (set! (.-state $scope) state)
           (.$on $scope ng/event-canvas-ready (:init @state))
