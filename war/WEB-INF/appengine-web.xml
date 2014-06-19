@@ -1,10 +1,15 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
 
-  <application>thing-gae0</application>
+  <application>devartcodefactory</application>
   <version>1</version>
   <static-files/>
   <resource-files/>
-
+  <ssl-enabled>true</ssl-enabled>
   <threadsafe>true</threadsafe>
+
+  <inbound-services>
+    <service>warmup</service>
+  </inbound-services>
 
 </appengine-web-app>
