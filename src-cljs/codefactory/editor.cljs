@@ -33,18 +33,11 @@
        (mapv (comp mg/seed-box g/center))))
 
 (defn make-stripes
-  "Returns a tree which subdivides form into `n` columns and only
-    keeps those for whose index the given predicate returns a truthy
-    value. If no predicate is given, `even?` is used by default."
   ([n] (make-stripes even? n))
   ([pred n]
      (mg/subdiv :cols n :out (mapv #(if (pred %) {}) (range n)))))
 
 (defn stripes*
-  "Similar to `make-stripes`, but replaces the killed off columns with
-    connector elements by splitting each with the
-    keeping the center one. Returns tree of columns as created by
-    `make-stripes` and connectors between them."
   [pred gap-opts n]
   (loop [acc (make-stripes pred n) i (if (= pred even?) 1 0)]
     (if (< i n)
@@ -133,10 +126,6 @@
       :seed-id id
       :selected-path [])))
 
-(defn opnode-color
-  [node]
-  (if (nil? node) "#666666" (get-in config/operators [(:op node) :col])))
-
 (defn hex->rgb
   [hex]
   (let [h (js/parseInt (subs hex 1) 16)
@@ -151,7 +140,7 @@
         w' (if (pos? num-children)
              (/ (- w (* (dec num-children) 5)) num-children))
         y' (- y h 5)
-        hex (opnode-color node)]
+        hex (config/opnode-color-hex node)]
     (set! (.-strokeStyle ctx) hex)
     (.strokeRect ctx x (- y h) w h)
     ;;(prn :w w' (:op node))
@@ -194,7 +183,7 @@
                                  :time 0}
                                 (init-shaders config/shader-preset-ids)
                                 (init-camera)
-                                (init-tree :alu)))
+                                (init-tree :heatsink)))
                            (arcball/listen! (:cam @state) nil)
                            ((:update-meshes @state)))
                          (catch js/Error e
@@ -239,7 +228,7 @@
                                         :proj proj
                                         :normalMat (-> (g/invert view) (g/transpose))}
                            sel (get-in mg-trees [seed-id :sel])
-                           op-col (hex->rgb (get-in config/operators [:reflect :col]))]
+                           op-col (hex->rgb (get-in config/operators [:scale-side :col]))]
                        (apply gl/clear-color-buffer ctx config/canvas-bg)
                        (gl/clear-depth-buffer ctx 1.0)
 

@@ -15,3 +15,6 @@
    :reflect    {:col "#b9c500" :label "mirror"}
    nil         {:col "#ffffff" :label "delete"}})
 
+(defn opnode-color-hex
+  [node]
+  (if (nil? node) "#666666" (get-in operators [(:op node) :col])))
