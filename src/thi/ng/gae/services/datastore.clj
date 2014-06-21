@@ -43,11 +43,10 @@
 
 (defn as-gae-entity
   [e]
-  (prn :e e)
   (let [e* (Entity. ^Key (entity-key e))
         clj-props (clj-properties e)]
     (doseq [[k v] e]
-      (.setProperty e* (name k) (if (clj-props k) (pr-str v) v)))
+      (.setProperty e* (name k) (if (clj-props k) (Text. (pr-str v)) v)))
     e*))
 
 (defn as-entity
