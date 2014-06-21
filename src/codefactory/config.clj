@@ -20,4 +20,12 @@
            :width 1280
            :height 720
            :formats [{:type "video/webm" :ext ".webm"}
-                     {:type "video/mp4" :ext ".mp4"}]}})
+                     {:type "video/mp4" :ext ".mp4"}]}
+   :operators [{:icon "split.svg" :label "split"}
+               {:icon "inset.svg" :label "inset"}
+               {:icon "mirror.svg" :label "mirror"}
+               {:icon "ext.svg" :label "pull"}
+               {:icon "tilt.svg" :label "tilt"}
+               {:icon "scale.svg" :label "scale"}
+               {:icon "shift.svg" :label "shift"}
+               {:icon "delete.svg" :label "delete"}]})
