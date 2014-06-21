@@ -75,8 +75,8 @@
   (up [_] (set! click-pos nil))
   (resize
     [_ w h]
-    (let [ww (/ (.-innerWidth js/window) 2)
-          wh (/ (.-innerHeight js/window) 2)]
+    (let [ww (/ w 2)
+          wh (/ h 2)]
       (set! radius (* (min ww wh) 2))
       (set! center (vec2 ww wh))
       _))
@@ -101,5 +101,7 @@
   (let [min-dist (or min-dist (/ dist 2))
         max-dist (or max-dist (* dist 2))
         curr-rot (if init (q/quat init) (q/quat-from-axis-angle V3Y m/PI))
-        a (ArcBall. min-dist max-dist radius center dist curr-rot (vec3) nil nil nil)]
-    (-> a (resize) (update-view))))
+        a (ArcBall. min-dist max-dist radius center dist curr-rot (vec3) nil nil nil nil)]
+    (-> a
+        (resize (.-innerWidth js/window) (.-innerHeight js/window))
+        (update-view))))
