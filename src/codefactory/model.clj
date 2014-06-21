@@ -6,4 +6,4 @@
 
 (defentity User [name email] :key :email)
 
-(defentity CodeTree [id title user ^:clj tree has-stl?] :key :id)
+(defentity CodeTree [id title user ^:clj tree stl? date] :key :id)
