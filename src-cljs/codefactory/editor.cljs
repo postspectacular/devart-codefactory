@@ -25,6 +25,7 @@
 (def event-render-gl "render-gl")
 (def event-tree-editor-ready "tree-editor-ready")
 (def event-op-tree-ready "op-tree-ready")
+(def event-tree-submit "submit-tree")
 
 (def seeds
   (->> [(a/aabb 1)
@@ -51,20 +52,20 @@
          :tree {}
          :sel []}
    :alu {:seed 0
-                 :tree (let [branch (fn [[dir lpos]]
-                                      (mg/subdiv-inset
-                                       :dir :y :inset 0.05
-                                       :out {lpos (mg/subdiv dir 3 :out {1 nil}) 4 nil}))
-                             module (mg/subdiv-inset
-                                     :dir :y :inset 0.4
-                                     :out (mapv branch [[:cols 0] [:cols 1] [:slices 2] [:slices 3]]))]
-                         (mg/subdiv
-                          :rows 3
-                          :out [module
-                                (mg/subdiv
-                                 :rows 3 :out {1 (mg/subdiv :cols 3 :out [nil {} nil])})
-                                module]))
-                 :sel [[2 0 0 0] [2 0 0 2] [2 1 1 0] [2 1 1 2] [2 2 2 0] [2 2 2 2] [2 3 3 0] [2 3 3 2]]}
+         :tree (let [branch (fn [[dir lpos]]
+                              (mg/subdiv-inset
+                               :dir :y :inset 0.05
+                               :out {lpos (mg/subdiv dir 3 :out {1 nil}) 4 nil}))
+                     module (mg/subdiv-inset
+                             :dir :y :inset 0.4
+                             :out (mapv branch [[:cols 0] [:cols 1] [:slices 2] [:slices 3]]))]
+                 (mg/subdiv
+                  :rows 3
+                  :out [module
+                        (mg/subdiv
+                         :rows 3 :out {1 (mg/subdiv :cols 3 :out [nil {} nil])})
+                        module]))
+         :sel [[2 0 0 0] [2 0 0 2] [2 1 1 0] [2 1 1 2] [2 2 2 0] [2 2 2 2] [2 3 3 0] [2 3 3 2]]}
    :mit {:seed 0
          :tree (mg/subdiv
                 :cols 3
@@ -164,136 +165,156 @@
    [{:id controller-id
      :spec
      #js
-     ["$scope" "$routeParams" "$window"
-      (fn [$scope $routeParams $window]
+     ["$scope" "$routeParams" "$http" "$window"
+      (fn [$scope $routeParams $http $window]
         (prn :init "EditObjectController" $routeParams)
-        (let [state (atom {})]
-          (reset! state
-                  {:init
-                   (fn [evt canvas]
-                     (let [desktop? (.-matches (.matchMedia $window "(min-width: 480px)"))]
-                       (try
-                         (let [ctx (gl/gl-context canvas {:antialias desktop?})]
-                           (ng/merge-state
-                            state
-                            (-> {:inited? true
-                                 :animating? false
-                                 :canvas canvas
-                                 :ctx ctx
-                                 :time 0}
-                                (init-shaders config/shader-preset-ids)
-                                (init-camera)
-                                (init-tree :heatsink)))
-                           (arcball/listen! (:cam @state) nil)
-                           ((:update-meshes @state)))
-                         (catch js/Error e
-                           (js/alert (str "WebGL not supported: " e)))))
-                     (.stopPropagation evt))
+        (let [state (atom {:seed-id :hex})]
+          (ng/merge-state
+           state
+           {:init
+            (fn [evt canvas]
+              (prn :seed (:seed-id @state))
+              (let [desktop? (.-matches (.matchMedia $window "(min-width: 480px)"))]
+                (try
+                  (let [ctx (gl/gl-context canvas {:antialias desktop?})]
+                    (ng/merge-state
+                     state
+                     (-> {:inited? true
+                          :animating? false
+                          :canvas canvas
+                          :ctx ctx
+                          :time 0}
+                         (init-shaders config/shader-preset-ids)
+                         (init-camera)
+                         (init-tree (:seed-id @state))))
+                    (arcball/listen! (:cam @state) nil)
+                    ((:update-meshes @state)))
+                  (catch js/Error e
+                    (js/alert (str "WebGL not supported: " e)))))
+              (.stopPropagation evt))
 
-                   :handle-keys
-                   (fn [evt]
-                     (case (.-keyCode evt)
-                       65 (ng/merge-state state
-                                          {:use-selection? (not (:use-selection? @state))
-                                           :sel-time (:time @state)})
-                       nil))
+            :handle-keys
+            (fn [evt]
+              (let [k (int (.-keyCode evt))]
+                (if (and (>= k 49) (<= k 54))
+                  (prn ((vec (keys mg-trees)) (- k 49)))
+                  (case k
+                    83 (ng/merge-state state
+                                       {:use-selection? (not (:use-selection? @state))
+                                        :sel-time (:time @state)})
+                    nil))))
 
-                   :resize
-                   (fn [evt canvas]
-                     (let [{:keys [inited? ctx render-gl animating?]} @state]
-                       (when inited?
-                         (let [view-rect (r/rect 0 0 (.-width canvas) (.-height canvas))]
-                           (ng/merge-state state
-                                           {:view-rect view-rect
-                                            :proj (gl/perspective 45 view-rect 0.1 10)})
-                           (gl/set-viewport ctx view-rect)
-                           (when-not animating?
-                             (ng/assoc-state state [:animating?] true)
-                             (render-gl))))))
+            :resize
+            (fn [evt canvas]
+              (let [{:keys [inited? ctx render-gl animating?]} @state]
+                (when inited?
+                  (let [view-rect (r/rect 0 0 (.-width canvas) (.-height canvas))]
+                    (ng/merge-state state
+                                    {:view-rect view-rect
+                                     :proj (gl/perspective 45 view-rect 0.1 10)})
+                    (gl/set-viewport ctx view-rect)
+                    (when-not animating?
+                      (ng/assoc-state state [:animating?] true)
+                      (render-gl))))))
 
-                   :tree-editor-ready
-                   (fn [evt]
-                     (.stopPropagation evt)
-                     (.$broadcast $scope event-op-tree-ready (:tree @state) (:computed-tree @state)))
+            :tree-editor-ready
+            (fn [evt]
+              (.stopPropagation evt)
+              (.$broadcast $scope event-op-tree-ready (:tree @state) (:computed-tree @state)))
 
-                   :render-gl
-                   (fn []
-                     (let [{:keys [ctx cam shaders cam proj meshes time animating? seed-id use-selection?]} @state
-                           shader1 (shaders 0)
-                           shader2 (shaders 1)
-                           view (arcball/get-view cam)
-                           ;;view (g/rotate-y view (* time 0.2))
-                           shared-unis {:view view
-                                        :model M44
-                                        :proj proj
-                                        :normalMat (-> (g/invert view) (g/transpose))}
-                           sel (get-in mg-trees [seed-id :sel])
-                           op-col (hex->rgb (get-in config/operators [:scale-side :col]))]
-                       (apply gl/clear-color-buffer ctx config/canvas-bg)
-                       (gl/clear-depth-buffer ctx 1.0)
+            :render-gl
+            (fn []
+              (let [{:keys [ctx cam shaders cam proj meshes time animating? seed-id use-selection?]} @state
+                    shader1 (shaders 0)
+                    shader2 (shaders 1)
+                    view (arcball/get-view cam)
+                    ;;view (g/rotate-y view (* time 0.2))
+                    shared-unis {:view view
+                                 :model M44
+                                 :proj proj
+                                 :normalMat (-> (g/invert view) (g/transpose))}
+                    sel (get-in mg-trees [seed-id :sel])
+                    op-col (hex->rgb (get-in config/operators [:scale-side :col]))]
+                (apply gl/clear-color-buffer ctx config/canvas-bg)
+                (gl/clear-depth-buffer ctx 1.0)
 
-                       (if use-selection?
-                         (do
-                           (shader/prepare-state ctx (:state (:preset shader2)))
-                           (shader/draw-meshes
-                            ctx
-                            (select-keys meshes sel)
-                            (:shader shader2)
-                            (merge (:uniforms (:preset shader2)) shared-unis
-                                   {:lightCol (g/mix (vec3 0.5) op-col (+ 0.5 (* 0.5 (Math/sin (* time 0.5)))))}))
+                (if use-selection?
+                  (do
+                    (shader/prepare-state ctx (:state (:preset shader2)))
+                    (shader/draw-meshes
+                     ctx
+                     (select-keys meshes sel)
+                     (:shader shader2)
+                     (merge (:uniforms (:preset shader2)) shared-unis
+                            {:lightCol (g/mix (vec3 0.5) op-col (+ 0.5 (* 0.5 (Math/sin (* time 0.5)))))}))
 
-                           (shader/prepare-state ctx (:state (:preset shader1)))
-                           (shader/draw-meshes
-                            ctx
-                            (apply dissoc meshes sel)
-                            (:shader shader1)
-                            (merge (:uniforms (:preset shader1)) shared-unis
-                                   {:alpha (m/mix 1 (get-in shader1 [:preset :uniforms :alpha])
-                                                  (min (* 0.2 (- time (:sel-time @state))) 1.0))})))
+                    (shader/prepare-state ctx (:state (:preset shader1)))
+                    (shader/draw-meshes
+                     ctx
+                     (apply dissoc meshes sel)
+                     (:shader shader1)
+                     (merge (:uniforms (:preset shader1)) shared-unis
+                            {:alpha (m/mix 1 (get-in shader1 [:preset :uniforms :alpha])
+                                           (min (* 0.2 (- time (:sel-time @state))) 1.0))})))
 
-                         (do
-                           (shader/prepare-state ctx (:state (:preset shader2)))
-                           (shader/draw-meshes
-                            ctx meshes
-                            (:shader shader2)
-                            (merge (:uniforms (:preset shader2)) shared-unis))))
+                  (do
+                    (shader/prepare-state ctx (:state (:preset shader2)))
+                    (shader/draw-meshes
+                     ctx meshes
+                     (:shader shader2)
+                     (merge (:uniforms (:preset shader2)) shared-unis))))
 
-                       (when animating?
-                         (ng/update-state state [:time] #(+ % 0.16666))
-                         (anim/animframe-provider (:render-gl @state)))))
+                (when animating?
+                  (ng/update-state state [:time] #(+ % 0.16666))
+                  (anim/animframe-provider (:render-gl @state)))))
 
-                   :update-meshes
-                   (fn []
-                     (let [{:keys [ctx tree computed-tree selected-path meshes]} @state
-                           root (get computed-tree selected-path)
-                           sub-tree (get-in tree (mg/child-path selected-path))
-                           ;; TODO remove old attrib buffers
-                           ;; TODO delete all paths in computed-tree below selected root
-                           branch (->> selected-path
-                                       (mg/compute-tree-map* root sub-tree (transient {}))
-                                       (persistent!))
-                           meshes (->> branch
-                                       (reduce
-                                        (fn [acc [path node]]
-                                          (if (= :leaf (mg/classify-node-at tree path))
-                                            (assoc!
-                                             acc path
-                                             (-> (g/into (bm/basic-mesh) (g/faces node))
-                                                 (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
-                                                 (buf/make-attribute-buffers-in-spec ctx gl/static-draw)))
-                                            acc))
-                                        (transient meshes))
-                                       (persistent!))]
-                       (ng/merge-state state
-                                       {:computed-tree (merge computed-tree branch)
-                                        :meshes meshes})
-                       (prn :mkeys (sort (keys meshes)))))})
+            :update-meshes
+            (fn []
+              (let [{:keys [ctx tree computed-tree selected-path meshes]} @state
+                    root (get computed-tree selected-path)
+                    sub-tree (get-in tree (mg/child-path selected-path))
+                    ;; TODO remove old attrib buffers
+                    ;; TODO delete all paths in computed-tree below selected root
+                    branch (->> selected-path
+                                (mg/compute-tree-map* root sub-tree (transient {}))
+                                (persistent!))
+                    meshes (->> branch
+                                (reduce
+                                 (fn [acc [path node]]
+                                   (if (= :leaf (mg/classify-node-at tree path))
+                                     (assoc!
+                                      acc path
+                                      (-> (g/into (bm/basic-mesh) (g/faces node))
+                                          (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
+                                          (buf/make-attribute-buffers-in-spec ctx gl/static-draw)))
+                                     acc))
+                                 (transient meshes))
+                                (persistent!))]
+                (ng/merge-state state
+                                {:computed-tree (merge computed-tree branch)
+                                 :meshes meshes})
+                (prn :mkeys (sort (keys meshes)))))
+
+            :submit-tree
+            (fn []
+              (.. $http
+                  (post "/submit" #js {:tree (pr-str (:tree @state))})
+                  (success (fn [data status] (prn "----------------------------" status _)))))
+
+            :select-operator
+            (fn [e id]
+              (prn :sel-op id)
+              (.stopPropagation e))})
 
           (set! (.-state $scope) state)
+          (set! (.-submitTree $scope) (:submit-tree @state))
+          (set! (.-selectOperator $scope) (:select-operator @state))
+
           (.addEventListener $window "keydown" (:handle-keys @state))
           (.$on $scope ng/event-canvas-ready (:init @state))
           (.$on $scope ng/event-resize-canvas (:resize @state))
           (.$on $scope event-tree-editor-ready (:tree-editor-ready @state))
+          (.$on $scope event-tree-submit (:submit-tree @state))
           (.$on $scope "$destroy"
                 (fn []
                   (arcball/unlisten! (:cam @state))

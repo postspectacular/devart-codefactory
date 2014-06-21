@@ -39,6 +39,8 @@
                            (.play (aget element 0))
                            (.addEventListener $window "resize" (.-resizeBg scope) false)))
 
+
+
                    (.$on scope "$destroy"
                          (fn [] (.removeEventListener $window "resize" (.-resizeBg scope))))
 
@@ -47,4 +49,14 @@
    [{:id controller-id
      :spec #js ["$scope" "$routeParams" "$window"
                 (fn [$scope $routeParams $window]
-                  (prn :init "HomeController" $routeParams))]}]})
+                  (prn :init "HomeController" $routeParams)
+
+                  (set! (.-launchFullScreen $scope)
+                        (fn []
+                          #_(let [doc (.-documentElement js/document)]
+                            (cond
+                             (.-requestFullscreen doc) (.requestFullscreen doc)
+                             (.-mozRequestFullscreen doc) (.mozRequestFullscreen doc)
+                             (.-webkitRequestFullscreen doc) (.webkitRequestFullscreen doc)
+                             (.-msRequestFullscreen doc) (.msRequestFullscreen doc)
+                             :default nil)))))]}]})

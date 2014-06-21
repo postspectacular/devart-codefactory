@@ -1,3 +1,12 @@
+body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+
+
 video { display: block; }
 
 video#bgvid {
@@ -37,6 +46,14 @@ video#bgvid {
     margin-left: -8px;
 }
 
+
+.editor-toolbar {
+    line-height: 0.8;
+}
+
+.editor-toolbar img {
+    height: 40px;
+}
 /************** animations *************************************/
 
 .slide-animate.ng-enter, .slide-animate.ng-leave{
@@ -117,3 +134,4 @@ video#bgvid {
     from { opacity: 1; }
     to { opacity: 0; }
 }
+

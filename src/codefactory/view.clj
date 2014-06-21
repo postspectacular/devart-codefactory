@@ -82,7 +82,7 @@ ga('send', 'pageview');")))
         [:h1.text-center "Welcome to Co(de)Factory"]]
        [:div.row.home-content.footer
         [:div.col-md-6.col-md-offset-3.text-center
-         [:a.btn.btn-primary.btn-lg {:href "#/edit/new"} "Start coding"]]]]))))
+         [:a.btn.btn-primary.btn-lg {:href "#/edit/new" :ng-click "launchFullScreen()"} "Start coding"]]]]))))
 
 (def template-editor
   (memoize
@@ -92,17 +92,25 @@ ga('send', 'pageview');")))
       [:div.container-fluid
        [:div.row
         [:div.col-xs-12 [:resizable-canvas {:width 1 :height 0.6}]]]
-       [:div.row {:tool-bar true}
-        [:div.col-xs-8.col-xs-offset-2.text-center
-         (map
-          (fn [op]
-            [:button.btn.btn-default.btn-sm op])
-          ["split" "inset" "mirror" "stretch" "scale" "tilt" "delete"])]]
+       [:div.row.editor-toolbar
+        [:div.col-xs-2]
+        (map
+         (fn [{:keys [icon label]}]
+           [:div.col-xs-1.text-center
+            [:a {:ng-click "selectOperator()"} [:img {:src (str "/img/" icon) :alt label}]]
+            [:div label]])
+         (:operators config))]
        [:div.row {:ng-controller "TreeEditController"}
         [:div.col-xs-12 [:resizable-canvas {:width 1 :height 0.25}]]]
        [:div.row.footer.editor-footer
-        [:div.col-xs-6 [:a.btn.btn-danger.btn-lg.btn-block {:href "#/"} "Cancel"]]
-        [:div.col-xs-6 [:a.btn.btn-primary.btn-lg.btn-block {:href "#/submit"} "Submit"]]]]))))
+        [:div.col-xs-6
+         [:a.btn.btn-danger.btn-lg.btn-block
+          {:href "#/"}
+          "Cancel"]]
+        [:div.col-xs-6
+         [:a.btn.btn-primary.btn-lg.btn-block
+          {:href "#/submit" :ng-click "submitTree()"}
+          "Submit"]]]]))))
 
 (def templates
   {:home template-home
