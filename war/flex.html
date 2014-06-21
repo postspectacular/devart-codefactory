@@ -1,0 +1,120 @@
+<!DOCTYPE html5>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="Karsten Schmidt" />
+    <link rel="icon" href="url" />
+    <title>Google DevArt: Co(de)Factory</title>
+    <!-- <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.3/webfont.js"></script>
+    <script>
+      WebFont.load({google: {families: ['Abel']}});
+    </script> -->
+    <link rel="stylesheet" href="css-compiled/flex.css" type="text/css" media="screen" />
+  </head>
+  <body>
+    <div class="modules">
+      <section id="s3" class="present" data-transition="concave">
+        <div class="flex-container">
+          <div class="center">
+            Loading...
+          </div>
+        </div>
+      </section>
+      <section id="s2" class="future" data-transition="concave">
+        <div class="flex-container">
+          <div class="flex-item preview-wrapper">
+            <canvas id="preview"></canvas>
+          </div>
+          <div class="flex-item toolbar roll">
+            <div class="rollbody">
+              <div class="on">
+                <div class="inner">
+                  <div class="flex-item center first"><img src="/img/split.svg"/><br/>split</div>
+                  <div class="flex-item center"><img src="/img/inset.svg"/><br/>inset</div>
+                  <div class="flex-item center"><img src="/img/tilt.svg"/><br/>extrude</div>
+                  <div class="flex-item center"><img src="/img/ext.svg"/><br/>extrude</div>
+                  <div class="flex-item center"><img src="/img/mirror.svg"/><br/>mirror</div>
+                  <div class="flex-item center"><img src="/img/scale.svg"/><br/>scale</div>
+                  <div class="flex-item center"><img src="/img/shift.svg"/><br/>shift</div>
+                  <div class="flex-item center last"><img src="/img/delete.svg"/><br/>delete</div>
+                </div>
+              </div>
+              <div class="off">
+                <div class="inner">
+                  <div class="flex-item center alert alert-error">Computer says NO!!!</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex-item treemap">3
+          </div>
+          <div class="flex-item buttonbar">
+            <div class="inner">
+              <div class="flex-uniform center">
+                <svg width="100%" height="30" viewbox="0 0 1 1">
+                  <path d="M0.2,0.2 L0.8,0.8 M0.2,0.8 L0.8,0.2" fill="none" stroke="red" stroke-width="0.05"/>
+                </svg>
+              </div>
+              <div class="flex-uniform center">
+                <svg width="100%" height="30" viewbox="0 0 1 1">
+                  <path d="M0.2,0.2 L0.8,0.8 M0.2,0.8 L0.8,0.2" fill="none" stroke="limegreen" stroke-width="0.05"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="s1" class="future" data-transition="concave">
+        <div class="flex-container">
+          <div class="flex-item preview-wrapper">
+          </div>
+          <div class="flex-item start center">
+            <div id="arrow">
+              <svg width="100%" height="80" viewbox="0 0 1 1">
+                <path d="M0,0.5 L1,0.5 M0.7,0.2 L1,0.5 L0.7,0.8" fill="none" stroke="red" stroke-width="0.025"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+    </div>
+    </section>
+</div>
+<script>
+  function toggle(from,to) {
+  document.getElementById(from).setAttribute("class","past");
+  document.getElementById(to).setAttribute("class","present");
+  };
+  var s1=document.getElementById("s1");
+  var s2=document.getElementById("s2");
+  var s3=document.getElementById("s3");
+
+  var preview=document.getElementById("preview");
+  var arrow=document.getElementById("arrow");
+  var ctx=preview.getContext("2d");
+  function resizeCanvas() {
+  var w=preview.width=preview.parentElement.clientWidth;
+  var h=preview.height=preview.parentElement.clientHeight;
+  ctx.strokeStyle="white";
+  ctx.strokeRect(w/4,h/4,w/2,h/2);
+  }
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+  arrow.addEventListener("click", function() {
+  toggle("s1","s2");
+  });
+  var tb=document.querySelectorAll(".toolbar")[0];
+  function toggleTB() {
+  tb.setAttribute("class","flex-item toolbar roll rollon");
+  setTimeout(function() {
+  tb.setAttribute("class","flex-item toolbar roll");
+  },1500);
+  }
+  tb.addEventListener("click",toggleTB);
+  setTimeout(function() {
+  toggle("s3","s1");
+  },2000);
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+.fullsize() {
+    width: 100%;
+    height: 100%;
+}
+
+.transform-style(@style) {
+    -webkit-transform-style: @style;
+    -moz-transform-style: @style;
+    -ms-transform-style: @style;
+    transform-style: @style;
+}
+
+.transform-origin(@x; @y) {
+    -webkit-transform-origin: @x @y;
+    -moz-transform-origin: @x @y;
+    -ms-transform-origin: @x @y;
+    transform-origin: @x @y;
+}
+
+.transform(@t) {
+    -webkit-transform: e(replace(@t,"\$","-webkit-","gi"));
+    -moz-transform: e(replace(@t,"\$","-moz-","gi"));
+    -ms-transform: e(replace(@t,"\$","-ms-","gi"));
+    transform: e(replace(@t,"\$","","gi"));
+}
+
+.transition(@t) {
+    -webkit-transition: e(replace(@t,"\$","-webkit-","gi"));
+    -moz-transition: e(replace(@t,"\$","-moz-","gi"));
+    -ms-transition: e(replace(@t,"\$","-ms-","gi"));
+    transition: e(replace(@t,"\$","","gi"));
+}
+
+.perspective(@dist) {
+    -webkit-perspective: @dist;
+    -moz-perspective: @dist;
+    -ms-perspective: @dist;
+    perspective: @dist;
+}
+
+.perspective-origin(@x; @y) {
+    -webkit-perspective-origin: @x @y;
+    -moz-perspective-origin: @x @y;
+    -ms-perspective-origin: @x @y;
+    perspective-origin: @x @y;
+}
+
+.cull-backface() {
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    backface-visibility: hidden;
+}

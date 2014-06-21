@@ -1,0 +1,104 @@
+@import "common.less";
+@import "slide.less";
+
+.flex-container {
+    display: flex;
+    display: -webkit-flex;
+    display: -moz-flex;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    -webkit-flex-flow: column nowrap;
+    -moz-flex-flow: column nowrap;
+    flex-flow: column nowrap;
+    -webkit-justify-content: center;
+    -moz-justify-content: center;
+    justify-content: center;
+}
+
+.flex-container .inner {
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    -webkit-flex-flow: row nowrap;
+    -moz-flex-flow: row nowrap;
+    flex-flow: row nowrap;
+}
+
+.flex-item {
+    -webkit-flex: 1 100%;
+    -moz-flex: 1 100%;
+    flex: 1 100%;
+}
+
+.flex-uniform {
+    -webkit-flex: 1 1 auto;
+    -moz-flex: 1 1 auto;
+    flex: 1 1 auto;
+}
+
+.flex-container .toolbar {
+    height: 60px;
+    -webkit-flex: 0 1 auto;
+    -moz-flex: 0 1 auto;
+    flex: 0 1 auto;
+
+    img {
+        height: 40px;
+    }
+
+    .inner {
+        min-height: 60px;
+    }
+}
+
+.preview-wrapper {
+    cursor: -webkit-grab;
+    -webkit-flex: 4 1 auto;
+    -moz-flex: 12 1 auto;
+    flex: 12 1 auto;
+}
+
+.first { margin-left: 10%; }
+.last { margin-right: 10%; }
+
+.treemap {
+    min-height: 200px;
+    -webkit-flex: 2 2 auto;
+    -moz-flex: 2 2 auto;
+    flex: 2 2 auto;
+}
+
+.buttonbar {
+    min-height: 50;
+    height: 50px;
+    -webkit-flex: 0 1 auto;
+    -moz-flex: 0 1 auto;
+    flex: 0 1 auto;
+
+    .inner {
+        min-height: 50px;
+        line-height: 30px;
+    }
+}
+
+.start {
+    -webkit-flex: 0 1 auto;
+    -moz-flex: 0 1 auto;
+    flex: 0 1 auto;
+    height: 100px;
+}
+
+.start svg {
+    width: 98%;
+}
+
+.start div, .buttonbar .inner div {
+    margin: 10px;
+    border: 2px solid red;
+}
+
+.start div:hover, .buttonbar .inner div:hover {
+    border: 2px solid @op-col-sd;
+    cursor: pointer;
+}

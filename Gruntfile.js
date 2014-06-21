@@ -28,7 +28,7 @@ module.exports = function(grunt) {
           compress: false
         },
         files: {
-          "war/css-compiled/flextest.css": "src-less/flextest.less",
+          "war/css-compiled/flex.css": "src-less/flex.less",
           "war/css-compiled/main-flex.css": "src-less/main-flex.less"
         }
       },
@@ -38,7 +38,7 @@ module.exports = function(grunt) {
           compress: true,
         },
         files: {
-          "war/css-compiled/flextest.css": "src-less/flextest.less",
+          "war/css-compiled/flex.css": "src-less/flex.less",
           "war/css-compiled/main-flex.css": "src-less/main-flex.less"
         }
       }
