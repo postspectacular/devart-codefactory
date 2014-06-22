@@ -7,22 +7,22 @@
     <meta name="author" content="Karsten Schmidt" />
     <link rel="icon" href="url" />
     <title>Google DevArt: Co(de)Factory</title>
-    <!-- <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.3/webfont.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.3/webfont.js"></script>
     <script>
       WebFont.load({google: {families: ['Abel']}});
-    </script> -->
+    </script>
     <link rel="stylesheet" href="css-compiled/flex.css" type="text/css" media="screen" />
   </head>
   <body>
     <div class="modules">
-      <section id="s3" class="present" data-transition="concave">
+      <section id="loader" class="present" data-transition="concave">
         <div class="flex-container">
           <div class="center">
             Loading...
           </div>
         </div>
       </section>
-      <section id="s2" class="future" data-transition="concave">
+      <section id="editor" class="future" data-transition="concave">
         <div class="flex-container">
           <div class="flex-item preview-wrapper">
             <canvas id="preview"></canvas>
@@ -52,12 +52,12 @@
           </div>
           <div class="flex-item buttonbar">
             <div class="inner">
-              <div class="flex-uniform center">
+              <div id="edit-cancel" class="flex-uniform center">
                 <svg width="100%" height="30" viewbox="0 0 1 1">
                   <path d="M0.2,0.2 L0.8,0.8 M0.2,0.8 L0.8,0.2" fill="none" stroke="red" stroke-width="0.05"/>
                 </svg>
               </div>
-              <div class="flex-uniform center">
+              <div id="edit-submit" class="flex-uniform center">
                 <svg width="100%" height="30" viewbox="0 0 1 1">
                   <path d="M0.2,0.2 L0.8,0.8 M0.2,0.8 L0.8,0.2" fill="none" stroke="limegreen" stroke-width="0.05"/>
                 </svg>
@@ -66,7 +66,7 @@
           </div>
         </div>
       </section>
-      <section id="s1" class="future" data-transition="concave">
+      <section id="home" class="future" data-transition="concave">
         <div class="flex-container">
           <div class="flex-item preview-wrapper">
           </div>
@@ -82,7 +82,8 @@
     </section>
 </div>
 <script>
-  function toggle(from,to) {
+  /* 
+function toggle(from,to) {
   document.getElementById(from).setAttribute("class","past");
   document.getElementById(to).setAttribute("class","present");
   };
@@ -102,6 +103,7 @@
   resizeCanvas();
   window.addEventListener("resize", resizeCanvas);
   arrow.addEventListener("click", function() {
+  
   toggle("s1","s2");
   });
   var tb=document.querySelectorAll(".toolbar")[0];
@@ -115,6 +117,8 @@
   setTimeout(function() {
   toggle("s3","s1");
   },2000);
+*/
 </script>
+<script src="/js/app.js"></script>
 </body>
 </html>

@@ -1,56 +1,82 @@
 (ns codefactory.core
   (:require
-   [thi.ng.angular]
    [codefactory.config :as config]
-   [codefactory.home :as home]
-   [codefactory.editor :as editor]
-   [codefactory.gallery :as gallery])
-  (:require-macros [hiccups.core :as h]))
+   [codefactory.protocols :as proto]
+   [codefactory.controllers.home :as home]
+   [codefactory.controllers.editor :as edit]
+   [thi.ng.cljs.appstate :as app]
+   [thi.ng.cljs.dom :as dom]
+   [thi.ng.cljs.io :as io]
+   [thi.ng.cljs.route :as route]
+   [thi.ng.cljs.utils :as utils]))
 
 (enable-console-print!)
 
-(defn add-module-spec
-  [app spec]
-  (doseq [{:keys [id spec]} (:directives spec)]
-    (.directive app id spec))
-  (doseq [{:keys [id spec]} (:controllers spec)]
-    (.controller app id spec))
-  app)
+(def controllers
+  {:loader nil
+   :home home/instance
+   :intro nil
+   :editor edit/instance
+   :gallery nil})
 
-(def ^:export app
-  (let [app (.. js/angular
-                (module config/module-name
-                        #js ["mgcrea.ngStrap" "ngRoute" "ngAnimate" "thi.ng.ngSupport"])
+(def state
+  (app/make-app-state
+   {:controller (controllers :loader)
+    :route {:controller :loader}}))
 
-                (config
-                 #js ["$routeProvider" "$locationProvider"
-                      (fn [$routeProvider $locationProvider]
-                        (.. $routeProvider
-                            (when "/"
-                              #js {:controller home/controller-id
-                                   :templateUrl "/templates/home"})
-                            (when "/edit/:id"
-                              #js {:controller editor/controller-id
-                                   :templateUrl "/templates/editor"})
-                            (when "/gallery"
-                              #js {:controller gallery/controller-id
-                                   :templateUrl "/templates/gallery"})
-                            (otherwise #js {:redirectTo "/"}))
-                        ;;(.html5Mode $locationProvider true)
-                        )])
+(defn init-controllers
+  []
+  (app/listen-state-update!
+   state :ctrl [:controller]
+   (fn [_ old new]
+     (prn :ctrl-change old new)
+     (proto/init new state)
+     (when (and old (not= old new))
+       (js/setTimeout #(proto/release old) 900))))
+  (.addEventListener
+   (dom/by-id "arrow") "click"
+   (fn [] (route/set-route! :edit "new")))
+  (.addEventListener
+   (dom/by-id "edit-cancel") "click"
+   (fn [] (route/set-route! :home))))
 
-                (controller
-                 "MainController"
-                 #js ["$scope" "$routeParams" "$document"
-                      (fn [$scope $routeParams $document]
-                        (prn :init "MainController")
-                        (.on $document "touchmove"
-                             (fn [e]
-                               (when (>= (alength (.-touches e)) 2)
-                                 (.stopPropagation e)
-                                 (.preventDefault e)))))]))]
+(defn transition-controller
+  [{ca :controller :as old} {cb :controller :as new}]
+  (let [a (dom/by-id (name ca))
+        b (dom/by-id (name cb))
+        dir (if (pos? (get config/route-transitions [ca cb]))
+              "future" "past")]
+    (prn :cb cb (controllers cb))
+    (swap! state assoc :controller (controllers cb))
+    (dom/set-class! a dir)
+    (dom/set-class! b "present")))
 
-    (-> app
-        (add-module-spec home/module-spec)
-        (add-module-spec editor/module-spec)
-        (add-module-spec gallery/module-spec))))
+(defn route-changed
+  [_ old new]
+  (prn :route-changed new)
+  (transition-controller old new))
+
+(defn route-dispatcher
+  [new-route]
+  ;;(prn :new-route new-route)
+  (swap!
+   state merge
+   {:route new-route
+    :metrics {:last-route-change (utils/now)}}))
+
+(defn start-router!
+  []
+  (app/listen-state-change!
+   state :route [:route] route-changed)
+  (route/start-router!
+   (route/router
+    config/routes
+    config/default-route
+    route-dispatcher)))
+
+(defn ^:export start
+  []
+  (init-controllers)
+  (start-router!))
+
+(.addEventListener js/window "load" start)

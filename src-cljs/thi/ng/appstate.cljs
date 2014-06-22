@@ -20,16 +20,26 @@
   [init-state]
   (atom init-state))
 
+(defn listen-state-update!
+  [state id path listener]
+  (add-watch
+   state id
+   (fn [_ state old new]
+     (prn :listener id)
+     (listener state (get-in old path) (get-in new path)))))
+
 (defn listen-state-change!
   [state id path listener]
   (add-watch
    state id
    (fn [_ state old new]
-     (let [newval (get-in new path)]
-       (if-not (= (get-in old path) newval)
-         (listener state newval))))))
+     (prn :listener id)
+     (let [old (get-in old path)
+           new (get-in new path)]
+       (if-not (= old new)
+         (listener state old new))))))
 
-(defn unlisten-state-change!
+(defn unlisten-state!
   [state id]
   (remove-watch state id))
 

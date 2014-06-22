@@ -1,6 +1,27 @@
-(ns codefactory.config)
+(ns codefactory.config
+  (:require
+   [thi.ng.cljs.utils :as utils]
+   [thi.ng.validate.core :as v]))
 
-(def module-name "codefactory")
+(def routes
+  [{:match ["home"] :controller :home :uri "home"}
+   {:match ["edit" :id]
+    :bindings {:id {:validate [(v/uuid4)]}}
+    :controller :editor}
+   {:match ["edit" "new"]
+    :controller :editor}
+   {:match ["gallery" :page]
+    :bindings {:page {:coerce utils/parse-int :validate [(v/number) (v/pos)]}}
+    :controller :gallery}])
+
+(def default-route (routes 0))
+
+(def route-transitions
+  {[:loader :home] -1
+   [:loader :editor] -1
+   [:loader :gallery] -1
+   [:home :editor] -1
+   [:editor :home] 1})
 
 (def canvas-bg [0.2 0.2 0.211 1])
 
