@@ -6,16 +6,20 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/data.json "0.2.5"]
+                 [org.clojure/core.async "0.1.301.0-deb34a-alpha"]
+                 ;;[org.clojure/data.fressian "0.2.0"]
+                 
                  [ring/ring-core "1.2.2"]
                  [compojure "1.1.8"]
                  [hiccup "1.0.5"]
                  [camel-snake-kebab "0.1.5"]
                  [garden "1.1.7"]
                  [simple-time "0.1.1"]
-                 [org.clojure/data.fressian "0.2.0"]
+                 
                  [thi.ng/geom-core "0.3.0-SNAPSHOT"]
                  [thi.ng/geom-types "0.3.0-SNAPSHOT"]
                  [thi.ng/morphogen "0.1.0-SNAPSHOT"]
+                 [thi.ng/validate "0.1.0-SNAPSHOT"]
 
                  ;; GAE
                  [javax.servlet/servlet-api "2.5"]
@@ -39,7 +43,7 @@
                  ;; CLJS
                  [thi.ng/geom-webgl "0.3.0-SNAPSHOT"]
                  [hiccups "0.3.0" :exclusions [org.clojure/clojurescript]]
-                 [net.unit8/fressian-cljs "0.1.0"]
+                 ;;[net.unit8/fressian-cljs "0.1.0"]
                  ]
 
   :profiles {:dev {:dependencies [[org.clojure/clojurescript "0.0-2246"]]
