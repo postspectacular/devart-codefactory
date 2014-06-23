@@ -1,4 +1,4 @@
-(ns thi.ng.arcball
+(ns thi.ng.geom.ui.arcball
   (:require-macros [thi.ng.macromath.core :as mm])
   (:require
    [thi.ng.geom.core :as g]

@@ -1,12 +1,13 @@
 (ns thi.ng.cljs.appstate
-  (:refer-clojure :exclude [map filter remove distinct concat take-while])
-  (:require [goog.events :as events]
-            [goog.events.EventType]
-            [goog.net.Jsonp]
-            [goog.Uri]
-            [cljs.core.async :refer [>! <! chan put! close! timeout]])
-  (:require-macros [cljs.core.async.macros :refer [go alt!]]
-                   [thi.ng.cljs.macros :refer [dochan]])
+  (:refer-clojure
+   :exclude [map filter remove distinct concat take-while])
+  (:require-macros
+   [cljs.core.async.macros :refer [go alt!]]
+   [thi.ng.cljs.macros :refer [dochan]])
+  (:require
+   [thi.ng.cljs.utils :as utils]
+   [goog.events :as events]
+   [cljs.core.async :refer [>! <! chan put! close! timeout]])
   (:import goog.events.EventType))
 
 (defn log [in]
@@ -16,9 +17,13 @@
             (>! out e))
     out))
 
-(defn make-app-state
+(defn make-state
   [init-state]
   (atom init-state))
+
+(defn merge-state
+  [state xs]
+  (swap! state #(utils/deep-merge-with (fn [& _] (last _)) % xs)))
 
 (defn listen-state-update!
   [state id path listener]
