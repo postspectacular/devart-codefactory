@@ -20,7 +20,7 @@
    :gallery nil})
 
 (def state
-  (app/make-app-state
+  (app/make-state
    {:controller (controllers :loader)
     :route {:controller :loader}}))
 
@@ -46,8 +46,7 @@
         b (dom/by-id (name cb))
         dir (if (pos? (get config/route-transitions [ca cb]))
               "future" "past")]
-    (prn :cb cb (controllers cb))
-    (swap! state assoc :controller (controllers cb))
+    (prn :cb cb (:controller @state))
     (dom/set-class! a dir)
     (dom/set-class! b "present")))
 
@@ -62,6 +61,7 @@
   (swap!
    state merge
    {:route new-route
+    :controller (controllers (:controller new-route))
     :metrics {:last-route-change (utils/now)}}))
 
 (defn start-router!

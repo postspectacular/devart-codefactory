@@ -15,6 +15,28 @@
   (:import
    [codefactory.model CodeTree]))
 
+(def mime-types
+  {:edn "application/edn"
+   :json "application/json"
+   :text "text/plain"})
+
+(defn api-response
+  [req data]
+  (let [accept (:accept (:headers req))
+        {:keys [edn json text] mime-types}]
+    (cond
+     (or (= accept "*/*") (= accept edn))
+     (-> data pr-str resp/response (resp/content-type edn))
+
+     (= accept json)
+     (-> data json/write-str resp/response (resp/content-type json))
+
+     :else (-> (str "Only the following content types are supported: "
+                    edn ", " json)
+               (resp/response)
+               (resp/status 406)
+               (resp/content-type text)))))
+
 (defroutes handlers
   (GET "/" []
        (resp/response (view/main-wrapper config/app)))
@@ -39,6 +61,12 @@
             (.printStackTrace e)
             {:status 400
              :body "Error saving tree"})))
+  (POST "/api" {:keys [params] :as req}
+        (prn :api params)
+        (resp/response "ok"))
+  (GET "/api/models/:id" [id :as req]
+       (let [data {:seed :box :tree {:op :sd :args {:cols 3} :out [{} nil {}]}}]
+         (api-response req data)))
   (route/not-found "404"))
 
 (def app

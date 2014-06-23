@@ -8,7 +8,7 @@
 
 (deftype HomeController
     [^:mutable shared state]
-  proto/PLifeCycle
+  proto/PLifecycle
   (init [_ s]
     (prn :init-home)
     (set! shared s))
