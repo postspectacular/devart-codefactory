@@ -1,25 +1,35 @@
-(ns thi.ng.cljs.appstate
-  (:refer-clojure
-   :exclude [map filter remove distinct concat take-while])
+(ns thi.ng.cljs.app
   (:require-macros
    [cljs.core.async.macros :refer [go alt!]]
    [thi.ng.cljs.macros :refer [dochan]])
   (:require
+   [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.utils :as utils]
    [goog.events :as events]
    [cljs.core.async :refer [>! <! chan put! close! timeout]])
   (:import goog.events.EventType))
 
-(defn log [in]
-  (let [out (chan)]
-    (dochan [e in]
-            (.log js/console e)
-            (>! out e))
-    out))
+(defmulti dispatch-event (fn [[id] state queue] id))
+
+(defmethod dispatch-event :default
+  [[id] & _]
+  (prn :unhandled-event id))
+
+(defn event-dispatcher
+  [state queue]
+  (go
+    (while true
+      (let [event (<! queue)]
+        (debug :new-event event)
+        (dispatch-event event state queue)))))
+
+(defn emit
+  [queue id body]
+  (put! queue [id body]))
 
 (defn make-state
   [init-state]
-  (atom init-state))
+  (atom (assoc init-state :event-queue (chan))))
 
 (defn merge-state
   [state xs]
@@ -30,7 +40,7 @@
   (add-watch
    state id
    (fn [_ state old new]
-     (prn :listener id)
+     (debug :listener id)
      (listener state (get-in old path) (get-in new path)))))
 
 (defn listen-state-change!
@@ -38,7 +48,7 @@
   (add-watch
    state id
    (fn [_ state old new]
-     (prn :listener id)
+     (debug :listener id)
      (let [old (get-in old path)
            new (get-in new path)]
        (if-not (= old new)

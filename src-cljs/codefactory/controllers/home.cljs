@@ -2,7 +2,7 @@
   (:require
    [codefactory.config :as config]
    [codefactory.protocols :as proto]
-   [thi.ng.cljs.appstate :as app]
+   [thi.ng.cljs.app :as app]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.io :as io]))
 

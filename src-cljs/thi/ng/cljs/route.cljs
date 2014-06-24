@@ -1,6 +1,8 @@
 (ns thi.ng.cljs.route
   (:require
    [thi.ng.validate.core :as v]
+   [thi.ng.cljs.app :as app]
+   [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.utils :as utils]
    [clojure.string :as str]))
 
@@ -59,15 +61,14 @@
      routes)))
 
 (defn router
-  [routes default dispatcher]
+  [routes default queue]
   (fn []
     (let [route-info (match-route routes)]
       (if route-info
-        (dispatcher route-info)
+        (app/emit queue :route-changed route-info)
         (do
-          (apply set-route! (:uri default) (:params default))
-          (dispatcher (assoc default :route (get-route)))
-          )))))
+          (debug "no matching route:" (get-route) ", redirect to default...")
+          (apply set-route! (:uri default) (:params default)))))))
 
 (defn start-router!
   [router]

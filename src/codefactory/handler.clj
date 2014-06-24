@@ -23,7 +23,7 @@
 (defn api-response
   [req data]
   (let [accept (:accept (:headers req))
-        {:keys [edn json text] mime-types}]
+        {:keys [edn json text]} mime-types]
     (cond
      (or (= accept "*/*") (= accept edn))
      (-> data pr-str resp/response (resp/content-type edn))
