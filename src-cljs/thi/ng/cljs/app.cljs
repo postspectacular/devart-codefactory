@@ -5,31 +5,28 @@
   (:require
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.utils :as utils]
+   [thi.ng.cljs.dom :as dom]
    [goog.events :as events]
-   [cljs.core.async :refer [>! <! chan put! close! timeout]])
-  (:import goog.events.EventType))
+   [cljs.core.async :refer [>! <! chan put! close! timeout]]))
 
-(defmulti dispatch-event (fn [[id] state queue] id))
+(defmulti handle-event (fn [[id] state queue] id))
 
-(defmethod dispatch-event :default
+(defmethod handle-event :default
   [[id] & _]
   (prn :unhandled-event id))
 
 (defn event-dispatcher
   [state queue]
   (go
-    (while true
+    (loop []
       (let [event (<! queue)]
         (debug :new-event event)
-        (dispatch-event event state queue)))))
+        (handle-event event state queue)
+        (recur)))))
 
 (defn emit
   [queue id body]
   (put! queue [id body]))
-
-(defn make-state
-  [init-state]
-  (atom (assoc init-state :event-queue (chan))))
 
 (defn merge-state
   [state xs]
@@ -58,24 +55,30 @@
   [state id]
   (remove-watch state id))
 
-(def keyword->event-type
-  {:keyup goog.events.EventType.KEYUP
-   :keydown goog.events.EventType.KEYDOWN
-   :keypress goog.events.EventType.KEYPRESS
-   :click goog.events.EventType.CLICK
-   :dblclick goog.events.EventType.DBLCLICK
-   :mousedown goog.events.EventType.MOUSEDOWN
-   :mouseup goog.events.EventType.MOUSEUP
-   :mouseover goog.events.EventType.MOUSEOVER
-   :mouseout goog.events.EventType.MOUSEOUT
-   :mousemove goog.events.EventType.MOUSEMOVE
-   :focus goog.events.EventType.FOCUS
-   :blur goog.events.EventType.BLUR})
-
 (defn listen
   ([el type] (listen el type nil))
   ([el type f] (listen el type f (chan)))
   ([el type f out]
-     (events/listen el (keyword->event-type type)
+     (events/listen el (name type)
                     (fn [e] (when f (f e)) (put! out e)))
      out))
+
+(defn add-listeners
+  [specs]
+  (loop [specs specs]
+    (if specs
+      (let [[id eid f] (first specs)
+            el (if (= "$window" id)
+                 js/window (dom/query nil id))]
+        (events/listen el (name eid) f)
+        (recur (next specs))))))
+
+(defn remove-listeners
+  [specs]
+  (loop [specs specs]
+    (if specs
+      (let [[id eid f] (first specs)
+            el (if (= "$window" id)
+                 js/window (dom/query nil id))]
+        (events/unlisten el (name eid) f)
+        (recur (next specs))))))

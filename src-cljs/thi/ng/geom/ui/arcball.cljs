@@ -14,7 +14,7 @@
     (if (> m 1.0) (g/normalize v) (assoc v :z (Math/sqrt (- 1 m))))))
 
 (defprotocol PArcBall
-  (listen! [_ callback])
+  (listen! [_ el callback])
   (unlisten! [_])
   (down [_ x y])
   (drag [_ x y])
@@ -33,23 +33,25 @@
      ^:mutable click-rot
      ^:mutable click-pos
      ^:mutable view
-     ^:mutable callback
      ^:mutable listeners]
   PArcBall
   (listen!
-    [_ cb]
-    (let [ldown (fn [e] (down _ (.-x e) (- (.-innerHeight js/window) (.-y e))))
+    [_ el cb]
+    (let [ldown (fn [e] (down _ (.-x e) (- (.-clientHeight el) (.-y e))))
           lup   (fn [e] (up _))
-          ldrag (fn [e] (if click-pos (drag _ (.-x e) (- (.-innerHeight js/window) (.-y e)))))
+          ldrag (fn [e] (if click-pos (drag _ (.-x e) (- (.-clientHeight el) (.-y e)))))
           lzoom (fn [e] (zoom _ (.-wheelDeltaY e)) (.preventDefault e))
-          lresize (fn [e] (resize _ (.-innerWidth js/window) (.-innerHeight js/window)))]
-      (set! callback cb)
-      (set! listeners {:down ldown :up lup :drag :ldrag :zoom lzoom :resize lresize})
+          lresize (fn [] (resize _ (.-clientWidth el) (.-clientHeight el)))]
+      (set! listeners
+            {:down ldown :up lup :drag ldrag
+             :zoom lzoom :resize lresize
+             :callback cb :element el})
       (.addEventListener js/window "mousedown" ldown)
       (.addEventListener js/window "mouseup" lup)
       (.addEventListener js/window "mousemove" ldrag)
       (.addEventListener js/window "mousewheel" lzoom)
       (.addEventListener js/window "resize" lresize)
+      (lresize)
       _))
   (unlisten!
     [_]
@@ -58,6 +60,7 @@
     (.removeEventListener js/window "mousemove" (:drag listeners))
     (.removeEventListener js/window "mousewheel" (:zoom listeners))
     (.removeEventListener js/window "resize" (:resize listeners))
+    (set! listeners nil)
     _)
   (down
     [_ x y]
@@ -79,6 +82,7 @@
           wh (/ h 2)]
       (set! radius (* (min ww wh) 2))
       (set! center (vec2 ww wh))
+      (prn :center center)
       _))
   (zoom
     [_ delta]
@@ -92,16 +96,14 @@
           target (vec3)
           up (g/transform V3Y q)]
       (set! view (mat/look-at eye target up))
-      (when callback (callback view))
-      _))
-  (get-view [_] view))
+      (when-let [callback (:callback listeners)]
+        (callback view))
+      view))
+  (get-view [_] (or view (update-view _))))
 
 (defn make-arcball
   [& {:keys [init dist min-dist max-dist radius center] :or {dist 2}}]
   (let [min-dist (or min-dist (/ dist 2))
         max-dist (or max-dist (* dist 2))
-        curr-rot (if init (q/quat init) (q/quat-from-axis-angle V3Y m/PI))
-        a (ArcBall. min-dist max-dist radius center dist curr-rot (vec3) nil nil nil nil)]
-    (-> a
-        (resize (.-innerWidth js/window) (.-innerHeight js/window))
-        (update-view))))
+        curr-rot (if init (q/quat init) (q/quat-from-axis-angle V3Y m/PI))]
+    (ArcBall. min-dist max-dist radius center dist curr-rot (vec3) nil nil nil)))

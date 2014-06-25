@@ -68,7 +68,7 @@
         (app/emit queue :route-changed route-info)
         (do
           (debug "no matching route:" (get-route) ", redirect to default...")
-          (apply set-route! (:uri default) (:params default)))))))
+          (apply set-route! (:hash default) (:params default)))))))
 
 (defn start-router!
   [router]

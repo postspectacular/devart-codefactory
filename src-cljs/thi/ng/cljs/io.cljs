@@ -2,11 +2,11 @@
   (:require
    [goog.net.XhrIo :as xhr]
    [goog.events :as ev]
+   [goog.net.EventType]
    [goog.Uri.QueryData :as qd]
    [goog.structs :as structs]
    [cljs.reader :refer [read-string]]
-   [clojure.string :as str])
-  (:import goog.net.EventType))
+   [clojure.string :as str]))
 
 (defn ->request-data
   [data]

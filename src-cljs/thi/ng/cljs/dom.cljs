@@ -32,3 +32,25 @@
 
 (defn offset [el]
   [(style/getPageOffsetLeft el) (style/getPageOffsetTop el)])
+
+(defn size
+  [el]
+  (let [s (style/getSize el)]
+    [(.-width s) (.-height s)]))
+
+(defn request-fullscreen
+  []
+  (let [doc (.-documentElement js/document)]
+    (cond
+     (.-requestFullscreen doc) (.requestFullscreen doc)
+     (.-mozRequestFullscreen doc) (.mozRequestFullscreen doc)
+     (.-webkitRequestFullscreen doc) (.webkitRequestFullscreen doc)
+     (.-msRequestFullscreen doc) (.msRequestFullscreen doc)
+     :default nil)))
+
+(defn match-media
+  [q]
+  (.-matches (.matchMedia js/window q)))
+
+(defn parent
+  [el] (.-parentElement el))

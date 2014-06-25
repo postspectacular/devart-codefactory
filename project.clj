@@ -19,6 +19,7 @@
                  [thi.ng/geom-core "0.3.0-SNAPSHOT"]
                  [thi.ng/geom-types "0.3.0-SNAPSHOT"]
                  [thi.ng/morphogen "0.1.0-SNAPSHOT"]
+                 [thi.ng/macromath "0.2.1"]
                  [thi.ng/validate "0.1.0-SNAPSHOT"]
 
                  ;; GAE
@@ -42,7 +43,7 @@
 
                  ;; CLJS
                  [thi.ng/geom-webgl "0.3.0-SNAPSHOT"]
-                 [hiccups "0.3.0" :exclusions [org.clojure/clojurescript]]
+                 ;;[hiccups "0.3.0" :exclusions [org.clojure/clojurescript]]
                  ;;[net.unit8/fressian-cljs "0.1.0"]
                  ]
 

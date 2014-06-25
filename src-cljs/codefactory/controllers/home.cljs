@@ -2,17 +2,29 @@
   (:require
    [codefactory.config :as config]
    [codefactory.protocols :as proto]
+   [thi.ng.cljs.log :refer [debug info warn]]
+   [thi.ng.cljs.route :as route]
    [thi.ng.cljs.app :as app]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.io :as io]))
 
-(deftype HomeController
-    [^:mutable shared state]
-  proto/PLifecycle
-  (init [_ s]
-    (prn :init-home)
-    (set! shared s))
-  (release [_]
-    (prn :release-home)))
+(defn launch-intro
+  [] (route/set-route! :edit "new"))
 
-(def instance (HomeController. nil nil))
+(def dom-listeners
+  [["#home-arrow" "click" launch-intro]
+   ["#home-fs-toggle" "click" dom/request-fullscreen]])
+
+(deftype HomeController
+    [state ^:mutable shared ^:mutable queue]
+  proto/PController
+  (init [_ opts]
+    (debug :init-home)
+    (set! shared (:state opts))
+    (set! queue (:queue opts))
+    (app/add-listeners dom-listeners))
+  (release [_]
+    (debug :release-home)
+    (app/remove-listeners dom-listeners)))
+
+(def instance (HomeController. nil nil nil))

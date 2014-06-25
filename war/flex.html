@@ -25,7 +25,7 @@
       <section id="editor" class="future" data-transition="concave">
         <div class="flex-container">
           <div class="flex-item preview-wrapper">
-            <canvas id="preview"></canvas>
+            <canvas id="edit-canvas"></canvas>
           </div>
           <div class="flex-item toolbar roll">
             <div class="rollbody">
@@ -69,9 +69,11 @@
       <section id="home" class="future" data-transition="concave">
         <div class="flex-container">
           <div class="flex-item preview-wrapper">
+            <canvas></canvas>
+            <div id="home-fs-toggle">fullscreen</div>
           </div>
           <div class="flex-item start center">
-            <div id="arrow">
+            <div id="home-arrow">
               <svg width="100%" height="80" viewbox="0 0 1 1">
                 <path d="M0,0.5 L1,0.5 M0.7,0.2 L1,0.5 L0.7,0.8" fill="none" stroke="red" stroke-width="0.025"/>
               </svg>
@@ -82,8 +84,8 @@
     </section>
 </div>
 <script>
-  /* 
-function toggle(from,to) {
+  /*
+  function toggle(from,to) {
   document.getElementById(from).setAttribute("class","past");
   document.getElementById(to).setAttribute("class","present");
   };
@@ -103,7 +105,7 @@ function toggle(from,to) {
   resizeCanvas();
   window.addEventListener("resize", resizeCanvas);
   arrow.addEventListener("click", function() {
-  
+
   toggle("s1","s2");
   });
   var tb=document.querySelectorAll(".toolbar")[0];
@@ -117,7 +119,7 @@ function toggle(from,to) {
   setTimeout(function() {
   toggle("s3","s1");
   },2000);
-*/
+  */
 </script>
 <script src="/js/app.js"></script>
 </body>

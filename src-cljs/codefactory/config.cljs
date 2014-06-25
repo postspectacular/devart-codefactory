@@ -4,7 +4,7 @@
    [thi.ng.validate.core :as v]))
 
 (def routes
-  [{:match ["home"] :controller :home :uri "home"}
+  [{:match ["home"] :controller :home :hash "home"}
    {:match ["edit" :id]
     :bindings {:id {:validate [(v/uuid4)]}}
     :controller :editor}
@@ -16,16 +16,20 @@
 
 (def default-route (routes 0))
 
-(def route-transitions
+(def dom-transitions
   {[:loader :home] -1
    [:loader :editor] -1
    [:loader :gallery] -1
    [:home :editor] -1
    [:editor :home] 1})
 
-(def canvas-bg [0.2 0.2 0.211 1])
+(def controller-release-delay 900)
 
-(def shader-preset-ids [:xray-soft :lambert-default])
+(def webgl
+  {:min-aa-res 480
+   :bg-col [0.2 0.2 0.211 1]
+   :shader-preset-ids [:xray-soft :lambert-default]
+   :initial-view [0.10196 0.90405 -0.30269 -0.2838]})
 
 (def operators
   {:sd         {:col "#56ffee" :label "split"}
@@ -35,7 +39,3 @@
    :ext        {:col "#3fa6f2" :label "stretch"}
    :reflect    {:col "#b9c500" :label "mirror"}
    nil         {:col "#ffffff" :label "delete"}})
-
-(defn opnode-color-hex
-  [node]
-  (if (nil? node) "#666666" (get-in operators [(:op node) :col])))
