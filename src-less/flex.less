@@ -82,6 +82,13 @@
     }
 }
 
+#home-fs-toggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+}
+
 .start {
     -webkit-flex: 0 1 auto;
     -moz-flex: 0 1 auto;
@@ -101,4 +108,12 @@
 .start div:hover, .buttonbar .inner div:hover {
     border: 2px solid @op-col-sd;
     cursor: pointer;
+}
+
+.alert {
+    line-height: 60px;
+}
+
+.alert-error {
+    background: red;
 }

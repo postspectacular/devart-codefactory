@@ -1,7 +1,7 @@
 (ns codefactory.protocols)
 
-(defprotocol PLifecycle
-  (init [_ shared-state])
+(defprotocol PController
+  (init [_ opts])
   (release [_]))
 
 (defprotocol PState
