@@ -22,13 +22,13 @@
 
 (defn api-response
   [req data]
-  (let [accept (:accept (:headers req))
+  (let [^String accept (:accept (:headers req))
         {:keys [edn json text]} mime-types]
     (cond
-     (or (= accept "*/*") (= accept edn))
+     (or (= accept "*/*") (not (neg? (.indexOf accept ^String edn))))
      (-> data pr-str resp/response (resp/content-type edn))
 
-     (= accept json)
+     (not (neg? (.indexOf accept ^String json)))
      (-> data json/write-str resp/response (resp/content-type json))
 
      :else (-> (str "Only the following content types are supported: "
