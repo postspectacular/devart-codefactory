@@ -1,5 +1,9 @@
 (ns codefactory.config
   (:require
+   [thi.ng.geom.core :as g]
+   [thi.ng.geom.aabb :as a]
+   [thi.ng.geom.cuboid :as cub]
+   [thi.ng.morphogen.core :as mg]
    [thi.ng.cljs.utils :as utils]
    [thi.ng.validate.core :as v]))
 
@@ -31,6 +35,12 @@
    :shader-preset-ids [:xray-soft :lambert-default]
    :initial-view [0.10196 0.90405 -0.30269 -0.2838]})
 
+(def seeds
+  (->> [(a/aabb 1)
+        (cub/cuboid (mg/circle-lattice-seg 6 1 0.2))
+        (cub/cuboid (mg/sphere-lattice-seg 6 0.25 0.0955 0.2))]
+       (mapv (comp mg/seed-box g/center))))
+
 (def operators
   {:sd         {:col "#56ffee" :label "split"}
    :skew       {:col "#ffd641" :label "tilt"}
@@ -39,3 +49,6 @@
    :ext        {:col "#3fa6f2" :label "stretch"}
    :reflect    {:col "#b9c500" :label "mirror"}
    nil         {:col "#ffffff" :label "delete"}})
+
+(defn operator-color
+  [id] (:col (operators id)))

@@ -18,6 +18,6 @@
      (* (bit-and (bit-shift-right h 8) 0xff) i)
      (* (bit-and h 0xff) i)]))
 
-(defn pulsate-color
-  [base target t]
-  (g/mix (vec3 base) target (mm/madd (Math/sin (* t 0.5)) 0.5 0.5)))
+(defn pulsate
+  [base target t speed]
+  (g/mix (vec3 base) target (mm/madd (Math/sin (* t speed)) 0.5 0.5)))

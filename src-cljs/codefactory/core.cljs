@@ -3,6 +3,7 @@
    [codefactory.config :as config]
    [codefactory.protocols :as proto]
    [codefactory.controllers.home :as home]
+   [codefactory.controllers.seedselect :as seed]
    [codefactory.controllers.editor :as edit]
    [thi.ng.cljs.app :as app :refer [handle-event emit]]
    [thi.ng.cljs.dom :as dom]
@@ -17,8 +18,8 @@
 
 (def controllers
   {:loader nil
+   :seed-selector seed/instance
    :home home/instance
-   :intro nil
    :editor edit/instance
    :gallery nil})
 

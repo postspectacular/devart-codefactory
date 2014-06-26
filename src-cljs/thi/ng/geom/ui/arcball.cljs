@@ -37,9 +37,15 @@
   PArcBall
   (listen!
     [_ el cb]
-    (let [ldown (fn [e] (down _ (.-x e) (- (.-clientHeight el) (.-y e))))
+    (let [ldown (fn [e]
+                  (let [y (- (.-y e) (.-offsetTop el))
+                        h (.-clientHeight el)]
+                    (if (m/in-range? 0 h y)
+                      (down _ (.-x e) (- h y)))))
           lup   (fn [e] (up _))
-          ldrag (fn [e] (if click-pos (drag _ (.-x e) (- (.-clientHeight el) (.-y e)))))
+          ldrag (fn [e]
+                  (if click-pos
+                    (drag _ (.-x e) (- (.-clientHeight el) (- (.-y e) (.-offsetTop el))))))
           lzoom (fn [e] (zoom _ (.-wheelDeltaY e)) (.preventDefault e))
           lresize (fn [] (resize _ (.-clientWidth el) (.-clientHeight el)))]
       (set! listeners
@@ -51,7 +57,6 @@
       (.addEventListener js/window "mousemove" ldrag)
       (.addEventListener js/window "mousewheel" lzoom)
       (.addEventListener js/window "resize" lresize)
-      (lresize)
       _))
   (unlisten!
     [_]
