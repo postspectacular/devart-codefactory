@@ -1,41 +1,11 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
-<svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   version="1.1"
-   width="88"
-   height="80"
-   id="svg5733">
-  <g
-     id="layer5">
-    <path
-       d="m 7.75,5.625 0,51.25375 0,21.24625 72.5,0 0,-72.5 -72.5,0 z"
-       id="path774"
-       style="opacity:0.3;fill:none;stroke:#ff772a;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
-    <path
-       d="m 60.253625,58.128625 17.91625,18.125"
-       id="path778"
-       style="opacity:0.3;fill:none;stroke:#ff772a;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
-    <path
-       d="m 60.253625,25.003625 17.91625,-18.125"
-       id="path782"
-       style="opacity:0.3;fill:none;stroke:#ff772a;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
-    <path
-       d="m 28.171125,58.128625 -17.91625,18.125"
-       id="path786"
-       style="opacity:0.3;fill:none;stroke:#ff772a;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
-    <path
-       d="m 28.171125,25.003625 -17.91625,-18.125"
-       id="path790"
-       style="opacity:0.3;fill:none;stroke:#ff772a;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
-    <path
-       d="m 27.75,25.625 0,19.44375 0,13.05625 32.5,0 0,-32.5 -32.5,0 z"
-       id="path864"
-       style="fill:none;stroke:#ff772a;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" version="1.1" width="88" height="80">
+  <g style="fill:none;stroke:#ff772a;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none">
+    <path d="m 7.75,5.625 0,51.25375 0,21.24625 72.5,0 0,-72.5 -72.5,0 z" style="opacity:0.3"/>
+    <path d="m 60.253625,58.128625 17.91625,18.125" style="opacity:0.3"/>
+    <path d="m 60.253625,25.003625 17.91625,-18.125" style="opacity:0.3"/>
+    <path d="m 28.171125,58.128625 -17.91625,18.125" style="opacity:0.3"/>
+    <path d="m 28.171125,25.003625 -17.91625,-18.125" style="opacity:0.3"/>
+    <path d="m 27.75,25.625 0,19.44375 0,13.05625 32.5,0 0,-32.5 -32.5,0 z"/>
   </g>
 </svg>
