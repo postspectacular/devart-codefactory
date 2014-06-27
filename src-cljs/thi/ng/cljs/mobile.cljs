@@ -4,7 +4,7 @@
 
 (defn mobile?
   []
-  (and (re-find #"(?i)iphone|ipod|android" (.-userAgent js/navigator))
+  (and (re-find #"(?i)mobile|tablet|ip(ad|hone|od)|android|silk" (.-userAgent js/navigator))
        (not (re-find #"(?i)crios" (.-userAgent js/navigator)))))
 
 (defn remove-address-bar

@@ -56,7 +56,7 @@
                 :compiler
                 {:pretty-print true
                  :output-to "war/js/app.js"
-                 ;;:externs ["inc/angular-1.2.js"]
+                 :externs ["inc/hammer.externs.js"]
                  :optimizations :whitespace}
                 :jar false}
                {:source-paths ["src-cljs"]
@@ -64,7 +64,7 @@
                 :compiler
                 {:pretty-print false
                  :output-to "war/js/app.min.js"
-                 ;;:externs ["inc/angular-1.2.js"]
+                 :externs ["inc/hammer.externs.js"]
                  :optimizations :advanced}
                 :jar false}]}
 

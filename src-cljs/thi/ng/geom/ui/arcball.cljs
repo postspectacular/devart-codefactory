@@ -1,6 +1,7 @@
 (ns thi.ng.geom.ui.arcball
   (:require-macros [thi.ng.macromath.core :as mm])
   (:require
+   [thi.ng.cljs.app :as app]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.vector :refer [vec2 vec3 V3Y]]
    [thi.ng.geom.core.matrix :as mat]
@@ -33,38 +34,34 @@
      ^:mutable click-rot
      ^:mutable click-pos
      ^:mutable view
-     ^:mutable listeners]
+     ^:mutable listeners
+     ^:mutable touches]
   PArcBall
   (listen!
     [_ el cb]
-    (let [ldown (fn [e]
-                  (let [y (- (.-y e) (.-offsetTop el))
+    (let [w "$window"
+          mdown (fn [e]
+                  (let [y (- (.-offsetY e) (.-offsetTop el))
                         h (.-clientHeight el)]
                     (if (m/in-range? 0 h y)
-                      (down _ (.-x e) (- h y)))))
-          lup   (fn [e] (up _))
-          ldrag (fn [e]
+                      (down _ (.-offsetX e) (- h y)))))
+          mup   (fn [e] (up _))
+          mdrag (fn [e]
                   (if click-pos
-                    (drag _ (.-x e) (- (.-clientHeight el) (- (.-y e) (.-offsetTop el))))))
-          lzoom (fn [e] (zoom _ (.-wheelDeltaY e)) (.preventDefault e))
-          lresize (fn [] (resize _ (.-clientWidth el) (.-clientHeight el)))]
-      (set! listeners
-            {:down ldown :up lup :drag ldrag
-             :zoom lzoom :resize lresize
-             :callback cb :element el})
-      (.addEventListener js/window "mousedown" ldown)
-      (.addEventListener js/window "mouseup" lup)
-      (.addEventListener js/window "mousemove" ldrag)
-      (.addEventListener js/window "mousewheel" lzoom)
-      (.addEventListener js/window "resize" lresize)
+                    (drag _ (.-offsetX e) (- (.-clientHeight el) (- (.-offsetY e) (.-offsetTop el))))))
+          mzoom (fn [e] (zoom _ (.-wheelDeltaY e)) (.preventDefault e))
+          resize (fn [] (resize _ (.-clientWidth el) (.-clientHeight el)))
+          lspecs [[w "mousedown" mdown]
+                  [w "mouseup" mup]
+                  [w "mousemove" mdrag]
+                  [w "mousewheel" mzoom]
+                  [w "resize" resize]]]
+      (set! listeners {:specs lspecs :callback cb})
+      (app/add-listeners lspecs)
       _))
   (unlisten!
     [_]
-    (.removeEventListener js/window "mousedown" (:down listeners))
-    (.removeEventListener js/window "mouseup" (:up listeners))
-    (.removeEventListener js/window "mousemove" (:drag listeners))
-    (.removeEventListener js/window "mousewheel" (:zoom listeners))
-    (.removeEventListener js/window "resize" (:resize listeners))
+    (app/remove-listeners (:specs listeners))
     (set! listeners nil)
     _)
   (down
@@ -111,4 +108,4 @@
   (let [min-dist (or min-dist (/ dist 2))
         max-dist (or max-dist (* dist 2))
         curr-rot (if init (q/quat init) (q/quat-from-axis-angle V3Y m/PI))]
-    (ArcBall. min-dist max-dist radius center dist curr-rot (vec3) nil nil nil)))
+    (ArcBall. min-dist max-dist radius center dist curr-rot (vec3) nil nil nil #{})))
