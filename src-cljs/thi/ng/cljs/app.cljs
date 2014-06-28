@@ -82,3 +82,19 @@
                  js/window (dom/query nil id))]
         (events/unlisten el (name eid) f)
         (recur (next specs))))))
+
+(defn add-hammer-listeners
+  [h specs]
+  (loop [specs specs]
+    (if specs
+      (let [[g f] (first specs)]
+        (.on h g f)
+        (recur (next specs))))))
+
+(defn remove-hammer-listeners
+  [h specs]
+  (loop [specs specs]
+    (if specs
+      (let [[g f] (first specs)]
+        (.off h g f)
+        (recur (next specs))))))

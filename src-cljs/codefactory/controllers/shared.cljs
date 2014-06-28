@@ -8,7 +8,7 @@
    [thi.ng.geom.rect :as r]))
 
 (defn cancel-module
-  [] (route/set-route! :home))
+  [id] (fn [] (route/set-route! id)))
 
 (def resize-window*
   (fn [state initial render]
@@ -25,3 +25,10 @@
             :proj (gl/perspective 45 view-rect 0.1 10)})
           (gl/set-viewport gl view-rect)
           (render state))))))
+
+(defn svg-hover
+  [color]
+  (fn [e]
+    (dom/set-style!
+     (dom/query (.-target e) "svg g")
+     #js {:stroke color})))

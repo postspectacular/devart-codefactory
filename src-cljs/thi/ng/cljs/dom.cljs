@@ -30,6 +30,10 @@
 (defn remove-class! [el name]
   (classes/remove el name))
 
+(defn set-style!
+  [el opts]
+  (style/setStyle el opts))
+
 (defn offset [el]
   [(style/getPageOffsetLeft el) (style/getPageOffsetTop el)])
 

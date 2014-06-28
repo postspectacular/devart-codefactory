@@ -30,10 +30,10 @@
    ))
 
 (def mg-trees
-  {:box {:seed 0
+  {:box {:seed :box
          :tree {}
          :sel []}
-   :alu {:seed 0
+   :alu {:seed :box
          :tree (let [branch (fn [[dir lpos]]
                               (mg/subdiv-inset
                                :dir :y :inset 0.05
@@ -48,7 +48,7 @@
                          :rows 3 :out {1 (mg/subdiv :cols 3 :out [nil {} nil])})
                         module]))
          :sel [[2 0 0 0] [2 0 0 2] [2 1 1 0] [2 1 1 2] [2 2 2 0] [2 2 2 2] [2 3 3 0] [2 3 3 2]]}
-   :hex2 {:seed 1
+   :hex2 {:seed :hex2
           :tree (let [hex (mg/apply-recursively (mg/reflect :dir :e) 5 [1] 1)
                       reflected-hex (mg/reflect :dir :n :out [{} hex])
                       inject #(-> hex
@@ -69,12 +69,12 @@
    :edn? true
    :success (fn [_ data]
               (app/emit
-               queue :get-model-success
+               queue :editor-get-model-success
                {:uuid id
                 :seed-id (:seed data)
                 :tree (:tree data)}))
    :error   (fn [status body]
-              (app/emit queue :get-model-fail [status body]))))
+              (app/emit queue :editor-get-model-fail [status body]))))
 
 (defn init-model
   [queue id]
@@ -87,9 +87,9 @@
   (let [{:keys [tree seed]} (mg-trees id)]
     (assoc state
       :tree tree
-      :computed-tree {[] (config/seeds seed)}
+      :computed-tree {[] (:seed (config/seeds seed))}
       :meshes {}
-      :seed-id id
+      :seed-id seed
       :selected-path [])))
 
 (defn update-meshes
@@ -126,19 +126,19 @@
 
 (defn init-state
   [state queue initial opts]
-  (let [resize-window (shared/resize-window* (.-state instance) initial webgl/render-scene)
-        dom-listeners [["#edit-cancel" "click" shared/cancel-module]
+  (let [resize-window (shared/resize-window* state initial webgl/render-scene)
+        dom-listeners [["#edit-cancel" "click" (shared/cancel-module "select-seed")]
                        ["$window" "resize" resize-window]]]
     (reset!
      state
      (-> initial
          (merge
           {:dom-listeners dom-listeners
-           :selection (get-in mg-trees [:hex2 :sel])
+           :selection (get-in mg-trees [:alu :sel])
            :sel-time 0
            :time 0})
          (webgl/init-arcball nil (fn [_] (emit queue :editor-redraw-canvas nil)))
-         (init-tree :hex2)
+         (init-tree :alu)
          (update-meshes)))
     (resize-window)
     (let [{:keys [arcball canvas-width canvas-height]} @state]

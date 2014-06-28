@@ -70,7 +70,7 @@
                {:controller (controllers :loader)
                 :route {:controller :loader}})
         queue (chan)]
-    (mobile/hide-address-bar)
+    ;;(mobile/hide-address-bar)
     (app/event-dispatcher state queue)
     (start-router! queue)
     (set! app {:state state :queue queue})))

@@ -19,5 +19,5 @@
 (defn hide-address-bar
   []
   (when (mobile?)
-    (.addEventListeer js/window "load" remove-address-bar false)
-    (.addEventListeer js/window "orientationchange" remove-address-bar false)))
+    (.addEventListener js/window "load" remove-address-bar false)
+    (.addEventListener js/window "orientationchange" remove-address-bar false)))

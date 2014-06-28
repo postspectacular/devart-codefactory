@@ -9,7 +9,7 @@
    [thi.ng.cljs.io :as io]))
 
 (defn launch-intro
-  [] (route/set-route! :edit "new"))
+  [] (route/set-route! "select-seed"))
 
 (def dom-listeners
   [["#home-arrow" "click" launch-intro]

@@ -21,7 +21,8 @@
   (drag [_ x y])
   (up [_])
   (resize [_ w h])
-  (zoom [_ delta])
+  (zoom-delta [_ delta])
+  (zoom-abs [_ x])
   (update-view [_])
   (get-view [_]))
 
@@ -41,27 +42,39 @@
     [_ el cb]
     (let [w "$window"
           mdown (fn [e]
-                  (let [y (- (.-offsetY e) (.-offsetTop el))
+                  (let [e (.-center (.-gesture e))
+                        y (- (.-clientY e) (.-offsetTop el))
                         h (.-clientHeight el)]
                     (if (m/in-range? 0 h y)
-                      (down _ (.-offsetX e) (- h y)))))
-          mup   (fn [e] (up _))
+                      (down _ (.-clientX e) (- h y)))))
+          mup   (fn [e] (prn :up) (up _))
           mdrag (fn [e]
                   (if click-pos
-                    (drag _ (.-offsetX e) (- (.-clientHeight el) (- (.-offsetY e) (.-offsetTop el))))))
-          mzoom (fn [e] (zoom _ (.-wheelDeltaY e)) (.preventDefault e))
+                    (let [e (.-center (.-gesture e))]
+                      (drag _ (.-clientX e) (- (.-clientHeight el) (- (.-clientY e) (.-offsetTop el)))))))
+          mzoom (fn [e]
+                  (zoom-delta _ (.-wheelDeltaY (.getBrowserEvent e)))
+                  (.preventDefault e))
+          tzoom (fn [e]
+                  (zoom-abs _ (.-scale (.-gesture e))))
           resize (fn [] (resize _ (.-clientWidth el) (.-clientHeight el)))
-          lspecs [[w "mousedown" mdown]
-                  [w "mouseup" mup]
-                  [w "mousemove" mdrag]
-                  [w "mousewheel" mzoom]
-                  [w "resize" resize]]]
-      (set! listeners {:specs lspecs :callback cb})
+          hspecs [["dragstart" mdown]
+                  ["dragend" mup]
+                  ["drag" mdrag]
+                  ["pinch" tzoom]]
+          lspecs [[w "mousewheel" mzoom]
+                  [w "resize" resize]]
+          hammer (js/Hammer el #js {:preventDefault true
+                                    :swipeMinTouches 2
+                                    :swipeMaxTouches 2})]
+      (set! listeners {:hspecs hspecs :specs lspecs :callback cb :hammer hammer})
       (app/add-listeners lspecs)
+      (app/add-hammer-listeners hammer hspecs)
       _))
   (unlisten!
     [_]
     (app/remove-listeners (:specs listeners))
+    (app/remove-hammer-listeners (:hammer listeners) (:hspecs listeners))
     (set! listeners nil)
     _)
   (down
@@ -86,9 +99,13 @@
       (set! center (vec2 ww wh))
       (prn :center center)
       _))
-  (zoom
+  (zoom-delta
     [_ delta]
-    (set! dist (m/clamp (mm/madd delta (mm/subm max-dist min-dist 2e-4) dist) min-dist max-dist))
+    (set! dist (m/clamp (mm/madd delta (mm/subm max-dist min-dist 1e-3) dist) min-dist max-dist))
+    (update-view _))
+  (zoom-abs
+    [_ x]
+    (set! dist (m/clamp x min-dist max-dist))
     (update-view _))
   (update-view
     [_]

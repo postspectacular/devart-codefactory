@@ -32,9 +32,9 @@
 }
 
 .flex-uniform {
-    -webkit-flex: 1 1 auto;
-    -moz-flex: 1 1 auto;
-    flex: 1 1 auto;
+    -webkit-flex: 1 0 auto;
+    -moz-flex: 1 0 auto;
+    flex: 1 0 auto;
 }
 
 .flex-container .toolbar {
@@ -63,8 +63,10 @@
     flex: 12 1 auto;
 }
 
-.first { margin-left: 10%; }
-.last { margin-right: 10%; }
+@media (min-width: 640px) {
+    .first { margin-left: 10%; }
+    .last { margin-right: 10%; }
+}
 
 .treemap {
     min-height: 200px;
@@ -109,9 +111,14 @@
     border: 2px solid red;
 }
 
-.start div:hover, .buttonbar .inner div:hover {
+.start div:hover,
+.buttonbar .inner div:hover {
     border: 2px solid @op-col-sd;
     cursor: pointer;
+
+    svg g {
+        stroke: @op-col-sd;
+    }
 }
 
 .alert {
@@ -120,4 +127,20 @@
 
 .alert-error {
     background: red;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    z-index: 100;
+    padding: 10px;
+    border: 2px solid white;
+    background-color: rgba(0,0,0,0.2);
+}
+
+#seed-overlay {
+    width: 200px;
+    text-align: center;
 }

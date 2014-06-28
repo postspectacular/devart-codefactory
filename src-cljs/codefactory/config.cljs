@@ -7,28 +7,6 @@
    [thi.ng.cljs.utils :as utils]
    [thi.ng.validate.core :as v]))
 
-(def routes
-  [{:match ["home"] :controller :home :hash "home"}
-   {:match ["edit" :id]
-    :bindings {:id {:validate [(v/uuid4)]}}
-    :controller :editor}
-   {:match ["edit" "new"]
-    :controller :editor}
-   {:match ["gallery" :page]
-    :bindings {:page {:coerce utils/parse-int :validate [(v/number) (v/pos)]}}
-    :controller :gallery}])
-
-(def default-route (routes 0))
-
-(def dom-transitions
-  {[:loader :home] -1
-   [:loader :editor] -1
-   [:loader :gallery] -1
-   [:home :editor] -1
-   [:editor :home] 1})
-
-(def controller-release-delay 900)
-
 (def webgl
   {:min-aa-res 480
    :bg-col [0.2 0.2 0.211 1]
@@ -36,10 +14,13 @@
    :initial-view [0.10196 0.90405 -0.30269 -0.2838]})
 
 (def seeds
-  (->> [(a/aabb 1)
-        (cub/cuboid (mg/circle-lattice-seg 6 1 0.2))
-        (cub/cuboid (mg/sphere-lattice-seg 6 0.25 0.0955 0.2))]
-       (mapv (comp mg/seed-box g/center))))
+  (->> {:box  {:seed (a/aabb 1)}
+        :hex2 {:seed (cub/cuboid (mg/circle-lattice-seg 6 1 0.2))}
+        :hex3 {:seed (cub/cuboid (mg/sphere-lattice-seg 6 0.25 0.0955 0.2))}}
+       (reduce-kv
+        (fn [acc k v]
+          (assoc acc k (update-in v [:seed] (comp mg/seed-box g/center))))
+        {})))
 
 (def operators
   {:sd         {:col "#56ffee" :label "split"}
@@ -52,3 +33,32 @@
 
 (defn operator-color
   [id] (:col (operators id)))
+
+(def routes
+  [{:match ["home"] :controller :home :hash "home"}
+   {:match ["edit" :id]
+    :bindings {:id {:validate [(v/uuid4)]}}
+    :controller :editor}
+   {:match ["edit" "new" :seed-id]
+    :bindings {:seed-id {:validate [(v/member-of (set (map name (keys seeds))))]}}
+    :controller :editor}
+   {:match ["select-seed"]
+    :controller :seed-selector}
+   {:match ["gallery" :page]
+    :bindings {:page {:coerce utils/parse-int :validate [(v/number) (v/pos)]}}
+    :controller :gallery}])
+
+(def default-route (routes 0))
+
+(def dom-transitions
+  {[:loader :home] -1
+   [:loader :editor] -1
+   [:loader :gallery] -1
+   [:home :editor] -1
+   [:home :seed-selector] -1
+   [:editor :home] 1
+   [:editor :seed-selector] 1
+   [:seed-selector :home] 1
+   })
+
+(def controller-release-delay 900)
