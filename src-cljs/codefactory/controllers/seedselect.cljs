@@ -49,9 +49,10 @@
 (defn render-scene
   [state]
   (if (:active? @state)
-    (let [{:keys [gl shaders proj meshes selection cam-x time]} @state
-          cam-x (m/mix cam-x (* selection 2) 0.15)
-          view (mat/look-at (vec3 cam-x -3 1) (vec3 cam-x 0 0) (vec3 0 0 1))
+    (let [{:keys [gl shaders proj meshes selection camx time]} @state
+          {:keys [space camy camz rot-speed scroll-speed]} config/seed-select
+          camx (m/mix camx (* selection space) scroll-speed)
+          view (mat/look-at (vec3 camx camy camz) (vec3 camx 0 0) (vec3 0 0 1))
           shared-unis {:view view
                        :proj proj}
           num (count meshes)
@@ -59,19 +60,19 @@
           sel (if (neg? sel) (+ sel num) sel)]
       (apply gl/clear-color-buffer gl (:bg-col config/webgl))
       (gl/clear-depth-buffer gl 1.0)
-      (loop [i (- sel 2), x (mm/msub selection 2 4)]
+      (loop [i (- sel 2), x (mm/msub selection space (* 2 space))]
         (when (<= i (+ sel 2))
           (let [{:keys [mesh]} (meshes (if (neg? i) (+ i num) (rem i num)))
                 sel? (== i sel)
                 model-mat (g/translate M44 x 0 0)
-                model-mat (if sel? (g/rotate-z model-mat (* time -2)) model-mat)
+                model-mat (if sel? (g/rotate-z model-mat (* time rot-speed)) model-mat)
                 norm-mat (-> (g/* view model-mat) g/invert g/transpose)
                 shared-unis (assoc shared-unis :model model-mat :normalMat norm-mat)]
             (if sel?
               (webgl/render-meshes gl (shaders 1) {:a mesh} shared-unis nil)
               (webgl/render-meshes gl (shaders 0) {:a mesh} shared-unis {:alpha 0.5}))
-            (recur (inc i) (+ x 2)))))
-      (app/merge-state state {:time (+ time 0.01666) :cam-x cam-x})
+            (recur (inc i) (+ x space)))))
+      (app/merge-state state {:time (+ time 0.01666) :camx camx})
       (anim/animframe-provider (fn [& _] (render-scene state))))))
 
 (defn update-overlay
@@ -108,12 +109,13 @@
                        ["#seed-canvas" "mousemove" update-overlay]
                        ["$window" "resize" resize-window]
                        ["$window" "keydown" switch-seed]]
-        h-listeners [["drag" (fn [e]
+        h-listeners [["drag swipe" (fn [e]
                                (let [g (.-gesture e)
-                                     dx (.-deltaX g)]
+                                     dx (.-deltaX g)
+                                     dt (.-deltaTime g)]
                                  (if (and (not (:drag-switch @state))
-                                          (> (.-deltaTime g) 150)
-                                          (> (Math/abs dx) 60))
+                                          (> dt 50)
+                                          (> (Math/abs dx) 5))
                                    (let [s (:selection @state)]
                                      (if-not (:user-dragged? @state)
                                        (dom/set-style! (dom/by-id "seed-overlay") #js {:display "none"}))
@@ -130,7 +132,7 @@
            :h-listeners h-listeners
            :hammer hammer
            :selection 0
-           :cam-x 0
+           :camx 0
            :time 0
            :active? true
            :drag-switch false

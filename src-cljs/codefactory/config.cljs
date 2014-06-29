@@ -22,6 +22,13 @@
           (assoc acc k (update-in v [:seed] (comp mg/seed-box g/center))))
         {})))
 
+(def seed-select
+  {:space 1.5
+   :camy -4
+   :camz 1
+   :rot-speed 2
+   :scroll-speed 0.15})
+
 (def operators
   {:sd         {:col "#56ffee" :label "split"}
    :skew       {:col "#ffd641" :label "tilt"}
