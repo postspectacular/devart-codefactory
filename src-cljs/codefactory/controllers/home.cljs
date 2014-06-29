@@ -12,7 +12,7 @@
   [] (route/set-route! "select-seed"))
 
 (def dom-listeners
-  [["#home-arrow" "click" launch-intro]
+  [["#home-continue" "click" launch-intro]
    ["#home-fs-toggle" "click" dom/request-fullscreen]])
 
 (deftype HomeController

@@ -1,6 +1,38 @@
 @import "common.less";
 @import "slide.less";
 
+nav {
+    width: 100%;
+    position: fixed;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.25);
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    -webkit-flex-flow: row nowrap;
+    -moz-flex-flow: row nowrap;
+    flex-flow: row nowrap;
+    -webkit-justify-content: center;
+    -moz-justify-content: center;
+    justify-content: center;
+
+    .nav svg {
+        margin: 10px 0 10px 10px;
+    }
+
+    .icons svg {
+        margin:10px 10px 10px 0;
+    }
+
+    .icons a:hover svg g {
+        fill: white;
+    }
+}
+
+#nav-toggle:hover svg g {
+    stroke: white;
+}
+
 .flex-container {
     display: flex;
     display: -webkit-flex;
@@ -42,6 +74,7 @@
     -webkit-flex: 0 1 auto;
     -moz-flex: 0 1 auto;
     flex: 0 1 auto;
+    line-height: 1.8;
 
     img {
         height: 32px;
@@ -63,9 +96,21 @@
     flex: 12 1 auto;
 }
 
-@media (min-width: 640px) {
-    .first { margin-left: 10%; }
-    .last { margin-right: 10%; }
+@media (max-width: 640px) {
+    .first { margin-left: 5%; }
+    .last { margin-right: 5%; }
+    .toolbar { font-size: 80%; }
+}
+
+@media (min-width: 641px) {
+    .first { margin-left: 15%; }
+    .last { margin-right: 15%; }
+    .toolbar { font-size: 90%; }
+}
+
+@media (min-width: 1024px) {
+    .first { margin-left: 25%; }
+    .last { margin-right: 25%; }
 }
 
 .treemap {
@@ -76,15 +121,36 @@
 }
 
 .buttonbar {
-    min-height: 50;
-    height: 50px;
+    min-height: 70;
+    height: 70px;
     -webkit-flex: 0 1 auto;
     -moz-flex: 0 1 auto;
     flex: 0 1 auto;
 
     .inner {
-        min-height: 50px;
-        line-height: 30px;
+        min-height: 70px;
+        line-height: 50px;
+    }
+}
+
+#home {
+    .content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+}
+
+@media (min-width: 768px) {
+    #home .content h1 {
+        font-size: 360%;
+    }
+}
+
+@media (max-width: 640px) {
+    #home .content h1 {
+        font-size: 190%;
     }
 }
 
@@ -100,6 +166,7 @@
     -moz-flex: 0 1 auto;
     flex: 0 1 auto;
     height: 100px;
+    min-height: 100px;
 }
 
 .start svg {
@@ -108,16 +175,16 @@
 
 .start div, .buttonbar .inner div {
     margin: 10px;
-    border: 2px solid red;
+    border: 2px solid #666;
 }
 
 .start div:hover,
 .buttonbar .inner div:hover {
-    border: 2px solid @op-col-sd;
+    border: 2px solid #ccc;
     cursor: pointer;
 
     svg g {
-        stroke: @op-col-sd;
+        stroke: #fff;
     }
 }
 
@@ -137,7 +204,6 @@
     z-index: 100;
     padding: 10px;
     border: 2px solid white;
-    background-color: rgba(0,0,0,0.2);
 }
 
 #seed-overlay {

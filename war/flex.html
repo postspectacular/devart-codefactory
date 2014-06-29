@@ -14,14 +14,51 @@
     <link rel="stylesheet" href="css-compiled/flex.css" type="text/css" media="screen" />
   </head>
   <body>
+    <nav class="hidden">
+      <div class="flex-item nav">
+        <a id="nav-toggle" href="#"><svg id="nav-closed" width="40" height="40" viewBox="0 0 1 1">
+            <g style="stroke:#ff772a;stroke-width:0.075;">
+              <path d="M 0,0.275 L 1,0.275 M 0,0.5 L 1,0.5 M 0,0.725 L 1,0.725"/>
+            </g>
+          </svg><svg id="nav-open" class="hidden" width="40" height="40" viewBox="0 0 1 1">
+            <g style="stroke:#3fa6f2;stroke-width:0.075;">
+              <path d="M 0.275,0 L 0.275,1 M 0.5,0 L 0.5,1 M 0.725,0 L 0.725,1"/>
+            </g>
+        </svg></a>
+      </div>
+      <div class="flex-item center"><h1>CO(DE)FACTORY</h1></div>
+      <div class="flex-item right icons">
+        <a href="https://facebook.com/"><svg width="40" height="40">
+            <g transform="matrix(1.0526316,0,0,-1.0526316,-965.78282,917.89474)" style="fill:#ccc;fill-opacity:1;fill-rule:nonzero;stroke:none">
+              <g transform="translate(936.4937,872)">
+                <path d="m 0,0 c -10.477,0 -19,-8.523 -19,-19 0,-10.477 8.523,-19 19,-19 10.477,0 19,8.523 19,19 C 19,-8.523 10.477,0 0,0 m 0,-3 c 8.836,0 16,-7.164 16,-16 0,-8.838 -7.164,-16 -16,-16 -8.836,0 -16,7.162 -16,16 0,8.836 7.164,16 16,16" />
+              </g>
+              <g transform="translate(939.9214,852.9941)">
+                <path d="m 0,0 -2.242,0 0,-7.994 -3.322,0 0,7.994 -1.581,0 0,2.824 1.581,0 0,1.828 c 0,1.309 0.621,3.354 3.351,3.354 l 2.461,-0.01 0,-2.742 -1.786,0 c -0.291,0 -0.704,-0.145 -0.704,-0.77 l 0,-1.66 2.533,0 L 0,0 z" />
+              </g>
+            </g>
+          </svg>
+        </a>
+        <a href="https://twitter.com"><svg width="40" height="40">
+            <g transform="matrix(1.0526316,0,0,-1.0526316,-1021.5907,917.89474)" style="fill:#ccc;fill-opacity:1;fill-rule:nonzero;stroke:none">
+              <g transform="translate(989.5112,872)">
+                <path d="m 0,0 c -10.477,0 -19,-8.523 -19,-19 0,-10.477 8.523,-19 19,-19 10.477,0 19,8.523 19,19 C 19,-8.523 10.477,0 0,0 m 0,-3 c 8.836,0 16,-7.164 16,-16 0,-8.838 -7.164,-16 -16,-16 -8.836,0 -16,7.162 -16,16 0,8.836 7.164,16 16,16" />
+              </g>
+              <g transform="translate(995.8726,856.2617)">
+                <path d="m 0,0 c 0.008,-0.141 0.01,-0.281 0.01,-0.424 0,-4.338 -3.301,-9.34 -9.34,-9.34 -1.854,0 -3.578,0.543 -5.031,1.475 0.257,-0.029 0.517,-0.045 0.783,-0.045 1.539,0 2.953,0.523 4.076,1.404 -1.436,0.028 -2.648,0.977 -3.066,2.28 0.201,-0.037 0.406,-0.059 0.617,-0.059 0.301,0 0.59,0.041 0.865,0.115 -1.5,0.303 -2.633,1.629 -2.633,3.219 l 0,0.041 c 0.444,-0.246 0.949,-0.393 1.487,-0.41 -0.882,0.588 -1.459,1.594 -1.459,2.732 0,0.602 0.162,1.166 0.443,1.651 1.619,-1.987 4.039,-3.293 6.766,-3.43 -0.055,0.24 -0.084,0.49 -0.084,0.748 0,1.813 1.468,3.281 3.283,3.281 0.943,0 1.797,-0.398 2.394,-1.035 C -0.141,2.35 0.562,2.623 1.197,3 0.951,2.232 0.432,1.59 -0.246,1.184 0.418,1.262 1.051,1.439 1.639,1.699 1.199,1.041 0.643,0.463 0,0" />
+              </g>
+            </g>
+        </svg></a>
+      </div>
+    </nav>
     <div class="modules">
+
       <section id="loader" class="present" data-transition="concave">
         <div class="flex-container">
-          <div class="center">
-            Loading...
-          </div>
+          <div class="center"><img src="/img/loading.gif" alt="loading" /></div>
         </div>
       </section>
+
       <section id="seed-selector" class="future" data-transition="concave">
         <div class="flex-container">
           <div class="flex-item preview-wrapper">
@@ -30,13 +67,13 @@
           <div class="flex-item buttonbar">
             <div class="inner">
               <div id="seed-cancel" class="flex-item center">
-                <svg width="50%" height="30" viewbox="0 0 1 1">
-                  <g fill="none" stroke="red" stroke-width="0.05"><path d="M0.2,0.2 L0.8,0.8 M0.2,0.8 L0.8,0.2"/></g>
+                <svg width="50%" height="50" viewbox="0 0 1 1">
+                  <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.2,0.2 L0.8,0.8 M0.2,0.8 L0.8,0.2"/></g>
                 </svg>
               </div>
               <div id="seed-continue" class="flex-item center">
-                <svg width="50%" height="30" viewbox="0 0 1 1">
-                  <g fill="none" stroke="limegreen" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                <svg width="50%" height="50" viewbox="0 0 1 1">
+                  <g fill="none" stroke="#89c33f" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
                 </svg>
               </div>
             </div>
@@ -44,6 +81,7 @@
         </div>
         <div id="seed-overlay" class="overlay">Drag to select</div>
       </section>
+
       <section id="editor" class="future" data-transition="concave">
         <div class="flex-container">
           <div class="flex-item preview-wrapper">
@@ -53,14 +91,14 @@
             <div class="rollbody">
               <div class="on">
                 <div class="inner">
-                  <div class="flex-item center first"><img src="/img/split.svg"/><br/>split</div>
-                  <div class="flex-item center"><img src="/img/inset.svg"/><br/>inset</div>
-                  <div class="flex-item center"><img src="/img/tilt.svg"/><br/>tilt</div>
-                  <div class="flex-item center"><img src="/img/ext.svg"/><br/>extrude</div>
-                  <div class="flex-item center"><img src="/img/mirror.svg"/><br/>mirror</div>
-                  <div class="flex-item center"><img src="/img/scale.svg"/><br/>scale</div>
-                  <div class="flex-item center"><img src="/img/shift.svg"/><br/>shift</div>
-                  <div class="flex-item center last"><img src="/img/delete.svg"/><br/>delete</div>
+                  <div class="flex-item center first"><img src="/img/split.svg"/><br/>SPLIT</div>
+                  <div class="flex-item center"><img src="/img/inset.svg"/><br/>INSET</div>
+                  <div class="flex-item center"><img src="/img/tilt.svg"/><br/>TILT</div>
+                  <div class="flex-item center"><img src="/img/ext.svg"/><br/>EXTRUDE</div>
+                  <div class="flex-item center"><img src="/img/mirror.svg"/><br/>MIRROR</div>
+                  <div class="flex-item center"><img src="/img/scale.svg"/><br/>SCALE</div>
+                  <div class="flex-item center"><img src="/img/shift.svg"/><br/>SHIFT</div>
+                  <div class="flex-item center last"><img src="/img/delete.svg"/><br/>DELETE</div>
                 </div>
               </div>
               <div class="off">
@@ -75,71 +113,40 @@
           <div class="flex-item buttonbar">
             <div class="inner">
               <div id="edit-cancel" class="flex-item center">
-                <svg width="50%" height="30" viewbox="0 0 1 1">
-                  <g fill="none" stroke="red" stroke-width="0.05"><path d="M0.2,0.2 L0.8,0.8 M0.2,0.8 L0.8,0.2"/></g></svg></div>
+                <svg width="50%" height="50" viewbox="0 0 1 1">
+                  <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.2,0.2 L0.8,0.8 M0.2,0.8 L0.8,0.2"/></g></svg></div>
               <div id="edit-submit" class="flex-item center">
-                <svg width="50%" height="30" viewbox="0 0 1 1">
-                  <g fill="none" stroke="limegreen" stroke-width="0.05"><path d="M0.2,0.2 L0.8,0.8 M0.2,0.8 L0.8,0.2"/></g></svg></div>
+                <svg width="50%" height="50" viewbox="0 0 1 1">
+                  <g fill="none" stroke="#89c33f" stroke-width="0.05"><path d="M0.2,0.2 L0.8,0.8 M0.2,0.8 L0.8,0.2"/></g></svg></div>
             </div>
           </div>
         </div>
       </section>
+
       <section id="home" class="future" data-transition="concave">
         <div class="flex-container">
-          <div class="flex-item preview-wrapper">
-            <canvas></canvas>
+          <div class="flex-item">
+            <div class="content">
+              <div class="center"><h1>CREATE A PIECE OF ART USING</br>SIMPLE CODE OPERATIONS</h1></div>
+            </div>
             <div id="home-fs-toggle">fullscreen</div>
           </div>
-          <div class="flex-item start center">
-            <div id="home-arrow">
-              <svg width="100%" height="80" viewbox="0 0 1 1">
-                <g fill="none" stroke="red" stroke-width="0.025"><path d="M0,0.5 L1,0.5 M0.7,0.2 L1,0.5 L0.7,0.8"/></g>
-              </svg>
+          <div class="flex-item buttonbar">
+            <div class="inner">
+              <div id="home-gallery" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 1 1">
+                  <g fill="none" stroke="#ffd541" stroke-width="0.05"><path d="M0.2,0.2 L0.8,0.2 L0.8,0.8 L0.2,0.8 z M 0.5,0.2 L 0.5, 0.8 M 0.2,0.5 L 0.8,0.5"/></g></svg></div>
+              <div id="home-continue" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 1 1">
+                  <g fill="none" stroke="#89c33f" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                </svg>
+              </div>
             </div>
           </div>
         </div>
+      </section>
     </div>
-    </section>
-</div>
-<script>
-  /*
-  function toggle(from,to) {
-  document.getElementById(from).setAttribute("class","past");
-  document.getElementById(to).setAttribute("class","present");
-  };
-  var s1=document.getElementById("s1");
-  var s2=document.getElementById("s2");
-  var s3=document.getElementById("s3");
-
-  var preview=document.getElementById("preview");
-  var arrow=document.getElementById("arrow");
-  var ctx=preview.getContext("2d");
-  function resizeCanvas() {
-  var w=preview.width=preview.parentElement.clientWidth;
-  var h=preview.height=preview.parentElement.clientHeight;
-  ctx.strokeStyle="white";
-  ctx.strokeRect(w/4,h/4,w/2,h/2);
-  }
-  resizeCanvas();
-  window.addEventListener("resize", resizeCanvas);
-  arrow.addEventListener("click", function() {
-
-  toggle("s1","s2");
-  });
-  var tb=document.querySelectorAll(".toolbar")[0];
-  function toggleTB() {
-  tb.setAttribute("class","flex-item toolbar roll rollon");
-  setTimeout(function() {
-  tb.setAttribute("class","flex-item toolbar roll");
-  },1500);
-  }
-  tb.addEventListener("click",toggleTB);
-  setTimeout(function() {
-  toggle("s3","s1");
-  },2000);
-  */
-</script>
-<script src="/js/lib/hammer.min.js"></script>
-<script src="/js/app.js"></script>
-</body>
+    <script src="/js/lib/hammer.min.js"></script>
+    <script src="/js/app.js"></script>
+  </body>
 </html>

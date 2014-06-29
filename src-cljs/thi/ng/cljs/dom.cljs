@@ -34,13 +34,19 @@
   [el opts]
   (style/setStyle el opts))
 
+(defn show
+  [el] (style/setStyle el "display" "block"))
+
+(defn hide
+  [el] (style/setStyle el "display" "none"))
+
 (defn offset [el]
   [(style/getPageOffsetLeft el) (style/getPageOffsetTop el)])
 
 (defn size
   [el]
   (let [s (style/getSize el)]
-    [(.-width s) (.-height s)]))
+    [(.-clientWidth el) (.-clientHeight el)]))
 
 (defn request-fullscreen
   []
@@ -58,3 +64,8 @@
 
 (defn parent
   [el] (.-parentElement el))
+
+(defn force-redraw!
+  [el]
+  (set-style! el #js {:display "none"})
+  (set-style! el #js {:display "block"}))
