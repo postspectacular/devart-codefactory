@@ -77,10 +77,10 @@
               (app/emit queue :editor-get-model-fail [status body]))))
 
 (defn init-model
-  [queue id]
+  [queue {:keys [id seed-id]}]
   (if id
     (load-model queue id)
-    (app/emit queue :editor-select-seed 0)))
+    (app/emit queue :editor-select-seed seed-id)))
 
 (defn init-tree
   [state id]
@@ -141,10 +141,15 @@
          (init-tree :alu)
          (update-meshes)))
     (resize-window)
-    (let [{:keys [arcball canvas-width canvas-height]} @state]
-      (arcball/resize arcball canvas-width canvas-height))
+    (js/setTimeout
+     (fn []
+       (resize-window)
+       (let [{:keys [arcball canvas-width canvas-height]} @state]
+         (arcball/resize arcball canvas-width canvas-height)))
+     850)
     (app/add-listeners dom-listeners)
-    (init-model queue (get-in opts [:params :id]))))
+    (init-model queue (get-in opts [:params]))
+    (dom/force-redraw! (dom/by-id "editor"))))
 
 (deftype EditorController
     [state ^:mutable shared ^:mutable queue]
