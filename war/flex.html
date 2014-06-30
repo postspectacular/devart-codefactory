@@ -36,9 +36,7 @@
               <g transform="translate(939.9214,852.9941)">
                 <path d="m 0,0 -2.242,0 0,-7.994 -3.322,0 0,7.994 -1.581,0 0,2.824 1.581,0 0,1.828 c 0,1.309 0.621,3.354 3.351,3.354 l 2.461,-0.01 0,-2.742 -1.786,0 c -0.291,0 -0.704,-0.145 -0.704,-0.77 l 0,-1.66 2.533,0 L 0,0 z" />
               </g>
-            </g>
-          </svg>
-        </a>
+            </g></svg></a>
         <a href="https://twitter.com"><svg width="40" height="40">
             <g transform="matrix(1.0526316,0,0,-1.0526316,-1021.5907,917.89474)" style="fill:#ccc;fill-opacity:1;fill-rule:nonzero;stroke:none">
               <g transform="translate(989.5112,872)">
@@ -79,7 +77,7 @@
             </div>
           </div>
         </div>
-        <div id="seed-overlay" class="overlay">Drag to select</div>
+        <div id="seed-overlay"><h1>PICK A SEED FORM</h1></div>
       </section>
 
       <section id="editor" class="future" data-transition="concave">
@@ -87,29 +85,28 @@
           <div class="flex-item preview-wrapper">
             <canvas id="edit-canvas"></canvas>
           </div>
-          <div class="flex-item toolbar roll">
+          <div id="toolbar" class="flex-item toolbar roll">
             <div class="rollbody">
-              <div class="on">
-                <div class="inner">
-                  <div class="flex-item center first"><img src="/img/split.svg"/><br/>SPLIT</div>
-                  <div class="flex-item center"><img src="/img/inset.svg"/><br/>INSET</div>
-                  <div class="flex-item center"><img src="/img/tilt.svg"/><br/>TILT</div>
-                  <div class="flex-item center"><img src="/img/ext.svg"/><br/>EXTRUDE</div>
-                  <div class="flex-item center"><img src="/img/mirror.svg"/><br/>MIRROR</div>
-                  <div class="flex-item center"><img src="/img/scale.svg"/><br/>SCALE</div>
-                  <div class="flex-item center"><img src="/img/shift.svg"/><br/>SHIFT</div>
-                  <div class="flex-item center last"><img src="/img/delete.svg"/><br/>DELETE</div>
-                </div>
-              </div>
               <div class="off">
                 <div class="inner">
-                  <div class="flex-item center alert alert-error">Computer says NO!!!</div>
+                  <div class="flex-item center first"><a id="op-sd" href="#"><img src="/img/split.svg"/></a><br/>SPLIT</div>
+                  <div class="flex-item center"><a id="op-sd-inset" href="#"><img src="/img/inset.svg"/></a><br/>INSET</div>
+                  <div class="flex-item center"><a id="op-skew" href="#"><img src="/img/tilt.svg"/></a><br/>TILT</div>
+                  <div class="flex-item center"><a id="op-ext" href="#"><img src="/img/ext.svg"/></a><br/>EXTRUDE</div>
+                  <div class="flex-item center"><a id="op-reflect" href="#"><img src="/img/mirror.svg"/></a><br/>MIRROR</div>
+                  <div class="flex-item center"><a id="op-scale-side" href="#"><img src="/img/scale.svg"/></a><br/>SCALE</div>
+                  <div class="flex-item center"><a id="op-shift-displace" href="#"><img src="/img/shift.svg"/></a><br/>SHIFT</div>
+                  <div class="flex-item center last"><a id="op-delete" href="#"><img src="/img/delete.svg"/></a><br/>DELETE</div>
+                </div>
+              </div>
+              <div class="on">
+                <div class="inner">
+                  <div class="flex-item center"><h1>CODE BLOCKS</h1></div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="flex-item treemap">3
-          </div>
+          <div id="edit-treemap" class="flex-item"></div>
           <div class="flex-item buttonbar">
             <div class="inner">
               <div id="edit-cancel" class="flex-item center">
@@ -117,7 +114,9 @@
                   <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.2,0.2 L0.8,0.8 M0.2,0.8 L0.8,0.2"/></g></svg></div>
               <div id="edit-submit" class="flex-item center">
                 <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g fill="none" stroke="#89c33f" stroke-width="0.05"><path d="M0.2,0.2 L0.8,0.8 M0.2,0.8 L0.8,0.2"/></g></svg></div>
+                  <g fill="none" stroke="#89c33f" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                </svg>
+              </div>
             </div>
           </div>
         </div>
@@ -127,7 +126,7 @@
         <div class="flex-container">
           <div class="flex-item">
             <div class="content">
-              <div class="center"><h1>CREATE A PIECE OF ART USING</br>SIMPLE CODE OPERATIONS</h1></div>
+              <div class="center"><h1>GROW A PIECE OF ART USING</br>SIMPLE CODE OPERATIONS</h1></div>
             </div>
             <div id="home-fs-toggle">fullscreen</div>
           </div>

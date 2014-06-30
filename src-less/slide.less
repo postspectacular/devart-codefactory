@@ -54,12 +54,12 @@
 
     .rollbody {
         position: relative;
-        pointer-events: none;
+        //pointer-events: none;
 
         .transform-style(preserve-3d);
         .transform-origin(50%; 0);
         .transition("all 400ms ease");
-        .cull-backface();
+        //.cull-backface();
 
         .off {
             position: absolute;
@@ -69,12 +69,13 @@
 
             .transform-origin(50%,0);
             .transform("translate3d(0,110%,0) rotateX(-90deg)");
-            .cull-backface();
+            //.cull-backface();
         }
     }
 }
 
 .rollon .rollbody {
+    .on { opacity: 0; }
     .transform("translate3d(0px,0px,-45px) rotateX(90deg)");
 }
 

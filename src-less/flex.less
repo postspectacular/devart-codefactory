@@ -16,6 +16,8 @@ nav {
     -moz-justify-content: center;
     justify-content: center;
 
+    h1 { font-size: 180%; line-height: 0.8; }
+
     .nav svg {
         margin: 10px 0 10px 10px;
     }
@@ -87,6 +89,11 @@ nav {
             padding: 5px 10px 5px 10px;
         }
     }
+
+    h1 {
+        font-size: 190%;
+        line-height: 10px;
+    }
 }
 
 .preview-wrapper {
@@ -113,11 +120,24 @@ nav {
     .last { margin-right: 25%; }
 }
 
-.treemap {
+#edit-treemap {
     min-height: 200px;
+    max-height: 300px;
     -webkit-flex: 2 2 auto;
     -moz-flex: 2 2 auto;
     flex: 2 2 auto;
+
+    path, rect {
+        stroke-width: 2px;
+        vector-effect: non-scaling-stroke;
+    }
+
+    rect { fill: rgba(0,0,0,0.01); }
+
+    g:hover rect, g[class=selected] rect {
+        fill: rgba(0,0,0,0.5);
+        cursor: pointer;
+    }
 }
 
 .buttonbar {
@@ -135,21 +155,35 @@ nav {
 
 #home {
     .content {
+        display: -webkit-flex;
+        display: -moz-flex;
         display: flex;
+        -webkit-align-items: center;
+        -moz-align-items: center;
+        -ms-align-items: center;
         align-items: center;
+        -webkit-justify-content: center;
+        -moz-justify-content: center;
+        -ms-justify-content: center;
         justify-content: center;
         height: 100%;
     }
 }
 
 @media (min-width: 768px) {
-    #home .content h1 {
+    h1 {
         font-size: 360%;
     }
 }
 
+@media (min-width: 641px) and (max-width: 767px) {
+    h1 {
+        font-size: 280%;
+    }
+}
+
 @media (max-width: 640px) {
-    #home .content h1 {
+    h1 {
         font-size: 190%;
     }
 }
@@ -161,24 +195,11 @@ nav {
     z-index: 100;
 }
 
-.start {
-    -webkit-flex: 0 1 auto;
-    -moz-flex: 0 1 auto;
-    flex: 0 1 auto;
-    height: 100px;
-    min-height: 100px;
-}
-
-.start svg {
-    width: 98%;
-}
-
-.start div, .buttonbar .inner div {
+.buttonbar .inner div {
     margin: 10px;
     border: 2px solid #666;
 }
 
-.start div:hover,
 .buttonbar .inner div:hover {
     border: 2px solid #ccc;
     cursor: pointer;
@@ -207,6 +228,20 @@ nav {
 }
 
 #seed-overlay {
-    width: 200px;
+    position: fixed;
+    width: 100%;
+    top: 10%;
+    left: 0px;
+    z-index: 100;
     text-align: center;
 }
+
+.op-sd { stroke: @op-col-sd; }
+.op-sd-inset { stroke: @op-col-inset; }
+.op-ext { stroke: @op-col-ext; }
+.op-reflect { stroke: @op-col-mirror; }
+.op-shift-displace { stroke: @op-col-shift; }
+.op-skew { stroke: @op-col-tilt; }
+.op-scale-size { stroke: @op-col-scale-side; }
+.op-delete { stroke: @op-col-delete; }
+.op-leaf { stroke: white; }
