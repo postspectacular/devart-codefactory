@@ -71,6 +71,7 @@
                 :route {:controller :loader}})
         queue (chan)]
     (dom/remove-class! (dom/query nil "nav") "hidden")
+    (app/add-listeners [["#nav-toggle" "click" (fn [e] (.preventDefault e))]])
     (app/event-dispatcher state queue)
     (start-router! queue)
     (set! app {:state state :queue queue})))

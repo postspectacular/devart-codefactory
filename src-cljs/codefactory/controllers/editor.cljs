@@ -148,11 +148,7 @@
         path (or selection [])
         root (get computed-tree path)
         sub-tree (get-in tree (mg/child-path path))
-        _ (prn :path path)
-        _ (prn :root root)
-        _ (prn :sub-tree sub-tree)
         meshes (delete-branch-meshes gl meshes path)
-        ;; TODO remove old attrib buffers
         ;; TODO delete all paths in computed-tree below selected root
         branch (->> path
                     (mg/compute-tree-map* root sub-tree (transient {}))
@@ -245,6 +241,56 @@
       :svg-inset inset
       :svg-aspect aspect)))
 
+(defn init-op-slider
+  [state path i op-id {:keys [label min max value step listener]}]
+  (let [el-id (str "ctrl" i)
+        el (dom/by-id el-id)
+        cls (str "op-" (name op-id))]
+    (dom/set-attribs! el {:class cls :min min :max max :value value :step step})
+    (dom/set-text! (dom/by-id (str el-id "-label")) label)
+    [el "change"
+     (fn [e]
+       (let [n (utils/parse-int (.-value el))]
+         (swap!
+          state
+          assoc-in (cons :tree path)
+          (listener n (get-in (:tree @state) (concat path [:args]))))
+         (prn (:tree @state))
+         (swap! state update-meshes)
+         (render-scene state)))(listener )]))
+
+(defn init-op-controls
+  [state path op specs]
+  (loop [acc [], specs specs, i 0]
+    (if specs
+      (recur
+       (conj acc (init-op-slider state path i op (first specs)))
+       (next specs)
+       (inc i))
+      acc)))
+
+(defn init-operator
+  [state queue {:keys [op-id specs ctor]}]
+  (let [{:keys [viz-container tree sel-node selection]} @state
+        path (mg/child-path selection)
+        orig (if (seq path) (get-in tree path) tree)
+        ctrl (dom/by-id "op-ctrl")
+        listeners (init-op-controls state path op-id specs)]
+    (app/add-listeners listeners)
+    (dom/set-attribs! sel-node {:class (str "op-" (name op-id))})
+    (dom/set-attribs! (dom/by-id (str (.-id sel-node) "_plus")) {:class "hidden"})
+    (app/merge-state
+     state
+     {:orig-tree-value orig
+      :sel-type op-id
+      :ctrl-active? true
+      :ctrl-listeners listeners
+      :tree (if (seq path) (assoc-in tree path (mg/subdiv)) (mg/subdiv))})
+    (prn (:tree @state))
+    (swap! state update-meshes)
+    (render-scene state)
+    (dom/remove-class! ctrl "hidden")))
+
 (defmulti show-op-controls
   (fn [state op-id] op-id))
 
@@ -255,33 +301,21 @@
         orig (if (seq path) (get-in tree path) tree)
         {:keys [cols rows slices]} (:args orig)
         ctrl (dom/by-id "op-ctrl")
-        c0 (dom/by-id "ctrl0")
-        c1 (dom/by-id "ctrl1")
-        c2 (dom/by-id "ctrl2")
-        listener (fn [el subdiv]
-                   (fn [e]
-                     (let [n (utils/parse-int (.-value el))
-                           tree (:tree @state)]
-                       (swap! state assoc-in (concat [:tree] path) (subdiv n (get-in tree (concat path [:args]))))
-                       (prn (:tree @state))
-                       (swap! state update-meshes)
-                       (render-scene state))))
-        listeners [[c0 "change" (listener c0 (fn [n {:keys [rows slices]}] (mg/subdiv :cols n :rows rows :slices slices)))]
-                   [c1 "change" (listener c1 (fn [n {:keys [cols slices]}] (mg/subdiv :cols cols :rows n :slices slices)))]
-                   [c2 "change" (listener c2 (fn [n {:keys [rows cols]}] (mg/subdiv :cols cols :rows rows :slices n)))]]]
+        specs [{:label "columns" :min 1 :max 5 :value cols :step 1
+                :listener (fn [n {:keys [rows slices]}] (mg/subdiv :cols n :rows rows :slices slices))}
+               {:label "rows" :min 1 :max 5 :value rows :step 1
+                :listener (fn [n {:keys [cols slices]}] (mg/subdiv :cols cols :rows n :slices slices))}
+               {:label "slices" :min 1 :max 5 :value slices :step 1
+                :listener (fn [n {:keys [rows cols]}] (mg/subdiv :cols cols :rows rows :slices n))}]
+        listeners (init-op-controls state path op-id specs)]
     (app/add-listeners listeners)
     (dom/set-attribs! sel-node {:class (str "op-" (name op-id))})
     (dom/set-attribs! (dom/by-id (str (.-id sel-node) "_plus")) {:class "hidden"})
-    (dom/set-attribs! c0 {:class "op-sd" :min 1 :max 5 :value cols :step 1})
-    (dom/set-attribs! c1 {:class "op-sd" :min 1 :max 5 :value rows :step 1})
-    (dom/set-attribs! c2 {:class "op-sd" :min 1 :max 5 :value slices :step 1})
-    (dom/set-text! (dom/by-id "ctrl0-label") "columns")
-    (dom/set-text! (dom/by-id "ctrl1-label") "rows")
-    (dom/set-text! (dom/by-id "ctrl1-label") "slices")
     (app/merge-state
      state
      {:orig-tree-value orig
       :sel-type op-id
+      :ctrl-active? true
       :ctrl-listeners listeners
       :tree (if (seq path) (assoc-in tree path (mg/subdiv)) (mg/subdiv))})
     (prn (:tree @state))
@@ -333,9 +367,11 @@
 
 (defmethod handle-event :editor-op-triggered
   [[_ op-id] _ q]
-  (let [{:keys [sel-node svg-inset svg-max-size]} @(.-state instance)]
-    (dom/set-attribs! sel-node {:y svg-inset :height svg-max-size})
-    (show-op-controls (.-state instance) op-id)))
+  (let [{:keys [sel-node sel-type svg-inset svg-max-size ctrl-listeners]} @(.-state instance)]
+    (when (not= op-id sel-type)
+      (app/remove-listeners ctrl-listeners)
+      (dom/set-attribs! sel-node {:y svg-inset :height svg-max-size})
+      (show-op-controls (.-state instance) op-id))))
 
 (defn init-state
   [state queue initial opts]
