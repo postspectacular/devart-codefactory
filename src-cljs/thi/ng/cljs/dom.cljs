@@ -4,31 +4,57 @@
    [goog.dom :as dom]
    [goog.dom.classes :as classes]))
 
-(defn by-id [id]
-  (.getElementById js/document id))
+(defn create!
+  [type parent]
+  (let [el (.createElement js/document type)]
+    (when parent
+      (.appendChild parent el))
+    el))
+
+(defn remove!
+  [el] (.removeChild (.-parentElement el) el))
+
+(defn create-ns!
+  [ns type parent]
+  (let [el (.createElementNS js/document ns type)]
+    (when parent
+      (.appendChild parent el))
+    el))
+
+(defn by-id
+  [id] (.getElementById js/document id))
 
 (defn query
-  [e q]
-  (.querySelector (or e js/document) q))
+  [e q] (.querySelector (or e js/document) q))
 
 (defn query-all
-  [e q]
-  (.querySelectorAll (or e js/document) q))
+  [e q] (.querySelectorAll (or e js/document) q))
 
-(defn set-html! [el s]
-  (set! (.-innerHTML el) s))
+(defn set-html!
+  [el s] (set! (.-innerHTML el) s))
 
-(defn set-text! [el s]
-  (dom/setTextContent el s))
+(defn set-text!
+  [el s] (dom/setTextContent el s))
 
 (defn set-class! [el name]
   (classes/set el name))
 
-(defn add-class! [el name]
-  (classes/add el name))
+(defn add-class!
+  [el name] (classes/add el name))
 
-(defn remove-class! [el name]
-  (classes/remove el name))
+(defn remove-class!
+  [el name] (classes/remove el name))
+
+(defn get-attrib
+  [el attr] (.getAttribute el attr))
+
+(defn set-attribs!
+  [el attribs]
+  (loop [attribs attribs]
+    (if attribs
+      (let [[k v] (first attribs)]
+        (.setAttribute el (name k) v)
+        (recur (next attribs))))))
 
 (defn set-style!
   [el opts]
@@ -40,13 +66,11 @@
 (defn hide
   [el] (style/setStyle el "display" "none"))
 
-(defn offset [el]
-  [(style/getPageOffsetLeft el) (style/getPageOffsetTop el)])
+(defn offset
+  [el] [(style/getPageOffsetLeft el) (style/getPageOffsetTop el)])
 
 (defn size
-  [el]
-  (let [s (style/getSize el)]
-    [(.-clientWidth el) (.-clientHeight el)]))
+  [el] [(.-clientWidth el) (.-clientHeight el)])
 
 (defn request-fullscreen
   []
