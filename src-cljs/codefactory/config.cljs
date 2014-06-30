@@ -1,6 +1,8 @@
 (ns codefactory.config
   (:require
    [thi.ng.geom.core :as g]
+   [thi.ng.geom.types.utils :as tu]
+   [thi.ng.geom.core.vector :refer [vec3 V3Y V3Z]]
    [thi.ng.geom.aabb :as a]
    [thi.ng.geom.cuboid :as cub]
    [thi.ng.morphogen.core :as mg]
@@ -15,28 +17,42 @@
 
 (def seeds
   (->> {:box  {:seed (a/aabb 1)}
-        :hex2 {:seed (cub/cuboid (mg/circle-lattice-seg 6 1 0.2))}
-        :hex3 {:seed (cub/cuboid (mg/sphere-lattice-seg 6 0.25 0.0955 0.2))}}
+        :hex2 {:seed (cub/cuboid (mg/circle-lattice-seg 6 1 0.5))}
+        :oct2 {:seed (cub/cuboid (mg/circle-lattice-seg 8 1 0.5))}
+        :tri2 {:seed (cub/cuboid (mg/circle-lattice-seg 3 1 0.333333))}}
        (reduce-kv
         (fn [acc k v]
-          (assoc acc k (update-in v [:seed] (comp mg/seed-box g/center))))
+          (assoc acc k
+                 (update-in v [:seed]
+                            #(->> [%]
+                                  (tu/fit-all-into-bounds (a/aabb 1))
+                                  first
+                                  g/center
+                                  mg/seed-box))))
         {})))
 
 (def seed-select
   {:space 1.5
-   :camy -4
-   :camz 1
+   :camz -4
+   :camy 1
+   :cam-up V3Y
    :rot-speed 2
    :scroll-speed 0.15})
 
+(def editor-viz
+  {:inset 10})
+
 (def operators
-  {:sd         {:col "#56ffee" :label "split"}
-   :skew       {:col "#ffd641" :label "tilt"}
-   :sd-inset   {:col "#ed732a" :label "inset"}
-   :scale-side {:col "#bd10d5" :label "scale"}
-   :ext        {:col "#3fa6f2" :label "stretch"}
-   :reflect    {:col "#b9c500" :label "mirror"}
-   nil         {:col "#ffffff" :label "delete"}})
+  {:sd             {:col "#56ffee" :label "split"}
+   :skew           {:col "#ffd641" :label "tilt"}
+   :sd-inset       {:col "#ed732a" :label "inset"}
+   :scale-side     {:col "#bd10d5" :label "scale"}
+   :ext            {:col "#3fa6f2" :label "stretch"}
+   :reflect        {:col "#b9c500" :label "mirror"}
+   :leaf           {:col "#ffffff" :label "leaf"}
+   :shift-displace {:col "#b9c500" :label "shift"}
+   :delete         {:col "#aaaaaa" :label "delete"}
+   })
 
 (defn operator-color
   [id] (:col (operators id)))

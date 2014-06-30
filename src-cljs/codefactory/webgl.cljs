@@ -72,7 +72,7 @@ void main() {
    {:spec     lambert-shader-spec
     :state    {:depth-test true}
     :uniforms {:ambientCol [0.3 0.3 0.3]
-               :lightCol [0.8 0.8 0.8]
+               :lightCol [0.75 0.75 0.75]
                :lightDir (g/normalize (vec3 0 1 1))
                :alpha 1.0}}
 
@@ -171,22 +171,3 @@ void main() {
     (render-meshes
      gl xray meshes shared-uniforms {:alpha alpha})))
 
-(defn render-scene
-  [state]
-  (let [{:keys [gl arcball shaders proj meshes selection time sel-time]} @state
-        view (arcball/get-view arcball)
-        shared-unis {:view view
-                     :model M44
-                     :proj proj
-                     :normalMat (-> (g/invert view) (g/transpose))}
-        op-col (col/hex->rgb (config/operator-color :scale-side))]
-    (apply gl/clear-color-buffer gl (:bg-col config/webgl))
-    (gl/clear-depth-buffer gl 1.0)
-    (if selection
-      (render-with-selection
-       gl shaders shared-unis
-       (apply dissoc meshes selection)
-       (select-keys meshes selection)
-       op-col time sel-time)
-      (render-meshes gl (shaders 1) meshes shared-unis nil))
-    (swap! state update-in [:time] + 0.01666)))

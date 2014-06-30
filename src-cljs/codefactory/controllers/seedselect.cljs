@@ -50,9 +50,9 @@
   [state]
   (if (:active? @state)
     (let [{:keys [gl shaders proj meshes selection camx time]} @state
-          {:keys [space camy camz rot-speed scroll-speed]} config/seed-select
+          {:keys [space camy camz cam-up rot-speed scroll-speed]} config/seed-select
           camx (m/mix camx (* selection space) scroll-speed)
-          view (mat/look-at (vec3 camx camy camz) (vec3 camx 0 0) (vec3 0 0 1))
+          view (mat/look-at (vec3 camx camy camz) (vec3 camx 0 0) cam-up)
           shared-unis {:view view
                        :proj proj}
           num (count meshes)
@@ -65,12 +65,13 @@
           (let [{:keys [mesh]} (meshes (if (neg? i) (+ i num) (rem i num)))
                 sel? (== i sel)
                 model-mat (g/translate M44 x 0 0)
-                model-mat (if sel? (g/rotate-z model-mat (* time rot-speed)) model-mat)
+                model-mat (if sel? (g/rotate-y model-mat (* time rot-speed)) model-mat)
                 norm-mat (-> (g/* view model-mat) g/invert g/transpose)
-                shared-unis (assoc shared-unis :model model-mat :normalMat norm-mat)]
+                shared-unis (assoc shared-unis :model model-mat :normalMat norm-mat)
+                alpha ([1.0 0.4 0.2] (Math/abs (- sel i)))]
             (if sel?
               (webgl/render-meshes gl (shaders 1) {:a mesh} shared-unis nil)
-              (webgl/render-meshes gl (shaders 0) {:a mesh} shared-unis {:alpha 0.5}))
+              (webgl/render-meshes gl (shaders 0) {:a mesh} shared-unis {:alpha alpha}))
             (recur (inc i) (+ x space)))))
       (app/merge-state state {:time (+ time 0.01666) :camx camx})
       (anim/animframe-provider (fn [& _] (render-scene state))))))
@@ -97,31 +98,31 @@
   [e]
   (let [state (.-state instance)]
     (case (.-keyCode (.getBrowserEvent e))
-      39 (swap! state update-in [:selection] inc)
-      37 (swap! state update-in [:selection] dec)
+      37 (swap! state update-in [:selection] inc)
+      39 (swap! state update-in [:selection] dec)
       nil)))
 
 (defn init-state
   [state queue initial opts]
-  (let [resize-window (shared/resize-window* state initial (fn [& _] ))
+  (let [resize-window (shared/resize-window* state initial
+                                             (fn [& _]
+                                               ))
         dom-listeners [["#seed-cancel" "click" (shared/cancel-module "home")]
                        ["#seed-continue" "click" start-editor]
-                       ["#seed-canvas" "mousemove" update-overlay]
+                       ;;["#seed-canvas" "mousemove" update-overlay]
                        ["$window" "resize" resize-window]
                        ["$window" "keydown" switch-seed]]
         h-listeners [["drag swipe" (fn [e]
-                               (let [g (.-gesture e)
-                                     dx (.-deltaX g)
-                                     dt (.-deltaTime g)]
-                                 (if (and (not (:drag-switch @state))
-                                          (> dt 50)
-                                          (> (Math/abs dx) 5))
-                                   (let [s (:selection @state)]
-                                     (if-not (:user-dragged? @state)
-                                       (dom/set-style! (dom/by-id "seed-overlay") #js {:display "none"}))
-                                     (app/merge-state state {:selection (if (neg? dx) (dec s) (inc s))
-                                                             :drag-switch true
-                                                             :user-dragged? true})))))]
+                                     (let [g (.-gesture e)
+                                           dx (.-deltaX g)
+                                           dt (.-deltaTime g)]
+                                       (if (and (not (:drag-switch @state))
+                                                (> dt 50)
+                                                (> (Math/abs dx) 5))
+                                         (let [s (:selection @state)]
+                                           (app/merge-state state {:selection (if (neg? dx) (dec s) (inc s))
+                                                                   :drag-switch true
+                                                                   :user-dragged? true})))))]
                      ["dragend" (fn [e] (swap! state assoc-in [:drag-switch] false))]]
         hammer (js/Hammer (.-body js/document))]
     (reset!
@@ -157,7 +158,6 @@
     (debug :release-seedselect)
     (app/remove-listeners (:dom-listeners @state))
     (app/remove-hammer-listeners (:hammer @state) (:h-listeners @state))
-    (dom/set-style! (dom/by-id "seed-overlay") #js {:display "none"})
     (reset! state nil)
     (set! shared nil)))
 

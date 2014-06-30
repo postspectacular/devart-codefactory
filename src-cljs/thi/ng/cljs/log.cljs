@@ -1,6 +1,6 @@
 (ns thi.ng.cljs.log)
 
-(def log-level 1)
+(def log-level 0)
 
 (defn log
   [prefix msg]
