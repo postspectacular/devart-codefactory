@@ -12,6 +12,7 @@
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.io :as io]
    [thi.ng.cljs.route :as route]
+   [thi.ng.cljs.utils :as utils]
    [thi.ng.geom.webgl.core :as gl]
    [thi.ng.geom.webgl.animator :as anim]
    [thi.ng.geom.webgl.buffers :as buf]
@@ -117,12 +118,40 @@
       (webgl/render-meshes gl (shaders 1) meshes shared-unis nil))
     (swap! state update-in [:time] + 0.01666)))
 
+(defn select-sub-paths
+  [coll root]
+  (let [croot (count root)]
+    (->> (keys coll)
+         (reduce
+          (fn [acc k]
+            (if (> (count k) croot)
+              (if (every? #(= (nth % 0) (nth % 1)) (partition 2 (interleave root k)))
+                (conj acc k)
+                acc)
+              acc))
+          [])
+         (select-keys coll))))
+
+(defn delete-branch-meshes
+  [gl meshes root]
+  (let [d-meshes (select-sub-paths meshes root)
+        meshes (apply dissoc meshes (keys d-meshes))]
+    (dorun
+     (map
+      (fn [[id m]]
+        (.deleteBuffer gl (:buffer m))) d-meshes))
+    meshes))
+
 (defn update-meshes
   [state]
   (let [{:keys [gl tree computed-tree selection meshes]} state
         path (or selection [])
         root (get computed-tree path)
         sub-tree (get-in tree (mg/child-path path))
+        _ (prn :path path)
+        _ (prn :root root)
+        _ (prn :sub-tree sub-tree)
+        meshes (delete-branch-meshes gl meshes path)
         ;; TODO remove old attrib buffers
         ;; TODO delete all paths in computed-tree below selected root
         branch (->> path
@@ -140,7 +169,7 @@
                          acc))
                      (transient meshes))
                     (persistent!))]
-    (debug :mkeys (sort (keys meshes)))
+    (prn :mkeys (sort (keys meshes)))
     (merge
      state
      {:computed-tree (merge computed-tree branch)
@@ -153,7 +182,7 @@
   (apply str (cons "node_" (interpose "_" path))))
 
 (defn svg-node
-  [parent path type x y w h aspect queue]
+  [parent path type x y w h total-width aspect queue]
   (let [group (dom/create-ns! svg-ns "g" parent)
         node (dom/create-ns! svg-ns "rect" group)
         id (svg-node-id path)
@@ -162,10 +191,10 @@
       :leaf (let [plus (dom/create-ns! svg-ns "path" group)
                   x (mm/madd w 0.5 x)
                   y (mm/madd h 0.5 y)
-                  s 0.003]
+                  s (/ 5 total-width)]
               (dom/set-attribs!
                plus
-               {:class (str "plus " cls)
+               {:id (str id "_plus") :class cls
                 :transform (str "translate(" x "," y ") scale(" s "," (* s aspect) ")")
                 :d "M -1,0, L 1,0 M 0,-1 L 0,1"}))
       nil)
@@ -182,20 +211,23 @@
   [state queue]
   (let [{:keys [computed-tree]} state
         {:keys [inset]} config/editor-viz
-        viz (dom/create-ns! svg-ns "svg" (dom/by-id "edit-treemap"))
-        [w h] (dom/size (dom/parent viz))
+        parent  (dom/by-id "edit-treemap")
+        viz (dom/create-ns! svg-ns "svg" nil)
+        _ (.insertBefore parent viz (.-firstChild parent))
+        [w h] (dom/size parent)
         inset (/ inset w)
         max-size (mm/madd inset -2 1)
         aspect (/ w h)
         _ (dom/set-attribs!
            viz {:id "tree-viz" :width w :height h :viewBox "0 0 1 1"
                 :preserveAspectRatio "none"})
-        [id node] (svg-node viz [] :leaf inset (- max-size 0.25) max-size 0.25 aspect queue)]
+        [id node] (svg-node viz [] :leaf inset (- max-size 0.25) max-size 0.25 w aspect queue)]
     (assoc state
       :viz-container viz
       :svg-width w
       :svg-height h
       :svg-max-size max-size
+      :svg-inset inset
       :svg-aspect aspect
       :viz-nodes {id node})))
 
@@ -210,7 +242,61 @@
     (assoc state
       :svg-width w
       :svg-height h
+      :svg-inset inset
       :svg-aspect aspect)))
+
+(defmulti show-op-controls
+  (fn [state op-id] op-id))
+
+(defmethod show-op-controls :sd
+  [state op-id]
+  (let [{:keys [viz-container tree sel-node selection]} @state
+        path (mg/child-path selection)
+        orig (if (seq path) (get-in tree path) tree)
+        {:keys [cols rows slices]} (:args orig)
+        ctrl (dom/by-id "op-ctrl")
+        c0 (dom/by-id "ctrl0")
+        c1 (dom/by-id "ctrl1")
+        c2 (dom/by-id "ctrl2")
+        listener (fn [el subdiv]
+                   (fn [e]
+                     (let [n (utils/parse-int (.-value el))
+                           tree (:tree @state)]
+                       (swap! state assoc-in (concat [:tree] path) (subdiv n (get-in tree (concat path [:args]))))
+                       (prn (:tree @state))
+                       (swap! state update-meshes)
+                       (render-scene state))))
+        listeners [[c0 "change" (listener c0 (fn [n {:keys [rows slices]}] (mg/subdiv :cols n :rows rows :slices slices)))]
+                   [c1 "change" (listener c1 (fn [n {:keys [cols slices]}] (mg/subdiv :cols cols :rows n :slices slices)))]
+                   [c2 "change" (listener c2 (fn [n {:keys [rows cols]}] (mg/subdiv :cols cols :rows rows :slices n)))]]]
+    (app/add-listeners listeners)
+    (dom/set-attribs! sel-node {:class (str "op-" (name op-id))})
+    (dom/set-attribs! (dom/by-id (str (.-id sel-node) "_plus")) {:class "hidden"})
+    (dom/set-attribs! c0 {:class "op-sd" :min 1 :max 5 :value cols :step 1})
+    (dom/set-attribs! c1 {:class "op-sd" :min 1 :max 5 :value rows :step 1})
+    (dom/set-attribs! c2 {:class "op-sd" :min 1 :max 5 :value slices :step 1})
+    (dom/set-text! (dom/by-id "ctrl0-label") "columns")
+    (dom/set-text! (dom/by-id "ctrl1-label") "rows")
+    (dom/set-text! (dom/by-id "ctrl1-label") "slices")
+    (app/merge-state
+     state
+     {:orig-tree-value orig
+      :sel-type op-id
+      :ctrl-listeners listeners
+      :tree (if (seq path) (assoc-in tree path (mg/subdiv)) (mg/subdiv))})
+    (prn (:tree @state))
+    (swap! state update-meshes)
+    (render-scene state)
+    (dom/remove-class! ctrl "hidden")))
+
+(defmethod show-op-controls :sd-inset
+  [state op-id]
+  (let [{:keys [viz-container tree svg-nodes selection]} @state
+        ctrl (dom/by-id "op-ctrl")]
+    (dom/set-attribs! (dom/by-id "ctrl0") {:class "op-sd-inset" :min 1 :max 5 :value 1 :step 1})
+    (dom/set-attribs! (dom/by-id "ctrl1") {:class "op-sd-inset" :min 1 :max 5 :value 1 :step 1})
+    (dom/set-attribs! (dom/by-id "ctrl2") {:class "op-sd-inset" :min 1 :max 5 :value 1 :step 1})
+    (dom/remove-class! ctrl "hidden")))
 
 (defmethod handle-event :editor-redraw-canvas
   [_ _ _]
@@ -240,9 +326,16 @@
   [[_ [node path]] _ q]
   (let [pn (dom/parent node)]
     (dom/remove-class! (dom/by-id "toolbar") "rollon")
+    (dom/add-class! (dom/by-id "op-ctrl") "hidden")
     (dom/set-attribs! pn {:class nil})
     (swap! (.-state instance) assoc :selection nil)
     (emit q :editor-redraw-canvas nil)))
+
+(defmethod handle-event :editor-op-triggered
+  [[_ op-id] _ q]
+  (let [{:keys [sel-node svg-inset svg-max-size]} @(.-state instance)]
+    (dom/set-attribs! sel-node {:y svg-inset :height svg-max-size})
+    (show-op-controls (.-state instance) op-id)))
 
 (defn init-state
   [state queue initial opts]
@@ -253,7 +346,9 @@
                          (render-scene state)))
         dom-listeners  [["#edit-cancel" "click" (shared/cancel-module "select-seed")]
                         ["$window" "resize" resize-window]
-                        ["#op-sd" "click" (fn [e] (.preventDefault e) (emit queue :editor-op-triggered :sd))]]]
+                        ["#op-sd" "click" (fn [e] (.preventDefault e) (emit queue :editor-op-triggered :sd))]
+                        ["#op-sd-inset" "click" (fn [e] (.preventDefault e) (emit queue :editor-op-triggered :sd-inset))]
+                        ]]
     (reset!
      state
      (-> initial
@@ -293,6 +388,7 @@
       (arcball/unlisten! arcball)
       (dom/remove! viz-container)
       (dom/remove-class! (dom/by-id "toolbar") "rollon")
+      (dom/add-class! (dom/by-id "op-ctrl") "hidden")
       (reset! state nil)
       (set! shared nil))))
 

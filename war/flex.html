@@ -36,8 +36,8 @@
               <g transform="translate(939.9214,852.9941)">
                 <path d="m 0,0 -2.242,0 0,-7.994 -3.322,0 0,7.994 -1.581,0 0,2.824 1.581,0 0,1.828 c 0,1.309 0.621,3.354 3.351,3.354 l 2.461,-0.01 0,-2.742 -1.786,0 c -0.291,0 -0.704,-0.145 -0.704,-0.77 l 0,-1.66 2.533,0 L 0,0 z" />
               </g>
-            </g></svg></a>
-        <a href="https://twitter.com"><svg width="40" height="40">
+        </g></svg></a>
+        <a href="https://twitter.com/intent/tweet?text=Create+your+own+piece+of+art+using+simple+code+operations&url=http%3A%2F%2Fdevartcodefactory.com"><svg width="40" height="40">
             <g transform="matrix(1.0526316,0,0,-1.0526316,-1021.5907,917.89474)" style="fill:#ccc;fill-opacity:1;fill-rule:nonzero;stroke:none">
               <g transform="translate(989.5112,872)">
                 <path d="m 0,0 c -10.477,0 -19,-8.523 -19,-19 0,-10.477 8.523,-19 19,-19 10.477,0 19,8.523 19,19 C 19,-8.523 10.477,0 0,0 m 0,-3 c 8.836,0 16,-7.164 16,-16 0,-8.838 -7.164,-16 -16,-16 -8.836,0 -16,7.162 -16,16 0,8.836 7.164,16 16,16" />
@@ -106,7 +106,13 @@
               </div>
             </div>
           </div>
-          <div id="edit-treemap" class="flex-item"></div>
+          <div id="edit-treemap" class="flex-item">
+            <div id="op-ctrl" class="controls hidden">
+              <div><p id="ctrl0-label">label</p><input id="ctrl0" type="range" min="0" max="50" value="5" step="5"/></div>
+              <div><p id="ctrl1-label">label</p><input id="ctrl1" type="range" min="0" max="50" value="5" step="5"/></div>
+              <div><p id="ctrl2-label">label</p><input id="ctrl2" type="range" min="0" max="50" value="5" step="5"/></div>
+            </div>
+          </div>
           <div class="flex-item buttonbar">
             <div class="inner">
               <div id="edit-cancel" class="flex-item center">

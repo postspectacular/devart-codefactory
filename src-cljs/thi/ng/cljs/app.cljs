@@ -68,8 +68,10 @@
   (loop [specs specs]
     (if specs
       (let [[id eid f] (first specs)
-            el (if (= "$window" id)
-                 js/window (dom/query nil id))]
+            el (if (string? id)
+                 (if (= "$window" id)
+                   js/window (dom/query nil id))
+                 id)]
         (events/listen el (name eid) f)
         (recur (next specs))))))
 
@@ -78,8 +80,10 @@
   (loop [specs specs]
     (if specs
       (let [[id eid f] (first specs)
-            el (if (= "$window" id)
-                 js/window (dom/query nil id))]
+            el (if (string? id)
+                 (if (= "$window" id)
+                   js/window (dom/query nil id))
+                 id)]
         (events/unlisten el (name eid) f)
         (recur (next specs))))))
 
