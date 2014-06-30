@@ -53,7 +53,7 @@
                     (let [e (.-center (.-gesture e))]
                       (drag _ (.-clientX e) (- (.-clientHeight el) (- (.-clientY e) (.-offsetTop el)))))))
           mzoom (fn [e]
-                  (zoom-delta _ (.-wheelDeltaY (.getBrowserEvent e)))
+                  (zoom-delta _ (.-deltaY (.getBrowserEvent e)))
                   (.preventDefault e))
           tzoom (fn [e]
                   (zoom-abs _ (.-scale (.-gesture e))))
@@ -62,7 +62,7 @@
                   ["dragend" mup]
                   ["drag" mdrag]
                   ["pinch" tzoom]]
-          lspecs [[w "mousewheel" mzoom]
+          lspecs [[w "wheel" mzoom]
                   [w "resize" resize]]
           hammer (js/Hammer el #js {:preventDefault true
                                     :swipeMinTouches 2
