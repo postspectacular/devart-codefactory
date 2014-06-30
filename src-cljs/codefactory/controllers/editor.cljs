@@ -32,7 +32,7 @@
 (def mg-trees
   {:box {:seed :box
          :tree {}
-         :sel []}
+         :sel nil}
    :alu {:seed :box
          :tree (let [branch (fn [[dir lpos]]
                               (mg/subdiv-inset
@@ -47,7 +47,7 @@
                         (mg/subdiv
                          :rows 3 :out {1 (mg/subdiv :cols 3 :out [nil {} nil])})
                         module]))
-         :sel [[2 0 0 0] [2 0 0 2] [2 1 1 0] [2 1 1 2] [2 2 2 0] [2 2 2 2] [2 3 3 0] [2 3 3 2]]}
+         :sel [2 0 0 0]}
    :hex2 {:seed :hex2
           :tree (let [hex (mg/apply-recursively (mg/reflect :dir :e) 5 [1] 1)
                       reflected-hex (mg/reflect :dir :n :out [{} hex])
@@ -56,7 +56,10 @@
                                   (assoc-in (mg/child-path [1 1 1 1 0]) %))
                       seed-clone (mg/reflect :dir :s :out [{} (inject reflected-hex)])]
                   (mg/reflect :dir :s :out [(inject seed-clone) (inject reflected-hex)]))
-          :sel [[1 1 1 1 0]]}})
+          :sel [1 1 1 1 0]}})
+
+(defn node-operator
+  [n] (cond (:op n) (:op n), n :leaf, :else :delete))
 
 (declare instance)
 
@@ -84,22 +87,45 @@
 
 (defn init-tree
   [state id]
-  (let [{:keys [tree seed]} (mg-trees id)]
-    (assoc state
-      :tree tree
-      :computed-tree {[] (:seed (config/seeds seed))}
-      :meshes {}
-      :seed-id seed
-      :selected-path [])))
+  (let [state (merge
+               state
+               {:tree {}
+                :computed-tree {[] (:seed (config/seeds (keyword id)))}
+                :meshes {}
+                :seed-id id
+                :selection nil})]
+    ;;(prn :ct (:computed-tree state))
+    state))
+
+(defn render-scene
+  [state]
+  (let [{:keys [gl arcball shaders proj meshes selection sel-type time sel-time]} @state
+        view (arcball/get-view arcball)
+        shared-unis {:view view
+                     :model M44
+                     :proj proj
+                     :normalMat (-> (g/invert view) (g/transpose))}]
+    (apply gl/clear-color-buffer gl (:bg-col config/webgl))
+    (gl/clear-depth-buffer gl 1.0)
+    (if selection
+      (webgl/render-with-selection
+       gl shaders shared-unis
+       (dissoc meshes selection)
+       (select-keys meshes [selection])
+       (col/hex->rgb (config/operator-color sel-type))
+       time sel-time)
+      (webgl/render-meshes gl (shaders 1) meshes shared-unis nil))
+    (swap! state update-in [:time] + 0.01666)))
 
 (defn update-meshes
   [state]
-  (let [{:keys [gl tree computed-tree selected-path meshes]} state
-        root (get computed-tree selected-path)
-        sub-tree (get-in tree (mg/child-path selected-path))
+  (let [{:keys [gl tree computed-tree selection meshes]} state
+        path (or selection [])
+        root (get computed-tree path)
+        sub-tree (get-in tree (mg/child-path path))
         ;; TODO remove old attrib buffers
         ;; TODO delete all paths in computed-tree below selected root
-        branch (->> selected-path
+        branch (->> path
                     (mg/compute-tree-map* root sub-tree (transient {}))
                     (persistent!))
         meshes (->> branch
@@ -120,25 +146,125 @@
      {:computed-tree (merge computed-tree branch)
       :meshes meshes})))
 
+(def svg-ns "http://www.w3.org/2000/svg")
+
+(defn svg-node-id
+  [path]
+  (apply str (cons "node_" (interpose "_" path))))
+
+(defn svg-node
+  [parent path type x y w h aspect queue]
+  (let [group (dom/create-ns! svg-ns "g" parent)
+        node (dom/create-ns! svg-ns "rect" group)
+        id (svg-node-id path)
+        cls (str "op-" (name type))]
+    (condp = type
+      :leaf (let [plus (dom/create-ns! svg-ns "path" group)
+                  x (mm/madd w 0.5 x)
+                  y (mm/madd h 0.5 y)
+                  s 0.003]
+              (dom/set-attribs!
+               plus
+               {:class (str "plus " cls)
+                :transform (str "translate(" x "," y ") scale(" s "," (* s aspect) ")")
+                :d "M -1,0, L 1,0 M 0,-1 L 0,1"}))
+      nil)
+    (dom/set-attribs!
+     node {:id id :x x :y y :width w :height h
+           :class cls})
+    (.addEventListener
+     node
+     "click"
+     (fn [e] (emit queue :editor-node-toggle [(.-target e) path])))
+    [id {:svg node :path path}]))
+
+(defn init-viz
+  [state queue]
+  (let [{:keys [computed-tree]} state
+        {:keys [inset]} config/editor-viz
+        viz (dom/create-ns! svg-ns "svg" (dom/by-id "edit-treemap"))
+        [w h] (dom/size (dom/parent viz))
+        inset (/ inset w)
+        max-size (mm/madd inset -2 1)
+        aspect (/ w h)
+        _ (dom/set-attribs!
+           viz {:id "tree-viz" :width w :height h :viewBox "0 0 1 1"
+                :preserveAspectRatio "none"})
+        [id node] (svg-node viz [] :leaf inset (- max-size 0.25) max-size 0.25 aspect queue)]
+    (assoc state
+      :viz-container viz
+      :svg-width w
+      :svg-height h
+      :svg-max-size max-size
+      :svg-aspect aspect
+      :viz-nodes {id node})))
+
+(defn resize-viz
+  [state]
+  (let [{:keys [viz-container svg-nodes]} state
+        {:keys [inset]} config/editor-viz
+        [w h] (dom/size (dom/parent viz-container))
+        inset (/ inset w)
+        aspect (/ w h)]
+    (dom/set-attribs! viz-container {:width w :height h})
+    (assoc state
+      :svg-width w
+      :svg-height h
+      :svg-aspect aspect)))
+
 (defmethod handle-event :editor-redraw-canvas
   [_ _ _]
-  (webgl/render-scene (.-state instance)))
+  (let [state (.-state instance)
+        sel (:selection @state)]
+    (render-scene state)))
+
+(defmethod handle-event :editor-node-toggle
+  [[_ [node :as args]] _ q]
+  (let [pn (dom/parent node)
+        on? (not (neg? (.indexOf (or (dom/get-attrib pn "class") "") "selected")))]
+    (emit q (if on? :editor-node-deselected :editor-node-selected) args)))
+
+(defmethod handle-event :editor-node-selected
+  [[_ [node path]] _ q]
+  (let [pn (dom/parent node)
+        {:keys [computed-tree tree]} @(.-state instance)
+        tree-node (get-in tree (mg/child-path path))
+        node-type (node-operator tree-node)]
+    (prn :node-type node-type)
+    (dom/add-class! (dom/by-id "toolbar") "rollon")
+    (dom/set-attribs! pn {:class "selected"})
+    (swap! (.-state instance) assoc :selection path :sel-type node-type :sel-node node)
+    (emit q :editor-redraw-canvas nil)))
+
+(defmethod handle-event :editor-node-deselected
+  [[_ [node path]] _ q]
+  (let [pn (dom/parent node)]
+    (dom/remove-class! (dom/by-id "toolbar") "rollon")
+    (dom/set-attribs! pn {:class nil})
+    (swap! (.-state instance) assoc :selection nil)
+    (emit q :editor-redraw-canvas nil)))
 
 (defn init-state
   [state queue initial opts]
-  (let [resize-window (shared/resize-window* state initial webgl/render-scene)
-        dom-listeners [["#edit-cancel" "click" (shared/cancel-module "select-seed")]
-                       ["$window" "resize" resize-window]]]
+  (let [resize-window (shared/resize-window*
+                       state initial
+                       (fn [state]
+                         (swap! state resize-viz)
+                         (render-scene state)))
+        dom-listeners  [["#edit-cancel" "click" (shared/cancel-module "select-seed")]
+                        ["$window" "resize" resize-window]
+                        ["#op-sd" "click" (fn [e] (.preventDefault e) (emit queue :editor-op-triggered :sd))]]]
     (reset!
      state
      (-> initial
          (merge
           {:dom-listeners dom-listeners
-           :selection (get-in mg-trees [:alu :sel])
            :sel-time 0
-           :time 0})
+           :time 0
+           :viz-container (dom/by-id "tree-viz")})
          (webgl/init-arcball nil (fn [_] (emit queue :editor-redraw-canvas nil)))
-         (init-tree :alu)
+         (init-tree (get-in opts [:params :seed-id]))
+         (init-viz queue)
          (update-meshes)))
     (resize-window)
     (js/setTimeout
@@ -148,8 +274,7 @@
          (arcball/resize arcball canvas-width canvas-height)))
      850)
     (app/add-listeners dom-listeners)
-    (init-model queue (get-in opts [:params]))
-    (dom/force-redraw! (dom/by-id "editor"))))
+    (init-model queue (get-in opts [:params]))))
 
 (deftype EditorController
     [state ^:mutable shared ^:mutable queue]
@@ -162,10 +287,13 @@
       (init-state state queue initial opts)
       (app/emit queue :webgl-missing nil)))
   (release [_]
-    (debug :release-editor)
-    (app/remove-listeners (:dom-listeners @state))
-    (arcball/unlisten! (:arcball @state))
-    (reset! state nil)
-    (set! shared nil)))
+    (let [{:keys [viz-container arcball dom-listeners]} @state]
+      (debug :release-editor)
+      (app/remove-listeners dom-listeners)
+      (arcball/unlisten! arcball)
+      (dom/remove! viz-container)
+      (dom/remove-class! (dom/by-id "toolbar") "rollon")
+      (reset! state nil)
+      (set! shared nil))))
 
 (def instance (EditorController. (atom nil) nil nil))
