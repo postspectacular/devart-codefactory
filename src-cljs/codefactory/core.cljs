@@ -2,6 +2,7 @@
   (:require
    [codefactory.config :as config]
    [codefactory.protocols :as proto]
+   [codefactory.controllers.login :as login]
    [codefactory.controllers.home :as home]
    [codefactory.controllers.seedselect :as seed]
    [codefactory.controllers.editor :as edit]
@@ -12,12 +13,14 @@
    [thi.ng.cljs.route :as route]
    [thi.ng.cljs.utils :as utils]
    [thi.ng.cljs.log :refer [debug info warn]]
-   [cljs.core.async :refer [>! <! chan put! close! timeout]]))
+   [cljs.core.async :refer [>! <! chan put! close! timeout]]
+   [goog.net.Cookies]))
 
 (enable-console-print!)
 
 (def controllers
   {:loader nil
+   :login login/instance
    :seed-selector seed/instance
    :home home/instance
    :editor edit/instance
@@ -62,6 +65,11 @@
     config/default-route
     queue)))
 
+(defn check-cookie
+  []
+  (if-not (.get (goog.net.Cookies. js/document) (:name config/cookie))
+    (route/set-route! "login")))
+
 (def app nil)
 
 (defn ^:export start
@@ -70,9 +78,8 @@
                {:controller (controllers :loader)
                 :route {:controller :loader}})
         queue (chan)]
-    (dom/remove-class! (dom/query nil "nav") "hidden")
-    (app/add-listeners [["#nav-toggle" "click" (fn [e] (.preventDefault e))]])
     (app/event-dispatcher state queue)
+    (check-cookie)
     (start-router! queue)
     (set! app {:state state :queue queue})))
 

@@ -1,11 +1,16 @@
 @import "common.less";
 @import "slide.less";
 
+h1 {
+    font-weight: 400;
+    line-height: 1;
+}
+
 nav {
     width: 100%;
     position: fixed;
     z-index: 100;
-    background-color: rgba(0, 0, 0, 0.25);
+    //background-color: rgba(0, 0, 0, 0.25);
     display: -webkit-flex;
     display: -moz-flex;
     display: flex;
@@ -72,7 +77,7 @@ nav {
 }
 
 .flex-container .toolbar {
-    height: 60px;
+    height: 70px;
     -webkit-flex: 0 1 auto;
     -moz-flex: 0 1 auto;
     flex: 0 1 auto;
@@ -83,7 +88,7 @@ nav {
     }
 
     .inner {
-        min-height: 60px;
+        min-height: 70px;
 
         .flex-item {
             padding: 5px 10px 5px 10px;
@@ -134,7 +139,8 @@ nav {
 
     rect { fill: rgba(0,0,0,0.01); }
 
-    g:hover, g[class=selected] {
+    g:hover {
+
         rect {
             cursor: pointer;
         }
@@ -165,6 +171,12 @@ nav {
 }
 
 #home {
+
+    background-image: url('/img/20140701-timeout3-bidir-288spp.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+
     .content {
         display: -webkit-flex;
         display: -moz-flex;
@@ -208,11 +220,11 @@ nav {
 
 .buttonbar .inner div {
     margin: 10px;
-    border: 2px solid #666;
+    border: 2px solid @border-col;
 }
 
 .buttonbar .inner div:hover {
-    border: 2px solid #ccc;
+    border: 2px solid @border-col-hover;
     cursor: pointer;
 
     svg g {
@@ -229,22 +241,25 @@ nav {
 }
 
 .overlay {
-    display: none;
     position: fixed;
-    top: 0px;
-    left: 0px;
     z-index: 100;
-    padding: 10px;
-    border: 2px solid white;
 }
 
 #seed-overlay {
-    position: fixed;
     width: 100%;
     top: 10%;
     left: 0px;
-    z-index: 100;
     text-align: center;
+}
+
+#seed-left {
+    left: 5%;
+    top:45%;
+}
+
+#seed-right {
+    right: 5%;
+    top: 45%;
 }
 
 #edit-treemap {
@@ -286,8 +301,6 @@ nav {
             flex: 1 0 auto;
         }
 
-        //div { margin-bottom: 20px; }
-
         p {
             text-transform: uppercase;
             //line-height: 2.6;
@@ -296,7 +309,7 @@ nav {
         input[type='range'] {
             -webkit-appearance: none;
             width: 95%;
-            height: 3px;
+            height: 2px;
             vertical-align: middle;
 
             &:focus {
@@ -317,7 +330,8 @@ nav {
 
         input[type='range']::-moz-range-track {
             -moz-appearance: none;
-            height: 3px;
+            border: 1px solid white;
+            height: 2px;
         }
         input[type='range'].op-sd::-moz-range-track {
             background-color: @op-col-sd;
@@ -348,11 +362,12 @@ nav {
             -webkit-appearance: none !important;
             border-radius: 14px;
             background-color: @col-bg;
-            border-width: 3px;
+            border-width: 2px;
             border-style: solid;
             height: 24px;
             width: 24px;
         }
+
         input[type='range'].op-sd::-webkit-slider-thumb {
             border-color: @op-col-sd;
         }
@@ -381,8 +396,8 @@ nav {
         input[type='range']::-moz-range-thumb {
             -moz-appearance: none;
             border-radius: 14px;
-            background-color: @col-bg;
-            border-width: 3px;
+            background-color: @col-bg !important;
+            border-width: 2px;
             border-style: solid;
             height: 24px;
             width: 24px;
@@ -412,4 +427,109 @@ nav {
             border-color: @op-col-delete;
         }
     }
+}
+
+@-webkit-keyframes border-flash {
+    0%    { border-color: @border-col;  }
+    25%   { border-color: @border-col-flash; }
+    75%   { border-color: @border-col-flash; }
+    100%  { border-color: @border-col;  }
+}
+@-moz-keyframes border-flash {
+    0%    { border-color: @border-col;  }
+    25%   { border-color: @border-col-flash; }
+    75%   { border-color: @border-col-flash; }
+    100%  { border-color: @border-col;  }
+}
+@-o-keyframes border-flash {
+    0%    { border-color: @border-col;  }
+    25%   { border-color: @border-col-flash; }
+    75%   { border-color: @border-col-flash; }
+    100%  { border-color: @border-col;  }
+}
+@keyframes border-flash {
+    0%    { border-color: @border-col;  }
+    25%   { border-color: @border-col-flash; }
+    75%   { border-color: @border-col-flash; }
+    100%  { border-color: @border-col;  }
+}
+
+.flash {
+    -webkit-animation: border-flash 1.0s infinite;
+    -moz-animation:    border-flash 1.0s infinite;
+    -o-animation:      border-flash 1.0s infinite;
+    animation:         border-flash 1.0s infinite;
+}
+
+@err-col: #f00;
+
+@-webkit-keyframes error-flash {
+    0%    { border-color: @err-col; color: @err-col;  }
+    100%  { border-color: @op-col-sd; color: @op-col-sd; }
+}
+@-moz-keyframes error-flash {
+    0%    { border-color: @err-col; color: @err-col; }
+    100%  { border-color: @op-col-sd; color: @op-col-sd; }
+}
+@-o-keyframes error-flash {
+    0%    { border-color: @err-col; color: @err-col; }
+    100%  { border-color: @op-col-sd; color: @op-col-sd; }
+}
+@keyframes error-flash {
+    0%    { border-color: @err-col; color: @err-col; }
+    100%  { border-color: @op-col-sd; color: @op-col-sd;  }
+}
+
+.flash-error {
+    -webkit-animation: error-flash 800ms;
+    -moz-animation:    error-flash 800ms;
+    -o-animation:      error-flash 800ms;
+    animation:         error-flash 800ms;
+}
+
+#login {
+    h1 { margin-bottom: 14px; }
+    .subtitle { margin-bottom: 2em; }
+
+    .content div {
+        margin: 0 auto 1em auto;
+    }
+}
+
+@media (max-width: 480px) {
+    #login .content div {
+        max-width: 80%;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 640px) {
+    #login .content div {
+        max-width: 66%;
+    }
+}
+@media (min-width: 641px) {
+    #login .content div {
+        max-width: 50%;
+    }
+}
+@media (min-width: 1024px) {
+    #login .content div {
+        max-width: 33%;
+    }
+}
+
+a:link { color: @op-col-sd; }
+
+a:hover { color: lighten(@op-col-sd,10); }
+
+input[type="password"], input[type="submit"] {
+    width: 300px;
+    height: 40px;
+    font-size: 2em;
+    font-family: "Abel";
+    line-height: 34px;
+    text-align: center;
+    background: transparent;
+    color: @op-col-sd;
+    border: 2px solid @op-col-sd;
 }

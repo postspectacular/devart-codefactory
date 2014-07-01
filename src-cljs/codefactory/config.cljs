@@ -9,6 +9,10 @@
    [thi.ng.cljs.utils :as utils]
    [thi.ng.validate.core :as v]))
 
+(def cookie
+  {:name  "__cfaccess"
+   :pwd "TIMEOUT"})
+
 (def webgl
   {:min-aa-res 480
    :bg-col [0.2 0.2 0.211 1]
@@ -40,7 +44,7 @@
    :scroll-speed 0.15})
 
 (def editor-viz
-  {:inset 10})
+  {:inset 11})
 
 (def operators
   {:sd             {:col "#56ffee" :label "split"}
@@ -69,7 +73,9 @@
     :controller :seed-selector}
    {:match ["gallery" :page]
     :bindings {:page {:coerce utils/parse-int :validate [(v/number) (v/pos)]}}
-    :controller :gallery}])
+    :controller :gallery}
+   {:match ["login"]
+    :controller :login}])
 
 (def default-route (routes 0))
 
@@ -77,11 +83,13 @@
   {[:loader :home] -1
    [:loader :editor] -1
    [:loader :gallery] -1
+   [:loader :login] -1
    [:home :editor] -1
    [:home :seed-selector] -1
    [:editor :home] 1
    [:editor :seed-selector] 1
    [:seed-selector :home] 1
+   [:login :home] -1
    })
 
 (def controller-release-delay 900)

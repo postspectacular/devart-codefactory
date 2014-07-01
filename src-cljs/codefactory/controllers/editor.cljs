@@ -195,8 +195,7 @@
                 :d "M -1,0, L 1,0 M 0,-1 L 0,1"}))
       nil)
     (dom/set-attribs!
-     node {:id id :x x :y y :width w :height h
-           :class cls})
+     node {:id id :x x :y y :width w :height h :class cls})
     (.addEventListener
      node
      "click"
@@ -299,7 +298,7 @@
   (let [{:keys [viz-container tree sel-node selection]} @state
         path (mg/child-path selection)
         orig (if (seq path) (get-in tree path) tree)
-        {:keys [cols rows slices]} (:args orig)
+        {:keys [cols rows slices] :or {cols 1 rows 1 slices 1}} (:args orig)
         ctrl (dom/by-id "op-ctrl")
         specs [{:label "columns" :min 1 :max 5 :value cols :step 1
                 :listener (fn [n {:keys [rows slices]}] (mg/subdiv :cols n :rows rows :slices slices))}

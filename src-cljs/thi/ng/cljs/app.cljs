@@ -72,7 +72,7 @@
                  (if (= "$window" id)
                    js/window (dom/query nil id))
                  id)]
-        (events/listen el (name eid) f)
+        (when el (events/listen el (name eid) f))
         (recur (next specs))))))
 
 (defn remove-listeners
@@ -84,7 +84,8 @@
                  (if (= "$window" id)
                    js/window (dom/query nil id))
                  id)]
-        (events/unlisten el (name eid) f)
+        (when el
+          (events/unlisten el (name eid) f))
         (recur (next specs))))))
 
 (defn add-hammer-listeners

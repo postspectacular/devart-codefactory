@@ -100,6 +100,7 @@
     (case (.-keyCode (.getBrowserEvent e))
       37 (swap! state update-in [:selection] inc)
       39 (swap! state update-in [:selection] dec)
+      13 (start-editor)
       nil)))
 
 (defn init-state
@@ -109,7 +110,8 @@
                                                ))
         dom-listeners [["#seed-cancel" "click" (shared/cancel-module "home")]
                        ["#seed-continue" "click" start-editor]
-                       ;;["#seed-canvas" "mousemove" update-overlay]
+                       ["#seed-left" "click" (fn [e] (swap! state update-in [:selection] inc) (.preventDefault e))]
+                       ["#seed-right" "click" (fn [e] (swap! state update-in [:selection] dec) (.preventDefault e))]
                        ["$window" "resize" resize-window]
                        ["$window" "keydown" switch-seed]]
         h-listeners [["drag swipe" (fn [e]
