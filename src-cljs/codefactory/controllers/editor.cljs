@@ -195,7 +195,7 @@
                 :d "M -1,0, L 1,0 M 0,-1 L 0,1"}))
       nil)
     (dom/set-attribs!
-     node {:id id :x x :y y :width w :height h :class cls})
+     node {:id id :x x :y y :width w :height h :class (str cls " selectable")})
     (.addEventListener
      node
      "click"
@@ -226,14 +226,23 @@
       :svg-aspect aspect
       :viz-nodes {id node})))
 
+(defn reposition-sliders
+  [state]
+  (let [{:keys [viz-container svg-height]} @state
+        ctrl (dom/by-id "op-ctrl")
+        y (int (- (mm/subm svg-height (nth (dom/size ctrl) 1) 0.25) svg-height))]
+    (dom/set-style! ctrl #js {:top (str y "px")})))
+
 (defn resize-viz
   [state]
-  (let [{:keys [viz-container svg-nodes]} state
+  (let [{:keys [viz-container svg-nodes ctrl-active?]} state
         {:keys [inset]} config/editor-viz
         [w h] (dom/size (dom/parent viz-container))
         inset (/ inset w)
         aspect (/ w h)]
     (dom/set-attribs! viz-container {:width w :height h})
+    ;; TODO relayout all components
+    (if ctrl-active? (reposition-sliders state))
     (assoc state
       :svg-width w
       :svg-height h
@@ -260,41 +269,26 @@
 
 (defn init-op-controls
   [state path op specs]
-  (loop [acc [], specs specs, i 0]
-    (if specs
-      (recur
-       (conj acc (init-op-slider state path i op (first specs)))
-       (next specs)
-       (inc i))
-      acc)))
-
-(defn init-operator
-  [state queue {:keys [op-id specs ctor]}]
-  (let [{:keys [viz-container tree sel-node selection]} @state
-        path (mg/child-path selection)
-        orig (if (seq path) (get-in tree path) tree)
-        ctrl (dom/by-id "op-ctrl")
-        listeners (init-op-controls state path op-id specs)]
-    (app/add-listeners listeners)
-    (dom/set-attribs! sel-node {:class (str "op-" (name op-id))})
-    (dom/set-attribs! (dom/by-id (str (.-id sel-node) "_plus")) {:class "hidden"})
-    (app/merge-state
-     state
-     {:orig-tree-value orig
-      :sel-type op-id
-      :ctrl-active? true
-      :ctrl-listeners listeners
-      :tree (if (seq path) (assoc-in tree path (mg/subdiv)) (mg/subdiv))})
-    (prn (:tree @state))
-    (swap! state update-meshes)
-    (render-scene state)
-    (dom/remove-class! ctrl "hidden")))
+  (let [op-col (config/operator-color op)]
+    (dom/set-style! (dom/by-id "ctrl-ok-path") #js {:fill op-col})
+    (dom/set-style! (dom/by-id "ctrl-cancel-path") #js {:stroke op-col})
+    (reposition-sliders state)
+    (loop [acc [], specs specs, i 0]
+      (if specs
+        (recur
+         (conj acc (init-op-slider state path i op (first specs)))
+         (next specs)
+         (inc i))
+        (do
+          (if (< i 3)
+            (loop [i i] (when (< i 3) (dom/add-class! (dom/by-id (str "ctrl" i)) "hidden") (recur (inc i)))))
+          acc)))))
 
 (defmulti show-op-controls
-  (fn [state op-id] op-id))
+  (fn [state queue op-id] op-id))
 
 (defmethod show-op-controls :sd
-  [state op-id]
+  [state queue op-id]
   (let [{:keys [viz-container tree sel-node selection]} @state
         path (mg/child-path selection)
         orig (if (seq path) (get-in tree path) tree)
@@ -306,7 +300,14 @@
                 :listener (fn [n {:keys [cols slices]}] (mg/subdiv :cols cols :rows n :slices slices))}
                {:label "slices" :min 1 :max 5 :value slices :step 1
                 :listener (fn [n {:keys [rows cols]}] (mg/subdiv :cols cols :rows rows :slices n))}]
-        listeners (init-op-controls state path op-id specs)]
+        listeners (init-op-controls state path op-id specs)
+        listeners (conj listeners
+                        ["#ctrl-ok" "click" (fn [e]
+                                              (emit queue :editor-commit-operator nil)
+                                              (.preventDefault e))]
+                        ["#ctrl-cancel" "click" (fn [e]
+                                                  (emit queue :editor-cancel-operator nil)
+                                                  (.preventDefault e))])]
     (app/add-listeners listeners)
     (dom/set-attribs! sel-node {:class (str "op-" (name op-id))})
     (dom/set-attribs! (dom/by-id (str (.-id sel-node) "_plus")) {:class "hidden"})
@@ -323,12 +324,13 @@
     (dom/remove-class! ctrl "hidden")))
 
 (defmethod show-op-controls :sd-inset
-  [state op-id]
-  (let [{:keys [viz-container tree svg-nodes selection]} @state
+  [state queue op-id]
+  (let [{:keys [viz-container tree svg-nodes svg-height selection]} @state
         ctrl (dom/by-id "op-ctrl")]
     (dom/set-attribs! (dom/by-id "ctrl0") {:class "op-sd-inset" :min 1 :max 5 :value 1 :step 1})
     (dom/set-attribs! (dom/by-id "ctrl1") {:class "op-sd-inset" :min 1 :max 5 :value 1 :step 1})
     (dom/set-attribs! (dom/by-id "ctrl2") {:class "op-sd-inset" :min 1 :max 5 :value 1 :step 1})
+    (dom/add-class! (dom/by-id "ctrl2") "hidden")
     (dom/remove-class! ctrl "hidden")))
 
 (defmethod handle-event :editor-redraw-canvas
@@ -370,7 +372,15 @@
     (when (not= op-id sel-type)
       (app/remove-listeners ctrl-listeners)
       (dom/set-attribs! sel-node {:y svg-inset :height svg-max-size})
-      (show-op-controls (.-state instance) op-id))))
+      (show-op-controls (.-state instance) q op-id))))
+
+(defmethod handle-event :editor-commit-operator
+  [_ _ q]
+  )
+
+(defmethod handle-event :editor-cancel-operator
+  [_ _ q]
+  )
 
 (defn init-state
   [state queue initial opts]

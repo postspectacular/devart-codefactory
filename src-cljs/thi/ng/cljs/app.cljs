@@ -67,12 +67,12 @@
   [specs]
   (loop [specs specs]
     (if specs
-      (let [[id eid f] (first specs)
+      (let [[id eid f cap?] (first specs)
             el (if (string? id)
                  (if (= "$window" id)
                    js/window (dom/query nil id))
                  id)]
-        (when el (events/listen el (name eid) f))
+        (when el (events/listen el (name eid) f cap?))
         (recur (next specs))))))
 
 (defn remove-listeners

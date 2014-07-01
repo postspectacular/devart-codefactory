@@ -126,11 +126,10 @@ nav {
 }
 
 #edit-treemap {
-    min-height: 200px;
-    max-height: 300px;
-    -webkit-flex: 2 2 auto;
-    -moz-flex: 2 2 auto;
-    flex: 2 2 auto;
+    height: 200px;
+    -webkit-flex: 1 0 auto;
+    -moz-flex: 1 0 auto;
+    flex: 1 0 auto;
 
     path, rect {
         stroke-width: 2px;
@@ -145,15 +144,15 @@ nav {
             cursor: pointer;
         }
 
-        rect.op-sd { fill: @op-col-sd; fill-opacity: 0.2; }
-        rect.op-sd-inset { fill: @op-col-inset; fill-opacity: 0.2; }
-        rect.op-ext { fill: @op-col-ext; fill-opacity: 0.2; }
-        rect.op-reflect { fill: @op-col-mirror; fill-opacity: 0.2; }
-        rect.op-shift-displace { fill: @op-col-shift; fill-opacity: 0.2; }
-        rect.op-skew { fill: @op-col-tilt; fill-opacity: 0.2; }
-        rect.op-scale-size { fill: @op-col-scale-side; fill-opacity: 0.2; }
-        rect.op-delete { fill: @op-col-delete; fill-opacity: 0.2; }
-        rect.op-leaf { fill: white; fill-opacity: 0.2; }
+        rect.selectable.op-sd { fill: @op-col-sd; fill-opacity: 0.2; }
+        rect.selectable.op-sd-inset { fill: @op-col-inset; fill-opacity: 0.2; }
+        rect.selectable.op-ext { fill: @op-col-ext; fill-opacity: 0.2; }
+        rect.selectable.op-reflect { fill: @op-col-mirror; fill-opacity: 0.2; }
+        rect.selectable.op-shift-displace { fill: @op-col-shift; fill-opacity: 0.2; }
+        rect.selectable.op-skew { fill: @op-col-tilt; fill-opacity: 0.2; }
+        rect.selectable.op-scale-size { fill: @op-col-scale-side; fill-opacity: 0.2; }
+        rect.selectable.op-delete { fill: @op-col-delete; fill-opacity: 0.2; }
+        rect.selectable.op-leaf { fill: white; fill-opacity: 0.2; }
     }
 }
 
@@ -172,7 +171,7 @@ nav {
 
 #home {
 
-    background-image: url('/img/20140701-timeout3-bidir-288spp.jpg');
+    background-image: url('/img/renders/20140701.jpg');
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
@@ -279,7 +278,7 @@ nav {
     .controls {
 
         position: relative;
-        top: -250px;
+        top: 0;
         left: 5%;
         z-index: 200;
         display: flex;
@@ -292,13 +291,14 @@ nav {
         .sliders {
             -webkit-flex: 6 0 auto;
             -moz-flex: 6 0 auto;
-            flex: 6 0 auto;
+            flex: 5 0 auto;
         }
 
         .buttons {
             -webkit-flex: 1 0 auto;
             -moz-flex: 1 0 auto;
             flex: 1 0 auto;
+            padding-right: 10px;
         }
 
         p {
@@ -308,7 +308,7 @@ nav {
 
         input[type='range'] {
             -webkit-appearance: none;
-            width: 95%;
+            width: 85%;
             height: 2px;
             vertical-align: middle;
 
