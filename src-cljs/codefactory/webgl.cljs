@@ -162,9 +162,11 @@ void main() {
 (defn render-with-selection
   [gl shaders shared-uniforms meshes sel-meshes sel-color time sel-time]
   (let [[xray solid] shaders
-        color (col/pulsate 0.5 sel-color time 0.5)
-        alpha (m/mix 1.0 (get-in xray [:preset :uniforms :alpha])
-                     (min (mm/subm time sel-time 0.2) 1.0))]
+        color sel-color
+        ;; color (col/pulsate 0.5 sel-color time 0.5)
+        alpha (get-in xray [:preset :uniforms :alpha])
+        ;; alpha (m/mix 1.0 alpha (min (mm/subm time sel-time 0.2) 1.0))
+        ]
     (debug time sel-time)
     (render-meshes
      gl solid sel-meshes shared-uniforms {:lightCol color})

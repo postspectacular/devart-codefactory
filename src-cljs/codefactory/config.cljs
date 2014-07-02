@@ -16,7 +16,7 @@
 (def webgl
   {:min-aa-res 480
    :bg-col [0.2 0.2 0.211 1]
-   :shader-preset-ids [:xray-soft :lambert-default]
+   :shader-preset-ids [:xray-strong :lambert-default]
    :initial-view [0.10196 0.90405 -0.30269 -0.2838]})
 
 (def seeds
@@ -52,7 +52,7 @@
    :sd-inset       {:col "#ed732a" :label "inset"}
    :scale-side     {:col "#bd10d5" :label "scale"}
    :ext            {:col "#3fa6f2" :label "stretch"}
-   :reflect        {:col "#b9c500" :label "mirror"}
+   :reflect        {:col "#89c33f" :label "mirror"}
    :leaf           {:col "#ffffff" :label "leaf"}
    :shift-displace {:col "#b9c500" :label "shift"}
    :delete         {:col "#aaaaaa" :label "delete"}
