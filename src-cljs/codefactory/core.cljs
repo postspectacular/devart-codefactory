@@ -6,6 +6,7 @@
    [codefactory.controllers.home :as home]
    [codefactory.controllers.seedselect :as seed]
    [codefactory.controllers.editor :as edit]
+   [codefactory.controllers.submit :as submit]
    [thi.ng.cljs.app :as app :refer [handle-event emit]]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.io :as io]
@@ -24,6 +25,7 @@
    :seed-selector seed/instance
    :home home/instance
    :editor edit/instance
+   :submit-form submit/instance
    :gallery nil})
 
 (defn transition-dom

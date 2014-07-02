@@ -62,8 +62,8 @@
                {:source-paths ["src-cljs"]
                 :id "prod"
                 :compiler
-                {:pretty-print false
-                 :output-to "war/js/app.min.js"
+                {:pretty-print true
+                 :output-to "war/js/app.js"
                  :externs ["inc/hammer.externs.js"]
                  :optimizations :advanced}
                 :jar false}]}

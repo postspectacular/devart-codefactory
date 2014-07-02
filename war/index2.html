@@ -67,7 +67,7 @@
             <div>Co(de) Factory has granted Time Out readers exclusive access until Wednesday 2 July 21.00 BST for a chance to have their sculpture selected to be printed on Saturday 5 July, live at the DevArt gallery in the Digital Revolution Exhibition at the Barbican.</div>
             <div>Go to <a href="timeout.com/devart">timeout.com/devart</a> to generate the access code and read the competition terms and conditions.<br/>Please ensure you have filled out the form on the Time Out page so Time Out can match your Code Factory 'Author name' with your contact details.</div>
             <div>If you already have your access code, please enter it below:</div>
-            <form id="login">
+            <form id="login-form">
               <p><input type="password" id="password"/></p>
               <p><input type="submit" value="LOGIN" id="bt-login"/></p>
             </form>
@@ -112,7 +112,7 @@
                   <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
                 </svg>
               </div>
-              <div id="seed-continue" class="flex-item center">
+              <div id="seed-continue" class="flex-item center flash-border flash">
                 <svg width="50%" height="50" viewbox="0 0 1 1">
                   <g fill="none" stroke="#89c33f" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
                 </svg>
@@ -121,8 +121,8 @@
           </div>
         </div>
         <div id="seed-overlay" class="overlay"><h1>SELECT A CANVAS</h1></div>
-        <a id="seed-left" class="overlay" href="#"><svg width="50" height="50" viewbox="0 0 1 1"><g fill="none" stroke="#fff" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g></svg></a>
-        <a id="seed-right" class="overlay" href="#"><svg width="50" height="50" viewbox="0 0 1 1"><g fill="none" stroke="#fff" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g></svg></a>
+        <a id="seed-left" class="overlay" href="#"><svg width="80" height="80" viewbox="0 0 1 1"><g fill="none" stroke="#fff" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g></svg></a>
+        <a id="seed-right" class="overlay" href="#"><svg width="80" height="80" viewbox="0 0 1 1"><g fill="none" stroke="#fff" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g></svg></a>
       </section>
 
       <section id="editor" class="future" data-transition="concave">
@@ -150,21 +150,21 @@
           <div id="edit-treemap" class="flex-item">
             <div id="op-ctrl" class="controls hidden">
               <div class="sliders">
-                <p id="ctrl0-label">label</p><input id="ctrl0" type="range" min="0" max="50" value="5" step="5"/>
-                <p id="ctrl1-label">label</p><input id="ctrl1" type="range" min="0" max="50" value="5" step="5"/>
-                <p id="ctrl2-label">label</p><input id="ctrl2" type="range" min="0" max="50" value="5" step="5"/>
+                <p id="ctrl0-label"></p><input id="ctrl0" type="range" min="0" max="50" value="5" step="5"/>
+                <p id="ctrl1-label"></p><input id="ctrl1" type="range" min="0" max="50" value="5" step="5"/>
+                <p id="ctrl2-label"></p><input id="ctrl2" type="range" min="0" max="50" value="5" step="5"/>
               </div>
               <div class="buttons">
                 <p><a id="ctrl-ok" href="#"><svg width="48" height="48">
-                    <g transform="translate(0,-1004.3622)">
-                      <path id="ctrl-ok-path" d="m 24.001787,1004.3622 c -13.234138,0 -24.0017873329,10.7686 -24.0017873329,24.0009 0,13.2331 10.7676493329,23.9991 24.0017873329,23.9991 13.233244,0 23.998213,-10.766 23.998213,-23.9991 0,-13.2323 -10.764969,-24.0009 -23.998213,-24.0009" style="fill:#3fa6f2;fill-opacity:1;fill-rule:nonzero;stroke:none" />
-                      <path d="m 12.24815,1028.4368 c 0,0 8.83378,9.3702 9.327971,9.3702 l 0.03932,0 c 0.510277,-0.01 14.186774,-15.9845 14.186774,-15.9845" style="fill:none;stroke:#ffffff;stroke-width:2.68086529;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
+                      <g transform="translate(0,-1004.3622)">
+                        <path id="ctrl-ok-path" d="m 24.001787,1004.3622 c -13.234138,0 -24.0017873329,10.7686 -24.0017873329,24.0009 0,13.2331 10.7676493329,23.9991 24.0017873329,23.9991 13.233244,0 23.998213,-10.766 23.998213,-23.9991 0,-13.2323 -10.764969,-24.0009 -23.998213,-24.0009" style="fill:#3fa6f2;fill-opacity:1;fill-rule:nonzero;stroke:none" />
+                        <path d="m 12.24815,1028.4368 c 0,0 8.83378,9.3702 9.327971,9.3702 l 0.03932,0 c 0.510277,-0.01 14.186774,-15.9845 14.186774,-15.9845" style="fill:none;stroke:#ffffff;stroke-width:2.68086529;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
                 </g></svg></a></p>
                 <p><a id="ctrl-cancel" href="#"><svg width="48" height="48">
-                    <g transform="translate(0,-1004.3622)">
-                      <path id="ctrl-cancel-path" d="m 24,1005.5298 c -12.527529,0 -22.7195903,10.195 -22.7195903,22.7252 0,12.5319 10.1920613,22.7252 22.7195903,22.7252 12.528382,0 22.71959,-10.1933 22.71959,-22.7252 0,-12.5302 -10.191208,-22.7252 -22.71959,-22.7252 z" style="fill:none;stroke:#3fa6f2;stroke-width:2.56118345;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
-                      <path d="m 15.691541,1036.5685 15.965002,-15.9704" style="fill:none;stroke:#ffffff;stroke-width:2.56118345;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
-                      <path d="M 31.656543,1036.5685 15.691541,1020.5981" style="fill:none;stroke:#ffffff;stroke-width:2.56118345;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
+                      <g transform="translate(0,-1004.3622)">
+                        <path id="ctrl-cancel-path" d="m 24,1005.5298 c -12.527529,0 -22.7195903,10.195 -22.7195903,22.7252 0,12.5319 10.1920613,22.7252 22.7195903,22.7252 12.528382,0 22.71959,-10.1933 22.71959,-22.7252 0,-12.5302 -10.191208,-22.7252 -22.71959,-22.7252 z" style="fill:none;stroke:#3fa6f2;stroke-width:2.56118345;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
+                        <path d="m 15.691541,1036.5685 15.965002,-15.9704" style="fill:none;stroke:#ffffff;stroke-width:2.56118345;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
+                        <path d="M 31.656543,1036.5685 15.691541,1020.5981" style="fill:none;stroke:#ffffff;stroke-width:2.56118345;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none" />
                 </g></svg></a></p>
               </div>
             </div>
@@ -176,7 +176,7 @@
                   <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g></svg></div>
               <div id="edit-submit" class="flex-item center">
                 <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g fill="none" stroke="#89c33f" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                  <g fill="none" stroke="#89c33f" stroke-width="0.05"><path d="M0.2,0.6 L0.2,0.8 L0.8,0.8 L0.8,0.6 M0.3,0.4 L0.5,0.2 L0.7,0.4 M0.5,0.2 L0.5,0.7"/></g>
                 </svg>
               </div>
             </div>
@@ -184,27 +184,26 @@
         </div>
       </section>
 
-      <section id="submit-art" class="future" data-transition="concave">
+      <section id="submit-form" class="future" data-transition="concave">
         <div class="flex-container">
           <div class="flex-item preview-wrapper">
             <canvas id="submit-canvas"></canvas>
           </div>
-          <div id="toolbar" class="flex-item toolbar">
+          <div id="toolbar" class="flex-item toolbar center">
             <h1>SUBMIT YOUR ARTWORK</h1>
           </div>
-          <div id="submit-form-wrapper" class="flex-item">
-
+          <div id="submit-form-wrapper" class="flex-item center">
+            <form id="submit-art">
+              <p><input type="text" placeholder="ARTWORK TITLE" name="title" /></p>
+              <p><input type="text" placeholder="AUTHOR NAME" name="name" /></p>
+              <p><input type="submit" value="SUBMIT"/></p>
+            </form>
           </div>
           <div class="flex-item buttonbar">
             <div class="inner">
-              <div id="edit-cancel" class="flex-item center">
+              <div id="submit-cancel" class="flex-item center">
                 <svg width="50%" height="50" viewbox="0 0 1 1">
                   <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g></svg></div>
-              <div id="edit-submit" class="flex-item center">
-                <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g fill="none" stroke="#89c33f" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
-                </svg>
-              </div>
             </div>
           </div>
         </div>

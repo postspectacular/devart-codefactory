@@ -32,3 +32,6 @@
     (dom/set-style!
      (dom/query (.-target e) "svg g")
      #js {:stroke color})))
+
+(defn show-nav
+  [] (dom/remove-class! (dom/query nil "nav") "hidden"))

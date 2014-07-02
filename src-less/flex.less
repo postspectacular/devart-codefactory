@@ -278,7 +278,7 @@ nav {
     .controls {
 
         position: relative;
-        top: 0;
+        top: -200px;
         left: 5%;
         z-index: 200;
         display: flex;
@@ -299,6 +299,7 @@ nav {
             -moz-flex: 1 0 auto;
             flex: 1 0 auto;
             padding-right: 10px;
+            padding-top: 32px;
         }
 
         p {
@@ -522,14 +523,17 @@ a:link { color: @op-col-sd; }
 
 a:hover { color: lighten(@op-col-sd,10); }
 
-input[type="password"], input[type="submit"] {
+input[type="text"], input[type="password"], input[type="submit"] {
     width: 300px;
     height: 40px;
     font-size: 2em;
     font-family: "Abel";
-    line-height: 34px;
+    line-height: 36px;
     text-align: center;
+    text-transform: uppercase;
     background: transparent;
     color: @op-col-sd;
     border: 2px solid @op-col-sd;
 }
+
+input[type="submit"] { cursor: pointer; }

@@ -30,6 +30,11 @@
    [thi.ng.common.math.core :as m]
    ))
 
+(def direction-ids [:x :y :z])
+(def direction-idx {:x 0 :y 1 :z 2})
+(def face-ids [:e :w :n :s :f :b])
+(def face-idx {:e 0 :w 1 :n 2 :s 3 :f 4 :b 5})
+
 (def mg-trees
   {:box {:seed :box
          :tree {}
@@ -63,6 +68,10 @@
   [n] (cond (:op n) (:op n), n :leaf, :else :delete))
 
 (declare instance)
+
+(defn submit-model
+  []
+  (route/set-route! "submit-form"))
 
 (defn load-model
   [queue id]
@@ -242,7 +251,7 @@
         aspect (/ w h)]
     (dom/set-attribs! viz-container {:width w :height h})
     ;; TODO relayout all components
-    (if ctrl-active? (reposition-sliders state))
+    ;;(if ctrl-active? (reposition-sliders state))
     (assoc state
       :svg-width w
       :svg-height h
@@ -253,36 +262,39 @@
   [state path i op-id {:keys [label min max value step listener]}]
   (let [el-id (str "ctrl" i)
         el (dom/by-id el-id)
+        el-label (dom/by-id (str el-id "-label"))
         cls (str "op-" (name op-id))]
     (dom/set-attribs! el {:class cls :min min :max max :value value :step step})
-    (dom/set-text! (dom/by-id (str el-id "-label")) label)
+    (dom/set-text! el-label label)
+    (dom/remove-class! el "hidden")
+    (dom/remove-class! el-label "hidden")
     [el "change"
      (fn [e]
-       (let [n (utils/parse-int (.-value el))]
+       (let [n (utils/parse-float (.-value el))]
          (swap!
           state
           assoc-in (cons :tree path)
           (listener n (get-in (:tree @state) (concat path [:args]))))
          (prn (:tree @state))
          (swap! state update-meshes)
-         (render-scene state)))(listener )]))
+         (render-scene state)))]))
 
 (defn init-op-controls
   [state path op specs]
   (let [op-col (config/operator-color op)]
     (dom/set-style! (dom/by-id "ctrl-ok-path") #js {:fill op-col})
     (dom/set-style! (dom/by-id "ctrl-cancel-path") #js {:stroke op-col})
-    (reposition-sliders state)
+    (dotimes [i 3]
+      (dom/add-class! (dom/by-id (str "ctrl" i)) "hidden")
+      (dom/add-class! (dom/by-id (str "ctrl" i "-label")) "hidden"))
+    ;;(reposition-sliders state)
     (loop [acc [], specs specs, i 0]
       (if specs
         (recur
          (conj acc (init-op-slider state path i op (first specs)))
          (next specs)
          (inc i))
-        (do
-          (if (< i 3)
-            (loop [i i] (when (< i 3) (dom/add-class! (dom/by-id (str "ctrl" i)) "hidden") (recur (inc i)))))
-          acc)))))
+        acc))))
 
 (defmulti show-op-controls
   (fn [state queue op-id] op-id))
@@ -295,11 +307,11 @@
         {:keys [cols rows slices] :or {cols 1 rows 1 slices 1}} (:args orig)
         ctrl (dom/by-id "op-ctrl")
         specs [{:label "columns" :min 1 :max 5 :value cols :step 1
-                :listener (fn [n {:keys [rows slices]}] (mg/subdiv :cols n :rows rows :slices slices))}
+                :listener (fn [n {:keys [rows slices]}] (mg/subdiv :cols (int n) :rows rows :slices slices))}
                {:label "rows" :min 1 :max 5 :value rows :step 1
-                :listener (fn [n {:keys [cols slices]}] (mg/subdiv :cols cols :rows n :slices slices))}
+                :listener (fn [n {:keys [cols slices]}] (mg/subdiv :cols cols :rows (int n) :slices slices))}
                {:label "slices" :min 1 :max 5 :value slices :step 1
-                :listener (fn [n {:keys [rows cols]}] (mg/subdiv :cols cols :rows rows :slices n))}]
+                :listener (fn [n {:keys [rows cols]}] (mg/subdiv :cols cols :rows rows :slices (int n)))}]
         listeners (init-op-controls state path op-id specs)
         listeners (conj listeners
                         ["#ctrl-ok" "click" (fn [e]
@@ -325,12 +337,37 @@
 
 (defmethod show-op-controls :sd-inset
   [state queue op-id]
-  (let [{:keys [viz-container tree svg-nodes svg-height selection]} @state
-        ctrl (dom/by-id "op-ctrl")]
-    (dom/set-attribs! (dom/by-id "ctrl0") {:class "op-sd-inset" :min 1 :max 5 :value 1 :step 1})
-    (dom/set-attribs! (dom/by-id "ctrl1") {:class "op-sd-inset" :min 1 :max 5 :value 1 :step 1})
-    (dom/set-attribs! (dom/by-id "ctrl2") {:class "op-sd-inset" :min 1 :max 5 :value 1 :step 1})
-    (dom/add-class! (dom/by-id "ctrl2") "hidden")
+  (let [{:keys [viz-container tree sel-node selection]} @state
+        path (mg/child-path selection)
+        orig (if (seq path) (get-in tree path) tree)
+        {:keys [dir inset] :or {dir :x inset 0.1}} (:args orig)
+        ctrl (dom/by-id "op-ctrl")
+        specs [{:label "direction" :min 0 :max 2 :value (direction-idx dir) :step 1
+                :listener (fn [n {:keys [inset]}] (mg/subdiv-inset :dir (direction-ids (int n)) :inset inset))}
+               {:label "inset" :min 0.001 :max 0.45 :value inset :step 0.001
+                :listener (fn [n {:keys [dir]}] (mg/subdiv-inset :dir dir :inset n))}]
+        listeners (init-op-controls state path op-id specs)
+        listeners (conj listeners
+                        ["#ctrl-ok" "click" (fn [e]
+                                              (emit queue :editor-commit-operator nil)
+                                              (.preventDefault e))]
+                        ["#ctrl-cancel" "click" (fn [e]
+                                                  (emit queue :editor-cancel-operator nil)
+                                                  (.preventDefault e))])
+        default (mg/subdiv-inset :dir dir :inset inset)]
+    (app/add-listeners listeners)
+    (dom/set-attribs! sel-node {:class (str "op-" (name op-id))})
+    (dom/set-attribs! (dom/by-id (str (.-id sel-node) "_plus")) {:class "hidden"})
+    (app/merge-state
+     state
+     {:orig-tree-value orig
+      :sel-type op-id
+      :ctrl-active? true
+      :ctrl-listeners listeners
+      :tree (if (seq path) (assoc-in tree path default) default)})
+    (prn (:tree @state))
+    (swap! state update-meshes)
+    (render-scene state)
     (dom/remove-class! ctrl "hidden")))
 
 (defmethod handle-event :editor-redraw-canvas
@@ -390,6 +427,7 @@
                          (swap! state resize-viz)
                          (render-scene state)))
         dom-listeners  [["#edit-cancel" "click" (shared/cancel-module "select-seed")]
+                        ["#edit-submit" "click" submit-model]
                         ["$window" "resize" resize-window]
                         ["#op-sd" "click" (fn [e] (.preventDefault e) (emit queue :editor-op-triggered :sd))]
                         ["#op-sd-inset" "click" (fn [e] (.preventDefault e) (emit queue :editor-op-triggered :sd-inset))]
@@ -425,7 +463,8 @@
     (set! queue (:queue opts))
     (if-let [initial (webgl/init-webgl (dom/by-id "edit-canvas"))]
       (init-state state queue initial opts)
-      (app/emit queue :webgl-missing nil)))
+      (app/emit queue :webgl-missing nil))
+    (shared/show-nav))
   (release [_]
     (let [{:keys [viz-container arcball dom-listeners]} @state]
       (debug :release-editor)

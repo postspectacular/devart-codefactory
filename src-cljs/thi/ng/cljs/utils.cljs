@@ -23,5 +23,11 @@
      (let [x' (js/parseInt x radix)]
        (if (js/isNaN x') nf x'))))
 
+(defn parse-float
+  ([x] (parse-float x nil))
+  ([x nf]
+     (let [x' (js/parseFloat x)]
+       (if (js/isNaN x') nf x'))))
+
 (defn now
   [] (.getTime (js/Date.)))

@@ -53,11 +53,11 @@
           {:keys [space camy camz cam-up rot-speed scroll-speed]} config/seed-select
           camx (m/mix camx (* selection space) scroll-speed)
           view (mat/look-at (vec3 camx camy camz) (vec3 camx 0 0) cam-up)
-          shared-unis {:view view
-                       :proj proj}
+          shared-unis {:view view :proj proj}
           num (count meshes)
           sel (rem selection num)
-          sel (if (neg? sel) (+ sel num) sel)]
+          sel (if (neg? sel) (+ sel num) sel)
+          [xray lambert] shaders]
       (apply gl/clear-color-buffer gl (:bg-col config/webgl))
       (gl/clear-depth-buffer gl 1.0)
       (loop [i (- sel 2), x (mm/msub selection space (* 2 space))]
@@ -70,8 +70,8 @@
                 shared-unis (assoc shared-unis :model model-mat :normalMat norm-mat)
                 alpha ([1.0 0.4 0.2] (Math/abs (- sel i)))]
             (if sel?
-              (webgl/render-meshes gl (shaders 1) {:a mesh} shared-unis nil)
-              (webgl/render-meshes gl (shaders 0) {:a mesh} shared-unis {:alpha alpha}))
+              (webgl/render-meshes gl lambert {:a mesh} shared-unis nil)
+              (webgl/render-meshes gl xray {:a mesh} shared-unis {:alpha alpha}))
             (recur (inc i) (+ x space)))))
       (app/merge-state state {:time (+ time 0.01666) :camx camx})
       (anim/animframe-provider (fn [& _] (render-scene state))))))
@@ -115,9 +115,9 @@
                        ["$window" "resize" resize-window]
                        ["$window" "keydown" switch-seed]]
         h-listeners [["drag swipe" (fn [e]
-                                     (let [g (.-gesture e)
-                                           dx (.-deltaX g)
-                                           dt (.-deltaTime g)]
+                                     (let [g (aget e "gesture")
+                                           dx (aget g "deltaX")
+                                           dt (aget g "deltaTime")]
                                        (if (and (not (:drag-switch @state))
                                                 (> dt 50)
                                                 (> (Math/abs dx) 5))
@@ -155,7 +155,8 @@
     (set! queue (:queue opts))
     (if-let [initial (webgl/init-webgl (dom/by-id "seed-canvas"))]
       (init-state state queue initial opts)
-      (app/emit queue :webgl-missing nil)))
+      (app/emit queue :webgl-missing nil))
+    (shared/show-nav))
   (release [_]
     (debug :release-seedselect)
     (app/remove-listeners (:dom-listeners @state))

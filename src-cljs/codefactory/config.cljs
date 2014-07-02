@@ -71,6 +71,8 @@
     :controller :editor}
    {:match ["select-seed"]
     :controller :seed-selector}
+   {:match ["submit-form"]
+    :controller :submit-form}
    {:match ["gallery" :page]
     :bindings {:page {:coerce utils/parse-int :validate [(v/number) (v/pos)]}}
     :controller :gallery}
@@ -84,10 +86,13 @@
    [:loader :editor] -1
    [:loader :gallery] -1
    [:loader :login] -1
+   [:loader :submit-form] -1
    [:home :editor] -1
    [:home :seed-selector] -1
    [:editor :home] 1
    [:editor :seed-selector] 1
+   [:editor :submit-form] -1
+   [:submit-form :editor] 1
    [:seed-selector :home] 1
    [:login :home] -1
    })

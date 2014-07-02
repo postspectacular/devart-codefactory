@@ -42,7 +42,7 @@
     [_ el cb]
     (let [w "$window"
           mdown (fn [e]
-                  (let [e (.-center (.-gesture e))
+                  (let [e (-> e (aget "gesture") (aget "center"))
                         y (- (.-clientY e) (.-offsetTop el))
                         h (.-clientHeight el)]
                     (if (m/in-range? 0 h y)
@@ -50,23 +50,24 @@
           mup   (fn [e] (prn :up) (up _))
           mdrag (fn [e]
                   (if click-pos
-                    (let [e (.-center (.-gesture e))]
+                    (let [e (-> e (aget "gesture") (aget "center"))]
                       (drag _ (.-clientX e) (- (.-clientHeight el) (- (.-clientY e) (.-offsetTop el)))))))
-          mzoom (fn [e]
-                  (zoom-delta _ (.-deltaY (.getBrowserEvent e)))
-                  (.preventDefault e))
           tzoom (fn [e]
-                  (zoom-abs _ (.-scale (.-gesture e))))
+                  (zoom-abs _ (-> e (aget "gesture") (aget "scale"))))
           resize (fn [] (resize _ (.-clientWidth el) (.-clientHeight el)))
           hspecs [["dragstart" mdown]
                   ["dragend" mup]
                   ["drag" mdrag]
                   ["pinch" tzoom]]
-          lspecs [[w "wheel" mzoom]
+          lspecs [(if (.-onwheel el)
+                    [w "wheel" (fn [e]
+                                 (zoom-delta _ (.-deltaY (.getBrowserEvent e)))
+                                 (.preventDefault e))]
+                    [w "mousewheel" (fn [e]
+                                      (zoom-delta _ (.-wheelDeltaY (.getBrowserEvent e)))
+                                      (.preventDefault e))])
                   [w "resize" resize]]
-          hammer (js/Hammer el #js {:preventDefault true
-                                    :swipeMinTouches 2
-                                    :swipeMaxTouches 2})]
+          hammer (js/Hammer el #js {:preventDefault true})]
       (set! listeners {:hspecs hspecs :specs lspecs :callback cb :hammer hammer})
       (app/add-listeners lspecs)
       (app/add-hammer-listeners hammer hspecs)

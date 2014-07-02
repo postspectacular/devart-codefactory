@@ -2,6 +2,7 @@
   (:require
    [codefactory.config :as config]
    [codefactory.protocols :as proto]
+   [codefactory.controllers.shared :as shared]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
    [thi.ng.cljs.app :as app]
@@ -22,7 +23,8 @@
     (debug :init-home)
     (set! shared (:state opts))
     (set! queue (:queue opts))
-    (app/add-listeners dom-listeners))
+    (app/add-listeners dom-listeners)
+    (shared/show-nav))
   (release [_]
     (debug :release-home)
     (app/remove-listeners dom-listeners)))

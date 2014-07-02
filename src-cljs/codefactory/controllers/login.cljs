@@ -35,7 +35,7 @@
     (debug :init-home)
     (set! shared (:state opts))
     (set! queue (:queue opts))
-    (swap! state assoc :dom-listeners [["#login" "submit" (check-login queue)]])
+    (swap! state assoc :dom-listeners [["#login-form" "submit" (check-login queue)]])
     (app/add-listeners (:dom-listeners @state))
     (.focus (dom/by-id "password")))
   (release [_]
