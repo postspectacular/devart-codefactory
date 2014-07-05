@@ -36,6 +36,11 @@ Hammer.Instance.prototype.trigger = function(e, data) {};
 
 Hammer.Instance.prototype.dispose = function() {};
 
+/**
+ * @type {Object{gesture:Object}}
+ */
+Hammer.Event;
+
 /*
 timestamp        {Number}        time the event occurred
 target           {HTMLElement}   target element

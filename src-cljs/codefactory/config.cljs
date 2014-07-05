@@ -44,14 +44,15 @@
    :scroll-speed 0.15})
 
 (def editor-viz
-  {:inset 11})
+  {:inset 11
+   :gap 5})
 
 (def operators
   {:sd             {:col "#56ffee" :label "split"}
    :skew           {:col "#ffd641" :label "tilt"}
    :sd-inset       {:col "#ed732a" :label "inset"}
    :scale-side     {:col "#bd10d5" :label "scale"}
-   :ext            {:col "#3fa6f2" :label "stretch"}
+   :extrude        {:col "#3fa6f2" :label "stretch"}
    :reflect        {:col "#89c33f" :label "mirror"}
    :leaf           {:col "#ffffff" :label "leaf"}
    :shift-displace {:col "#b9c500" :label "shift"}

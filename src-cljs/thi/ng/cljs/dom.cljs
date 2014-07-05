@@ -48,13 +48,18 @@
 (defn get-attrib
   [el attr] (.getAttribute el attr))
 
+(defn get-attribs
+  [el attrs]
+  (map (fn [a] (get-attrib el a)) attrs))
+
 (defn set-attribs!
   [el attribs]
-  (loop [attribs attribs]
-    (if attribs
-      (let [[k v] (first attribs)]
-        (.setAttribute el (name k) v)
-        (recur (next attribs))))))
+  (if el
+    (loop [attribs attribs]
+      (if attribs
+        (let [[k v] (first attribs)]
+          (.setAttribute el (name k) v)
+          (recur (next attribs)))))))
 
 (defn set-style!
   [el opts]
@@ -71,6 +76,9 @@
 
 (defn size
   [el] [(.-clientWidth el) (.-clientHeight el)])
+
+(defn remove-children
+  [el] (while (.-lastChild el) (.removeChild el (.-lastChild el))))
 
 (defn request-fullscreen
   []

@@ -27,12 +27,14 @@
                  [commons-io "2.4"]
                  [commons-codec "1.9"]
                  [commons-fileupload "1.3.1"]
+
                  ;; GAE admin
                  [tomcat/jasper-runtime "5.5.23"]
                  [org.apache.geronimo.specs/geronimo-jsp_2.1_spec "1.0.1"]
                  [javax.servlet/jstl "1.1.2"]
                  [taglibs/standard "1.1.2"]
                  [commons-el "1.0"]
+
                  ;; GAE standard libs
                  [com.google.appengine/appengine-api-1.0-sdk "1.9.5"]
                  [com.google.appengine/appengine-api-labs "1.9.5"]
