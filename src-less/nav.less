@@ -1,0 +1,33 @@
+nav {
+    width: 100%;
+    position: fixed;
+    z-index: 100;
+    //background-color: rgba(0, 0, 0, 0.25);
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    -webkit-flex-flow: row nowrap;
+    -moz-flex-flow: row nowrap;
+    flex-flow: row nowrap;
+    -webkit-justify-content: center;
+    -moz-justify-content: center;
+    justify-content: center;
+
+    h1 { font-size: 180%; line-height: 0.8; }
+
+    .nav svg {
+        margin: 10px 0 10px 10px;
+    }
+
+    .icons svg {
+        margin:10px 10px 10px 0;
+    }
+
+    .icons a:hover svg g {
+        fill: white;
+    }
+}
+
+#nav-toggle:hover svg g {
+    stroke: white;
+}

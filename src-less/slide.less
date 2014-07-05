@@ -167,3 +167,61 @@
 .slideUp {
   .animation-name(slideUp);
 }
+
+@-webkit-keyframes border-flash {
+    0%    { border-color: @border-col;  }
+    25%   { border-color: @border-col-flash; }
+    75%   { border-color: @border-col-flash; }
+    100%  { border-color: @border-col;  }
+}
+@-moz-keyframes border-flash {
+    0%    { border-color: @border-col;  }
+    25%   { border-color: @border-col-flash; }
+    75%   { border-color: @border-col-flash; }
+    100%  { border-color: @border-col;  }
+}
+@-o-keyframes border-flash {
+    0%    { border-color: @border-col;  }
+    25%   { border-color: @border-col-flash; }
+    75%   { border-color: @border-col-flash; }
+    100%  { border-color: @border-col;  }
+}
+@keyframes border-flash {
+    0%    { border-color: @border-col;  }
+    25%   { border-color: @border-col-flash; }
+    75%   { border-color: @border-col-flash; }
+    100%  { border-color: @border-col;  }
+}
+
+.flash {
+    -webkit-animation: border-flash 1.0s infinite;
+    -moz-animation:    border-flash 1.0s infinite;
+    -o-animation:      border-flash 1.0s infinite;
+    animation:         border-flash 1.0s infinite;
+}
+
+@err-col: #f00;
+
+@-webkit-keyframes error-flash {
+    0%    { border-color: @err-col; color: @err-col;  }
+    100%  { border-color: @op-col-sd; color: @op-col-sd; }
+}
+@-moz-keyframes error-flash {
+    0%    { border-color: @err-col; color: @err-col; }
+    100%  { border-color: @op-col-sd; color: @op-col-sd; }
+}
+@-o-keyframes error-flash {
+    0%    { border-color: @err-col; color: @err-col; }
+    100%  { border-color: @op-col-sd; color: @op-col-sd; }
+}
+@keyframes error-flash {
+    0%    { border-color: @err-col; color: @err-col; }
+    100%  { border-color: @op-col-sd; color: @op-col-sd;  }
+}
+
+.flash-error {
+    -webkit-animation: error-flash 800ms;
+    -moz-animation:    error-flash 800ms;
+    -o-animation:      error-flash 800ms;
+    animation:         error-flash 800ms;
+}

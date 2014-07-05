@@ -1,0 +1,42 @@
+#edit-treemap {
+    height: 200px;
+    -webkit-flex: 1 0 auto;
+    -moz-flex: 1 0 auto;
+    flex: 1 0 auto;
+
+    svg {
+        .op-sd { stroke: @op-col-sd; }
+        .op-sd-inset { stroke: @op-col-inset; }
+        .op-extrude { stroke: @op-col-extrude; }
+        .op-reflect { stroke: @op-col-reflect; }
+        .op-shift-displace { stroke: @op-col-shift; }
+        .op-skew { stroke: @op-col-tilt; }
+        .op-scale-size { stroke: @op-col-scale-side; }
+        .op-delete { stroke: @op-col-delete; }
+        .op-leaf { stroke: white; }
+    }
+
+    path, rect {
+        stroke-width: 2px;
+        vector-effect: non-scaling-stroke;
+    }
+
+    rect { fill: rgba(0,0,0,0.01); }
+
+    g:hover {
+
+        rect {
+            cursor: pointer;
+        }
+
+        rect.selectable.op-sd { fill: @op-col-sd; fill-opacity: 0.2; }
+        rect.selectable.op-sd-inset { fill: @op-col-inset; fill-opacity: 0.2; }
+        rect.selectable.op-ext { fill: @op-col-extrude; fill-opacity: 0.2; }
+        rect.selectable.op-reflect { fill: @op-col-reflect; fill-opacity: 0.2; }
+        rect.selectable.op-shift-displace { fill: @op-col-shift; fill-opacity: 0.2; }
+        rect.selectable.op-skew { fill: @op-col-tilt; fill-opacity: 0.2; }
+        rect.selectable.op-scale-size { fill: @op-col-scale-side; fill-opacity: 0.2; }
+        rect.selectable.op-delete { fill: @op-col-delete; fill-opacity: 0.2; }
+        rect.selectable.op-leaf { fill: white; fill-opacity: 0.2; }
+    }
+}
