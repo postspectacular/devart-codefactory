@@ -59,7 +59,7 @@
                   ["dragend" mup]
                   ["drag" mdrag]
                   ["pinch" tzoom]]
-          lspecs [(if (.-onwheel el)
+          lspecs [(if (.isDef js/goog (.-onwheel el))
                     [w "wheel" (fn [e]
                                  (zoom-delta _ (.-deltaY (.getBrowserEvent e)))
                                  (.preventDefault e))]
