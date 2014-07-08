@@ -3,6 +3,7 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
+  
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/data.json "0.2.5"]
@@ -53,7 +54,7 @@
                    :plugins [[lein-cljsbuild "1.0.3"]]}}
 
   :cljsbuild {:builds
-              [{:source-paths ["src-cljs"]
+              [{:source-paths ["src-async"]
                 :id "dev"
                 :compiler
                 {:pretty-print true
@@ -61,7 +62,7 @@
                  :externs ["inc/hammer.externs.js"]
                  :optimizations :whitespace}
                 :jar false}
-               {:source-paths ["src-cljs"]
+               {:source-paths ["src-async"]
                 :id "prod"
                 :compiler
                 {:pretty-print true
