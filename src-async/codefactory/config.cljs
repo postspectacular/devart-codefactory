@@ -43,9 +43,10 @@
    :scroll-speed 0.15
    :falloff [1.0 0.4 0.2]})
 
-(def editor-viz
+(def editor
   {:inset 11
-   :gap 5})
+   :gap 5
+   :min-size 24})
 
 (def operators
   {:sd             {:col "#56ffee" :label "split"}

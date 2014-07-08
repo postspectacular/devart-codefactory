@@ -18,16 +18,19 @@
    [thi.ng.geom.rect :as r]
    [thi.ng.common.math.core :as m]))
 
+(defn ->px [x] (str x "px"))
+
 (defn node-id
   [path]
   (apply str (cons "node-" (interpose "-" path))))
 
-(defn close-node-channels
+(defn remove-node-event-handlers
   [bus nodes]
   (->> nodes
        vals
        (map
-        (fn [{:keys [channel]}]
+        (fn [{:keys [el handler channel]}]
+          (.removeEventListener el "click" handler)
           (async/unsubscribe bus :node-toggle channel)
           (close! channel)))
        dorun))
@@ -37,63 +40,78 @@
   (let [el (dom/create! "div" parent)
         id (node-id path)
         cls (str "op-" (name op))
-        [ch] (dom/event-channel el "click")]
+        [ch handler] (dom/event-channel el "click")
+        label (fn [l]
+                (set! (.-innerText el) l)
+                (dom/set-style! el #js {:line-height (->px h)}))]
     (cond
-     (and (= :leaf op) (empty? path))
-     (do
-       (set! (.-innerText el) "TAP TO BEGIN")
-       (dom/set-style! el #js {:line-height (str h "px")}))
-
      (= :leaf op)
-     (do
-       (set! (.-innerText el) "+")
-       (dom/set-style! el #js {:line-height (str h "px")}))
+     (label (if (empty? path) "TAP TO BEGIN" "+"))
+
+     (= :delete op)
+     (label "x")
 
      :else nil)
-    (dom/set-attribs! el {:id id})
-    (dom/add-class! el (str cls " selectable"))
-    (dom/set-style! el #js {:left (str x "px")
-                            :top  (str y "px")
-                            :width (str w "px")
-                            :height (str h "px")})
+    (doto el
+      (dom/set-attribs! {:id id})
+      (dom/add-class! (str cls " selectable"))
+      (dom/set-style! #js {:left (->px x)
+                           :top  (->px y)
+                           :width (->px w)
+                           :height (->px h)}))
     (go
       (loop []
         (when (<! ch)
           (async/publish bus :node-toggle id)
           (recur))))
 
-    [id {:el el :path path :channel ch}]))
+    [id {:el el :path path :channel ch :handler handler}]))
+
+(defn cell-size
+  [total gap num]
+  (if (pos? num) (/ (- total (* (dec num) gap)) num) total))
 
 (defn generate-branch
   [bus viz tree]
-  (let [offx (.-offsetLeft viz)
-        offy (.-offsetTop viz)]
+  (let [gap (:gap config/editor)
+        offx (.-offsetLeft viz)
+        offy (+ (.-offsetTop viz) gap)]
     (fn gen-branch*
       [acc nodes path x y w h]
       (let [branch (tree/select-sub-paths nodes path)
             children (tree/select-direct-children branch path)
             nc (count children)
-            wc (if (pos? nc) (/ (- w (* (dec nc) 5)) nc) w)
+            wc (cell-size w gap nc)
             cy (- y h)
             op (tree/node-operator (tree/node-at tree path))
-            acc (conj acc (make-node viz path op (+ x offx) (+ (- y h) offy) w (- h 5) bus))]
+            acc (conj acc (make-node viz path op (+ x offx) (+ (- y h) offy) w (- h gap) bus))]
         (if (pos? nc)
           (reduce
            (fn [acc [c i]]
-             (gen-branch* acc branch c (mm/madd i wc i 5 x) cy wc h))
+             (gen-branch* acc branch c (mm/madd i wc i gap x) cy wc h))
            acc (zipmap (sort (keys children)) (range)))
           acc)))))
+
+(defn compute-required-width
+  [editor]
+  (let [{:keys [max-nodes max-nodes-depth]} @editor
+        {:keys [gap min-size]} config/editor
+        width (.-innerWidth js/window)
+        cw (cell-size width gap max-nodes)]
+    (if (< cw min-size)
+      (do (debug :too-small cw) width)
+      width)))
 
 (defn regenerate-viz
   [editor local bus]
   (let [{:keys [viz nodes]} @local
         {:keys [node-cache tree tree-depth]} @editor
-        width (.-innerWidth js/window)
-        height 200
-        node-height (/ height tree-depth)
+        width (compute-required-width editor)
+        height (.-clientHeight (dom/parent viz))
+        node-height (cell-size height (:gap config/editor) tree-depth)
         layout (generate-branch bus viz tree)]
     (set! (.-innerHtml viz) "")
-    (close-node-channels bus nodes)
+    (remove-node-event-handlers bus nodes)
     (swap! local assoc :nodes (layout {} node-cache [] 10 height (- width 20) node-height))))
 
 (defn init
@@ -123,7 +141,7 @@
         (when (<! resize)
           (debug :tedit-resize)
           (recur))))
-    
+
     (go
       (loop []
         (let [[_ id] (<! node-toggle)
@@ -163,7 +181,7 @@
             {:keys [viz nodes subs]} @local]
         (debug :tedit-release)
         (dom/remove! viz)
-        (close-node-channels bus nodes)
+        (remove-node-event-handlers bus nodes)
         (async/unsubscribe-and-close-many bus subs)
         (reset! local nil)))
 
