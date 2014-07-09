@@ -162,7 +162,7 @@
                     
                     (inputs 2) (arcball/up arcball)
 
-                    (inputs 3) (let [delta (or (.-deltaY e) (.-wheelDataY e))]
+                    (inputs 3) (let [delta (or (aget e "deltaY") (aget e "wheelDataY"))]
                                  (arcball/zoom-delta arcball delta)
                                  (async/publish bus :render-scene nil))
                     
