@@ -3,7 +3,10 @@
    [goog.style :as style]
    [goog.dom :as dom]
    [goog.dom.classes :as classes]
-   [cljs.core.async :refer [chan put!]]))
+   [cljs.core.async :refer [chan put! close!]]))
+
+(defn wheel-event-type
+  [] (if (.isDef js/goog (.-onwheel js/window)) "wheel" "mousewheel"))
 
 (defn create!
   [type parent]
@@ -109,4 +112,9 @@
         ch (chan)
         f (fn [e] (.preventDefault e) (put! ch e))]
     (.addEventListener el id f)
-    [ch f]))
+    [ch f id el]))
+
+(defn destroy-event-channel
+  [[ch f id el]]
+  (.removeEventListener el ev f)
+  (close! ch))

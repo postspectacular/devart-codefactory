@@ -209,6 +209,7 @@
   (let [{:keys [gap margin height map-width map-height]} config/editor
         {:keys [tree-depth]} @editor
         parent          (dom/by-id "edit-treemap")
+        toolbar         (dom/by-id "toolbar")
         viz             (dom/create! "div" nil)
         canvas          (dom/create! "canvas" nil)
         node-toggle     (async/subscribe bus :node-toggle)
@@ -264,13 +265,16 @@
     (go
       (loop []
         (let [[_ id] (<! node-selected)
-              node (get-in @local [:nodes id])]
+              {:keys [el path]} (get-in @local [:nodes id])]
           (when id
-            (debug :node-selected id node)
             (swap! local assoc :selected-id id)
-            (swap! editor assoc :selection (:path node))
-            (dom/add-class! (:el node) "selected")
-            (dom/add-class! (dom/by-id "toolbar") "rollon")
+            (swap!
+             editor assoc
+             :selection path
+             :sel-type (tree/node-operator (tree/node-at (:tree @editor) path)))
+            (dom/add-class! el "selected")
+            (dom/add-class! toolbar "rollon")
+            (async/publish bus :render-scene nil)
             (regenerate-map editor local)
             (recur)))))
 
@@ -279,12 +283,12 @@
         (let [[_ [id render?]] (<! node-deselected)
               node (get-in @local [:nodes id])]
           (when id
-            (debug :node-deselected id node)
             (swap! local assoc :selected-id nil)
-            (swap! editor assoc :selection nil)
+            (swap! editor assoc :selection nil :sel-type nil)
             (dom/remove-class! (:el node) "selected")
-            (dom/remove-class! (dom/by-id "toolbar") "rollon")
+            (dom/remove-class! toolbar "rollon")
             (when render?
+              (async/publish bus :render-scene nil)
               (regenerate-map editor local))
             (recur)))))
 

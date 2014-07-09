@@ -15,8 +15,6 @@
     (if (> m 1.0) (g/normalize v) (assoc v :z (Math/sqrt (- 1 m))))))
 
 (defprotocol PArcBall
-  (listen! [_ el callback])
-  (unlisten! [_])
   (down [_ x y])
   (drag [_ x y])
   (up [_])
@@ -34,50 +32,8 @@
      ^:mutable curr-rot
      ^:mutable click-rot
      ^:mutable click-pos
-     ^:mutable view
-     ^:mutable listeners
-     ^:mutable touches]
+     ^:mutable view]
   PArcBall
-  (listen!
-    [_ el cb]
-    (let [w "$window"
-          mdown (fn [e]
-                  (let [e (-> e (aget "gesture") (aget "center"))
-                        y (- (.-clientY e) (.-offsetTop el))
-                        h (.-clientHeight el)]
-                    (if (m/in-range? 0 h y)
-                      (down _ (.-clientX e) (- h y)))))
-          mup   (fn [e] (prn :up) (up _))
-          mdrag (fn [e]
-                  (if click-pos
-                    (let [e (-> e (aget "gesture") (aget "center"))]
-                      (drag _ (.-clientX e) (- (.-clientHeight el) (- (.-clientY e) (.-offsetTop el)))))))
-          tzoom (fn [e]
-                  (zoom-abs _ (-> e (aget "gesture") (aget "scale"))))
-          resize (fn [] (resize _ (.-clientWidth el) (.-clientHeight el)))
-          hspecs [["dragstart" mdown]
-                  ["dragend" mup]
-                  ["drag" mdrag]
-                  ["pinch" tzoom]]
-          lspecs [(if (.isDef js/goog (.-onwheel el))
-                    [w "wheel" (fn [e]
-                                 (zoom-delta _ (.-deltaY (.getBrowserEvent e)))
-                                 (.preventDefault e))]
-                    [w "mousewheel" (fn [e]
-                                      (zoom-delta _ (.-wheelDeltaY (.getBrowserEvent e)))
-                                      (.preventDefault e))])
-                  [w "resize" resize]]
-          hammer (js/Hammer el #js {:preventDefault true})]
-      (set! listeners {:hspecs hspecs :specs lspecs :callback cb :hammer hammer})
-      (app/add-listeners lspecs)
-      (app/add-hammer-listeners hammer hspecs)
-      _))
-  (unlisten!
-    [_]
-    (app/remove-listeners (:specs listeners))
-    (app/remove-hammer-listeners (:hammer listeners) (:hspecs listeners))
-    (set! listeners nil)
-    _)
   (down
     [_ x y]
     (set! click-pos (pos->sphere center radius x y))
@@ -85,12 +41,13 @@
     (update-view _))
   (drag
     [_ x y]
-    (let [drag-pos (pos->sphere center radius x y)
-          axis (g/cross click-pos drag-pos)
-          theta (g/dot click-pos drag-pos)
-          drag-rot (q/quat axis theta)]
-      (set! curr-rot (g/* drag-rot click-rot))
-      (update-view _)))
+    (when click-pos
+      (let [drag-pos (pos->sphere center radius x y)
+            axis (g/cross click-pos drag-pos)
+            theta (g/dot click-pos drag-pos)
+            drag-rot (q/quat axis theta)]
+        (set! curr-rot (g/* drag-rot click-rot))
+        (update-view _))))
   (up [_] (set! click-pos nil))
   (resize
     [_ w h]

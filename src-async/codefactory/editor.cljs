@@ -24,6 +24,7 @@
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
    [thi.ng.geom.rect :as r]
    [thi.ng.geom.basicmesh :as bm]
+   [thi.ng.geom.ui.arcball :as arcball]
    [thi.ng.morphogen.core :as mg]
    [thi.ng.common.math.core :as m]))
 
@@ -58,7 +59,8 @@
     (let [{:keys [gl arcball shaders proj meshes selection sel-type start-time sel-time]} @state
           now         (utils/now)
           time        (mm/subm now start-time 0.001)
-          view        (mat/look-at (vec3 0 1 -4) (vec3) (vec3 0 1 0)) ;; (arcball/get-view arcball)
+          ;;view        (mat/look-at (vec3 0 1 -4) (vec3) (vec3 0 1 0))
+          view        (arcball/get-view arcball)
           shared-unis {:view view
                        :model M44
                        :proj proj
@@ -76,7 +78,7 @@
 
 (defn resize-canvas
   [state]
-  (let [{:keys [gl canvas]} @state
+  (let [{:keys [gl canvas arcball]} @state
         [w h] (dom/size (dom/parent canvas))
         view-rect (r/rect 0 0 w h)]
     (set! (.-width canvas) w)
@@ -86,12 +88,15 @@
      {:canvas-width w :canvas-height h
       :view-rect view-rect
       :proj (gl/perspective 45 view-rect 0.1 10)})
-    (gl/set-viewport gl view-rect)))
+    (gl/set-viewport gl view-rect)
+    (arcball/resize arcball w h)))
 
 (defn init
   [bus]
-  (let [init       (async/subscribe bus :init-editor)
+  (let [canvas     (dom/by-id "edit-canvas")
+        init       (async/subscribe bus :init-editor)
         release    (async/subscribe bus :release-editor)
+        render     (async/subscribe bus :render-scene)
         [continue] (dom/event-channel "#edit-submit" "click")
         [cancel]   (dom/event-channel "#edit-cancel" "click")
         local      (atom {})
@@ -100,18 +105,27 @@
     (go
       (loop []
         (let [[_ [state params]] (<! init)
-              resize (async/subscribe bus :window-resize)
-              now (utils/now)]
+              resize  (async/subscribe bus :window-resize)
+              mdown   (dom/event-channel js/window "mousedown")
+              mup     (dom/event-channel js/window "mouseup")
+              mmove   (dom/event-channel js/window "mousemove")
+              mwheel  (dom/event-channel js/window (dom/wheel-event-type))
+              inputs  (mapv first [mdown mmove mup mwheel])
+              arcball (arcball/make-arcball :init (:initial-view config/editor))
+              now     (utils/now)]
           (debug :init-editor params)
           (reset!
            local
            (-> (webgl/init-webgl (dom/by-id "edit-canvas"))
                (merge
                 {:subs {:window-resize resize}
+                 :events [mdown mup mmove mwheel]
+                 :arcball arcball
                  :last-click now
                  :start-time now
                  :selection nil
-                 :time 0
+                 :sel-time now
+                 :time now
                  :active? true})
                (tree/init-tree-with-seed (:seed-id params))
                (tree/update-meshes)))
@@ -126,6 +140,33 @@
                 (when size
                   (resize-canvas local)
                   (render-scene local)
+                  (recur)))))
+
+          (go
+            (loop []
+              (let [[e ch] (alts! inputs)]
+                (when ch
+                  (condp = ch
+                    (inputs 0) (let [x (.-clientX e)
+                                     y (.-clientY e)
+                                     h (.-clientHeight canvas)]
+                                 (when (m/in-range? 0 h y)
+                                   (arcball/down arcball x (- h y))))
+
+                    (inputs 1) (let [x (.-clientX e)
+                                     y (.-clientY e)
+                                     h (.-clientHeight canvas)]
+                                 (when (and (m/in-range? 0 h y)
+                                            (arcball/drag arcball x (- h y)))
+                                   (async/publish bus :render-scene nil)))
+                    
+                    (inputs 2) (arcball/up arcball)
+
+                    (inputs 3) (let [delta (or (.-deltaY e) (.-wheelDataY e))]
+                                 (arcball/zoom-delta arcball delta)
+                                 (async/publish bus :render-scene nil))
+                    
+                    (debug :ev e))
                   (recur)))))
 
           ;; continue/cancel buttons & user timeout
@@ -143,9 +184,15 @@
 
                  (>= (- (utils/now) (:last-click @local)) module-timeout)
                  (route/set-route! "home")
-                 
+
                  :else (recur)))))
 
+          (recur))))
+
+    (go
+      (loop []
+        (let [_ (<! render)]
+          (render-scene local)
           (recur))))
 
     (go
@@ -155,6 +202,7 @@
           (debug :release-editor)
           (swap! local assoc :active? false)
           (async/unsubscribe-and-close-many bus (:subs @local))
+          (dorun (map dom/destroy-event-channel (:events @local)))
           (recur))))
 
     ))

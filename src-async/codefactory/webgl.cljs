@@ -16,7 +16,6 @@
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
    [thi.ng.geom.rect :as r]
    [thi.ng.geom.basicmesh :as bm]
-   ;;[thi.ng.geom.ui.arcball :as arcball]
    [thi.ng.common.math.core :as m]
    ))
 
@@ -115,12 +114,6 @@ void main() {
   [{:keys [gl] :as state} preset-ids]
   (assoc state
     :shaders (mapv #(init-shader gl %) preset-ids)))
-
-#_(defn init-arcball
-  [state initial-view f]
-  (let [a (arcball/make-arcball :init (or initial-view (:initial-view config/webgl) [0 0 0 1]))]
-    (arcball/listen! a (:canvas state) f)
-    (assoc state :arcball a)))
 
 (defn init-webgl
   [canvas]
