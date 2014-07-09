@@ -8,23 +8,6 @@
 (defn wheel-event-type
   [] (if (.isDef js/goog (.-onwheel js/window)) "wheel" "mousewheel"))
 
-(defn create!
-  [type parent]
-  (let [el (.createElement js/document type)]
-    (when parent
-      (.appendChild parent el))
-    el))
-
-(defn remove!
-  [el] (.removeChild (.-parentElement el) el))
-
-(defn create-ns!
-  [ns type parent]
-  (let [el (.createElementNS js/document ns type)]
-    (when parent
-      (.appendChild parent el))
-    el))
-
 (defn by-id
   [id] (.getElementById js/document id))
 
@@ -101,6 +84,32 @@
 (defn parent
   [el] (.-parentElement el))
 
+(defn create!
+  ([type] (create! type nil nil))
+  ([type parent] (create! type parent nil))
+  ([type parent attribs]
+     (let [el (.createElement js/document type)]
+       (when parent
+         (.appendChild parent el))
+       (when attribs
+         (set-attribs! el attribs))
+       el)))
+
+(defn remove!
+  [el] (.removeChild (.-parentElement el) el))
+
+(defn insert!
+  [el parent]
+  (.insertBefore parent el (.-firstChild parent))
+  el)
+
+(defn create-ns!
+  [ns type parent]
+  (let [el (.createElementNS js/document ns type)]
+    (when parent
+      (.appendChild parent el))
+    el))
+
 (defn force-redraw!
   [el]
   (set-style! el #js {:display "none"})
@@ -115,6 +124,6 @@
     [ch f id el]))
 
 (defn destroy-event-channel
-  [[ch f id el]]
+  [[ch f ev el]]
   (.removeEventListener el ev f)
   (close! ch))

@@ -208,10 +208,12 @@
   [editor bus]
   (let [{:keys [gap margin height map-width map-height]} config/editor
         {:keys [tree-depth]} @editor
-        parent          (dom/by-id "edit-treemap")
         toolbar         (dom/by-id "toolbar")
-        viz             (dom/create! "div" nil)
-        canvas          (dom/create! "canvas" nil)
+        parent          (dom/by-id "edit-treemap")
+        viz             (dom/insert! (dom/create! "div" nil {:id "viz-container"}) parent)
+        canvas          (dom/insert!
+                         (dom/create! "canvas" nil {:id "viz-map" :width map-width :height map-height})
+                         parent)
         node-toggle     (async/subscribe bus :node-toggle)
         node-selected   (async/subscribe bus :node-selected)
         node-deselected (async/subscribe bus :node-deselected)
@@ -234,10 +236,6 @@
                           :width width
                           :height map-height
                           :node-height (cell-size height gap tree-depth)})]
-    (.insertBefore parent canvas (.-firstChild parent))
-    (.insertBefore parent viz (.-firstChild parent))
-    (dom/set-attribs! canvas {:id "viz-map" :width map-width :height map-height})
-    (dom/set-attribs! viz {:id "viz-container"})
     (regenerate-viz editor local bus)
     (regenerate-map editor local)
 
