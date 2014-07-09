@@ -51,7 +51,8 @@
    :min-size 20
    :map-width 200
    :map-height 200
-   :map-bg "#333336"})
+   :map-bg "#333336"
+   :map-selection "#ffff00"})
 
 (def operators
   {:sd             {:col "#56ffee" :label "split"}

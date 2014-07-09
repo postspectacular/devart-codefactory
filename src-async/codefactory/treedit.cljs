@@ -170,35 +170,38 @@
     (swap! local assoc :width width)))
 
 (defn map-branch
-  [ctx tree path x y w h]
+  [ctx tree path x y w h sel]
   (let [{:keys [op out] :as node} (tree/node-at tree path)
         nc (count out)
         wc (cell-size w 1 nc)
-        col (config/operator-color (tree/node-operator node))] ;; TODO highlight sel
+        col (if (= path sel)
+              (:map-selection config/editor)
+              (config/operator-color (tree/node-operator node)))] ;; TODO highlight sel
     (set! (.-fillStyle ctx) col)
     (.fillRect ctx x (inc (- y h)) w h)
     (if (pos? nc)
       (loop [i 0]
         (when (< i nc)
-          (map-branch ctx tree (conj path i) (mm/madd i wc i 1 x) (- y h) wc h)
+          (map-branch ctx tree (conj path i) (mm/madd i wc i 1 x) (- y h) wc h sel)
           (recur (inc i)))))))
 
 (defn regenerate-map
   [editor local]
   (let [{:keys [ctx]} (:map @local)
         {:keys [width height]} @local
-        {:keys [tree tree-depth]} @editor
+        {:keys [tree tree-depth selection]} @editor
         {:keys [map-bg map-width map-height]} config/editor
         [vx vy vw vh] (compute-viewport local)
-        vx' (m/map-interval vx 0 vw 0 map-width)
-        vy' (m/map-interval vy 0 vh 0 map-height)
-        vw' (m/map-interval vw 0 width 0 map-width)
-        vh' (m/map-interval vh 0 height 0 map-height)]
+        vx' (m/map-interval vx 0 vw 1 (dec map-width))
+        vy' (m/map-interval vy 0 vh 1 (dec map-height))
+        vw' (m/map-interval vw 0 width 1 (dec map-width))
+        vh' (m/map-interval vh 0 height 1 (dec map-height))]
     (set! (.-fillStyle ctx) map-bg)
     (set! (.-strokeStyle ctx) nil)
     (.fillRect ctx 0 0 map-width map-height)
-    (map-branch ctx tree [] 0 map-height map-width (/ map-height tree-depth))
+    (map-branch ctx tree [] 0 map-height map-width (/ map-height tree-depth) selection)
     (set! (.-strokeStyle ctx) "yellow")
+    (set! (.-lineWidth ctx) 2)
     (.strokeRect ctx vx' vy' vw' vh')))
 
 (defn init
@@ -242,6 +245,7 @@
         (when (<! resize)
           (debug :tedit-resize)
           (resize-viz editor local)
+          (regenerate-map editor local)
           (recur))))
 
     (go
@@ -264,8 +268,10 @@
           (when id
             (debug :node-selected id node)
             (swap! local assoc :selected-id id)
+            (swap! editor assoc :selection (:path node))
             (dom/add-class! (:el node) "selected")
             (dom/add-class! (dom/by-id "toolbar") "rollon")
+            (regenerate-map editor local)
             (recur)))))
 
     (go
@@ -275,9 +281,11 @@
           (when id
             (debug :node-deselected id node)
             (swap! local assoc :selected-id nil)
+            (swap! editor assoc :selection nil)
             (dom/remove-class! (:el node) "selected")
             (dom/remove-class! (dom/by-id "toolbar") "rollon")
-            (when render?)
+            (when render?
+              (regenerate-map editor local))
             (recur)))))
 
     (go
@@ -292,8 +300,3 @@
         (reset! local nil)))
 
     ))
-
-;;@migurski as verbose & eloquent (t)his description is, it too seems all encompassing of (not just) contemporary society...
-;;@migurski it's a valid political/cultural critique, but hardly one which is or requires "new" in its title/mission
-;;@migurski most societies have been dominated by luddites & technology has always been a tool of power, hence our continous use/dev of it
-;;@migurski i'd rather see a "new edu" movement which focuses on
