@@ -13,7 +13,7 @@
 
 (defn init-tree-with-seed
   [state seed-id]
-  (let [tree (mg/subdiv :cols 3)]
+  (let [tree (mg/subdiv :cols 5 :out {1 (mg/subdiv-inset :dir :z :inset 0.2)})]
     (merge
      state
      {:tree tree
@@ -21,13 +21,16 @@
       :meshes {}
       :seed-id seed-id
       :selection nil
-      :tree-depth 2
-      :max-nodes 3
-      :max-nodes-depth 1})))
+      :tree-depth 3
+      :max-nodes-path [1]})))
 
 (defn node-at
   [tree path]
   (if (seq path) (get-in tree (mg/child-path path)) tree))
+
+(defn num-children-at
+  [tree path]
+  (count (:out (node-at tree path))))
 
 (defn node-operator
   [n] (cond (:op n) (:op n), n :leaf, :else :delete))

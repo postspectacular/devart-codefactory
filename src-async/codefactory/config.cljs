@@ -45,8 +45,13 @@
 
 (def editor
   {:inset 11
-   :gap 5
-   :min-size 24})
+   :gap 2
+   :margin 10
+   :height 200
+   :min-size 20
+   :map-width 200
+   :map-height 200
+   :map-bg "#333336"})
 
 (def operators
   {:sd             {:col "#56ffee" :label "split"}

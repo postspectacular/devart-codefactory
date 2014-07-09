@@ -138,8 +138,8 @@
                  (submit-model local)
 
                  (= cancel ch)
-                 ;;(route/set-route! "select" (:seed-id @local))
-                 (route/set-route! "home")
+                 (route/set-route! "select" (:seed-id @local))
+                 ;;(route/set-route! "home")
 
                  (>= (- (utils/now) (:last-click @local)) module-timeout)
                  (route/set-route! "home")

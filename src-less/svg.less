@@ -1,3 +1,5 @@
+@import "config.less";
+
 #edit-treemap {
     height: 200px;
     -webkit-flex: 1 0 auto;
@@ -41,29 +43,43 @@
     }
 }
 
-#viz-container div {
-    position: absolute;
-    text-align: center;
+#viz-container {
 
-    &.op-sd { background-color: @op-col-sd; }
-    &.op-sd-inset { background-color: @op-col-inset; }
-    &.op-extrude { background-color: @op-col-extrude; }
-    &.op-reflect { background-color: @op-col-reflect; }
-    &.op-shift-displace { background-color: @op-col-shift; }
-    &.op-skew { background-color: @op-col-tilt; }
-    &.op-scale-size { background-color: @op-col-scale-side; }
-    &.op-delete { background-color: @op-col-delete; }
-    &.op-leaf { background-color: #ddd; color: #333; }
+    height: 200;
 
-    &.op-sd:hover { background-color: lighten(@op-col-sd,10); }
-    &.op-sd-inset:hover { background-color: lighten(@op-col-inset,10); }
-    &.op-extrude:hover { background-color: lighten(@op-col-extrude,10); }
-    &.op-reflect:hover { background-color: lighten(@op-col-reflect,10); }
-    &.op-shift-displace:hover { background-color: lighten(@op-col-shift,10); }
-    &.op-skew:hover { background-color: lighten(@op-col-tilt,10); }
-    &.op-scale-size:hover { background-color: lighten(@op-col-scale-side,10); }
-    &.op-delete:hover { background-color: lighten(@op-col-delete,10); }
-    &.op-leaf:hover { background-color: white; color: #333; }
+    div {
+        position: absolute;
+        text-align: center;
 
-    &.selected { background-color: yellow !important; }
+        &.op-sd { background-color: @op-col-sd; }
+        &.op-sd-inset { background-color: @op-col-inset; }
+        &.op-extrude { background-color: @op-col-extrude; }
+        &.op-reflect { background-color: @op-col-reflect; }
+        &.op-shift-displace { background-color: @op-col-shift; }
+        &.op-skew { background-color: @op-col-tilt; }
+        &.op-scale-size { background-color: @op-col-scale-side; }
+        &.op-delete { background-color: @op-col-delete; }
+        &.op-leaf { background-color: #ddd; color: #333; }
+
+        &.op-sd:hover { background-color: lighten(@op-col-sd,10); }
+        &.op-sd-inset:hover { background-color: lighten(@op-col-inset,10); }
+        &.op-extrude:hover { background-color: lighten(@op-col-extrude,10); }
+        &.op-reflect:hover { background-color: lighten(@op-col-reflect,10); }
+        &.op-shift-displace:hover { background-color: lighten(@op-col-shift,10); }
+        &.op-skew:hover { background-color: lighten(@op-col-tilt,10); }
+        &.op-scale-size:hover { background-color: lighten(@op-col-scale-side,10); }
+        &.op-delete:hover { background-color: lighten(@op-col-delete,10); }
+        &.op-leaf:hover { background-color: white; color: #333; }
+
+        &.selected { background-color: yellow !important; }
+    }
+}
+
+#viz-map {
+    position: fixed;
+    z-index: 200;
+    right: 0;
+    bottom: 70;
+    border-left: 10px solid @col-bg;
+    border-right: 10px solid @col-bg;
 }
