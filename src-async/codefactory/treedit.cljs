@@ -247,7 +247,8 @@
         mdown           (dom/event-channel canvas "mousedown")
         mmove           (dom/event-channel canvas "mousemove")
         mup             (dom/event-channel canvas "mouseup")
-        map-inputs      (mapv first [mdown mmove mup])
+        tmove           (dom/event-channel canvas "touchmove" dom/touch-handler)
+        map-inputs      (mapv first [mdown mmove mup tmove])
         width           (compute-required-width editor)
         max-width       (mm/madd margin -2 (.-innerWidth js/window))
         local           (atom
@@ -256,7 +257,7 @@
                                   :node-toggle node-toggle
                                   :release-editor release
                                   :window-resize resize}
-                          :events [mdown mmove mup]
+                          :events [mdown mmove mup tmove]
                           :map {:ctx (.getContext canvas "2d")}
                           :viz   viz
                           :scroll (vec2)
@@ -333,6 +334,7 @@
         (let [[e ch] (alts! map-inputs)]
           (when e
             (if (or (= ch (map-inputs 0))
+                    (= ch (map-inputs 3))
                     (and down? (= ch (map-inputs 1))))
               (do (scroll-viewport editor local (- (.-clientX e) (.-offsetLeft canvas) 10))
                   (recur true))

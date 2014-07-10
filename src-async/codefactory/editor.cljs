@@ -107,8 +107,11 @@
               mdown   (dom/event-channel js/window "mousedown")
               mup     (dom/event-channel js/window "mouseup")
               mmove   (dom/event-channel js/window "mousemove")
+              tdown   (dom/event-channel canvas "touchstart" dom/touch-handler)
+              tmove   (dom/event-channel canvas "touchmove" dom/touch-handler)
+              tup     (dom/event-channel canvas "touchend" dom/touch-handler)
               mwheel  (dom/event-channel js/window (dom/wheel-event-type))
-              inputs  (mapv first [mdown mmove mup mwheel])
+              inputs  (mapv first [mdown mmove mup mwheel tdown tmove tup])
               arcball (arcball/make-arcball :init (:initial-view config/editor))
               now     (utils/now)]
           (debug :init-editor params)
@@ -117,7 +120,7 @@
            (-> (webgl/init-webgl (dom/by-id "edit-canvas"))
                (merge
                 {:subs {:window-resize resize}
-                 :events [mdown mup mmove mwheel]
+                 :events [mdown mup mmove mwheel tdown tmove tup]
                  :arcball arcball
                  :last-click now
                  :start-time now
@@ -144,27 +147,34 @@
             (loop []
               (let [[e ch] (alts! inputs)]
                 (when e
-                  (condp = ch
-                    (inputs 0) (let [x (.-clientX e)
-                                     y (.-clientY e)
-                                     h (.-clientHeight canvas)]
-                                 (when (m/in-range? 0 h y)
-                                   (arcball/down arcball x (- h y))))
+                  (cond
 
-                    (inputs 1) (let [x (.-clientX e)
-                                     y (.-clientY e)
-                                     h (.-clientHeight canvas)]
-                                 (when (and (m/in-range? 0 h y)
-                                            (arcball/drag arcball x (- h y)))
-                                   (async/publish bus :render-scene nil)))
-                    
-                    (inputs 2) (arcball/up arcball)
+                   (or (= ch (inputs 0))
+                       (= ch (inputs 4)))
+                   (let [x (.-clientX e)
+                         y (.-clientY e)
+                         h (.-clientHeight canvas)]
+                     (when (m/in-range? 0 h y)
+                       (arcball/down arcball x (- h y))))
 
-                    (inputs 3) (let [delta (or (aget e "deltaY") (aget e "wheelDataY"))]
-                                 (arcball/zoom-delta arcball delta)
-                                 (async/publish bus :render-scene nil))
-                    
-                    (debug :ev e))
+                   (or (= ch (inputs 1))
+                       (= ch (inputs 5)))
+                   (let [x (.-clientX e)
+                         y (.-clientY e)
+                         h (.-clientHeight canvas)]
+                     (when (and (m/in-range? 0 h y)
+                                (arcball/drag arcball x (- h y)))
+                       (async/publish bus :render-scene nil)))
+
+                   (or (= ch (inputs 2))
+                       (= ch (inputs 6)))
+                   (arcball/up arcball)
+
+                   (inputs 3) (let [delta (or (aget e "deltaY") (aget e "wheelDataY"))]
+                                (arcball/zoom-delta arcball delta)
+                                (async/publish bus :render-scene nil))
+
+                   :else (debug :ev e))
                   (recur)))))
 
           ;; continue/cancel buttons & user timeout
@@ -187,10 +197,10 @@
           (recur))))
 
     (go
-      (let [render-fn (fn [& _] (render-scene local))]        
+      (let [render-fn (fn [& _] (render-scene local))]
         (loop []
           (let [_ (<! render)]
-            (anim/animframe-provider render-fn) 
+            (anim/animframe-provider render-fn)
             (recur)))))
 
     (go

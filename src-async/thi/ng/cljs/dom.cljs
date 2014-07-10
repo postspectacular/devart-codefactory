@@ -115,15 +115,23 @@
   (set-style! el #js {:display "none"})
   (set-style! el #js {:display "block"}))
 
+(defn touch-handler
+  [ch]
+  (fn [e]
+    (.preventDefault e)
+    (put! ch (aget (.-touches e) 0))))
+
 (defn event-channel
-  [el id]
+  [el id & [f]]
   (let [el (if (string? el) (query nil el) el)
         ch (chan)
-        f (fn [e] (.preventDefault e) (put! ch e))]
-    (.addEventListener el id f)
-    [ch f id el]))
+        handler (if f
+                  (f ch)
+                  (fn [e] (.preventDefault e) (put! ch e)))]
+    (.addEventListener el id handler)
+    [ch handler id el]))
 
 (defn destroy-event-channel
-  [[ch f ev el]]
-  (.removeEventListener el ev f)
+  [[ch handler ev el]]
+  (.removeEventListener el ev handler)
   (close! ch))
