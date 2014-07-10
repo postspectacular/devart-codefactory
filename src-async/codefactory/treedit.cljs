@@ -174,7 +174,6 @@
         {:keys [gap margin height]} config/editor
         width  (compute-required-width editor)
         offset (g/+ scroll (.-offsetLeft viz) (- (.-innerHeight js/window) 270))]
-    (debug :scroll (:x scroll) (:x offset))
     ((resize-branch nodes tree gap offset) [] margin width)
     (swap! local assoc :width width)))
 
@@ -294,13 +293,15 @@
     (go
       (loop []
         (let [[_ id] (<! node-selected)
-              {:keys [el path]} (get-in @local [:nodes id])]
+              {:keys [el path]} (get-in @local [:nodes id])
+              {:keys [tree meshes]} @editor]
           (when id
             (swap! local assoc :selected-id id)
             (swap!
              editor assoc
              :selection path
-             :sel-type (tree/node-operator (tree/node-at (:tree @editor) path)))
+             :sel-type (tree/node-operator (tree/node-at tree path))
+             :display-meshes (tree/filter-leaves-and-selection meshes tree path))
             (dom/add-class! el "selected")
             (dom/add-class! toolbar "rollon")
             (async/publish bus :render-scene nil)
@@ -310,13 +311,19 @@
     (go
       (loop []
         (let [[_ [id render?]] (<! node-deselected)
-              node (get-in @local [:nodes id])]
+              node (get-in @local [:nodes id])
+              {:keys [tree meshes]} @editor]
           (when id
             (swap! local assoc :selected-id nil)
-            (swap! editor assoc :selection nil :sel-type nil)
+            (swap!
+             editor assoc
+             :selection nil :sel-type nil)
             (dom/remove-class! (:el node) "selected")
             (dom/remove-class! toolbar "rollon")
             (when render?
+              (swap!
+               editor assoc
+               :display-meshes (tree/filter-leaves-and-selection meshes tree nil))
               (async/publish bus :render-scene nil)
               (regenerate-map editor local))
             (recur)))))

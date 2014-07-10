@@ -68,7 +68,7 @@
 (defn init-tree-with-seed
   [state seed-id]
   (let [tree (mg/subdiv :cols 5 :out {1 (mg/subdiv-inset :dir :z :inset 0.2)})
-        ;;tree (mg/reflect-seq [:e :e :e :e :e])
+        tree (mg/reflect-seq [:e :e :e :e :e])
         ;;tree {}
         nodes (mg/compute-tree-map (:seed (config/seeds (keyword seed-id))) tree)]
     (merge
@@ -79,7 +79,15 @@
       :seed-id seed-id
       :selection nil
       :tree-depth (compute-tree-depth nodes)
-      :max-nodes-path [1]})))
+      :max-nodes-path [1 1 1 1]})))
+
+(defn filter-leaves-and-selection
+  [coll tree sel]
+  (->> coll
+       (filter
+        (fn [[path]]
+          (or (= path sel) (= :leaf (mg/classify-node-at tree path)))))
+       (into {})))
 
 (defn update-meshes
   [state]
@@ -96,13 +104,11 @@
         meshes (->> branch
                     (reduce
                      (fn [acc [path node]]
-                       (if (= :leaf (mg/classify-node-at tree path))
-                         (assoc!
-                          acc path
-                          (-> (g/into (bm/basic-mesh) (g/faces node))
-                              (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
-                              (buf/make-attribute-buffers-in-spec gl gl/static-draw)))
-                         acc))
+                       (assoc!
+                        acc path
+                        (-> (g/into (bm/basic-mesh) (g/faces node))
+                            (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
+                            (buf/make-attribute-buffers-in-spec gl gl/static-draw))))
                      (transient meshes))
                     (persistent!))
         node-cache (merge node-cache branch)]
@@ -110,4 +116,5 @@
     (merge
      state
      {:node-cache node-cache
-      :meshes meshes})))
+      :meshes meshes
+      :display-meshes (filter-leaves-and-selection meshes tree selection)})))

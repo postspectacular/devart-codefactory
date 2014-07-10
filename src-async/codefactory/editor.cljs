@@ -56,7 +56,7 @@
 (defn render-scene
   [state]
   (if (:active? @state)
-    (let [{:keys [gl arcball shaders proj meshes selection sel-type start-time sel-time]} @state
+    (let [{:keys [gl arcball shaders proj display-meshes selection sel-type start-time sel-time]} @state
           now         (utils/now)
           time        (mm/subm now start-time 0.001)
           view        (arcball/get-view arcball)
@@ -69,11 +69,11 @@
       (if selection
         (webgl/render-with-selection
          gl shaders shared-unis
-         (vals (dissoc meshes selection))
-         [(meshes selection)]
+         (vals (dissoc display-meshes selection))
+         [(display-meshes selection)]
          (col/hex->rgb (config/operator-color sel-type))
          time sel-time)
-        (webgl/render-meshes gl (shaders 1) (vals meshes) shared-unis nil)))))
+        (webgl/render-meshes gl (shaders 1) (vals display-meshes) shared-unis nil)))))
 
 (defn resize-canvas
   [state]
