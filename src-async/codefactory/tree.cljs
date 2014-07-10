@@ -11,6 +11,15 @@
    [thi.ng.morphogen.core :as mg]
    [thi.ng.common.math.core :as m]))
 
+(def direction-ids [:x :y :z])
+(def direction-idx {:x 0 :y 1 :z 2})
+(def face-ids      [:e :w :n :s :f :b])
+(def face-idx      {:e 0 :w 1 :n 2 :s 3 :f 4 :b 5})
+
+(defn op-args-or-default
+  [id node default]
+  (:args (if (= id (:op node)) node default)))
+
 (defn node-at
   [tree path]
   (if (seq path) (get-in tree (mg/child-path path)) tree))
@@ -18,6 +27,10 @@
 (defn num-children-at
   [tree path]
   (count (:out (node-at tree path))))
+
+(defn delete-node-at
+  [tree path]
+  (assoc-in tree (mg/child-path path) nil))
 
 (defn node-operator
   [n] (cond (:op n) (:op n), n :leaf, :else :delete))
@@ -90,12 +103,12 @@
        (into {})))
 
 (defn update-meshes
-  [state]
+  [state incl-sel?]
   (let [{:keys [gl tree node-cache selection meshes]} state
         path (or selection [])
         root (get node-cache path)
         sub-tree (node-at tree path)
-        meshes (delete-branch-meshes gl meshes path false)
+        meshes (delete-branch-meshes gl meshes path incl-sel?)
         branch (select-sub-paths node-cache path)
         node-cache (apply dissoc node-cache (keys branch)) ;; delete all sub-paths
         branch (->> path
@@ -111,10 +124,12 @@
                             (buf/make-attribute-buffers-in-spec gl gl/static-draw))))
                      (transient meshes))
                     (persistent!))
-        node-cache (merge node-cache branch)]
+        node-cache (merge node-cache branch)
+        selection (if-not (and incl-sel? (nil? sub-tree)) selection)]
     (debug :ct (keys node-cache) :meshes (keys meshes))
     (merge
      state
      {:node-cache node-cache
       :meshes meshes
+      :selection selection
       :display-meshes (filter-leaves-and-selection meshes tree selection)})))

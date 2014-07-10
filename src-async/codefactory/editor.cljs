@@ -23,9 +23,7 @@
    [thi.ng.geom.core.matrix :as mat :refer [M44]]
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
    [thi.ng.geom.rect :as r]
-   [thi.ng.geom.basicmesh :as bm]
    [thi.ng.geom.ui.arcball :as arcball]
-   [thi.ng.morphogen.core :as mg]
    [thi.ng.common.math.core :as m]))
 
 ;; FIXME pass model/scene to next controller
@@ -103,8 +101,9 @@
     (go
       (loop []
         (let [[_ [state params]] (<! init)
+              canvas  (dom/by-id "edit-canvas")
               resize  (async/subscribe bus :window-resize)
-              mdown   (dom/event-channel js/window "mousedown")
+              mdown   (dom/event-channel canvas "mousedown")
               mup     (dom/event-channel js/window "mouseup")
               mmove   (dom/event-channel js/window "mousemove")
               tdown   (dom/event-channel canvas "touchstart" dom/touch-handler)
@@ -117,7 +116,7 @@
           (debug :init-editor params)
           (reset!
            local
-           (-> (webgl/init-webgl (dom/by-id "edit-canvas"))
+           (-> (webgl/init-webgl canvas)
                (merge
                 {:subs {:window-resize resize}
                  :events [mdown mup mmove mwheel tdown tmove tup]
@@ -129,7 +128,7 @@
                  :time now
                  :active? true})
                (tree/init-tree-with-seed (:seed-id params))
-               (tree/update-meshes)))
+               (tree/update-meshes false)))
           (tedit/init local bus)
           (resize-canvas local)
           (render-scene local)

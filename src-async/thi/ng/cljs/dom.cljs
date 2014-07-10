@@ -104,11 +104,14 @@
   el)
 
 (defn create-ns!
-  [ns type parent]
-  (let [el (.createElementNS js/document ns type)]
-    (when parent
-      (.appendChild parent el))
-    el))
+  ([ns type parent] (create-ns! ns type parent nil))
+  ([ns type parent attribs]
+     (let [el (.createElementNS js/document ns type)]
+       (when parent
+         (.appendChild parent el))
+       (when attribs
+         (set-attribs! el attribs))
+       el)))
 
 (defn force-redraw!
   [el]
