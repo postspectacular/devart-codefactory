@@ -11,19 +11,6 @@
    [thi.ng.morphogen.core :as mg]
    [thi.ng.common.math.core :as m]))
 
-(defn init-tree-with-seed
-  [state seed-id]
-  (let [tree (mg/subdiv :cols 5 :out {1 (mg/subdiv-inset :dir :z :inset 0.2)})]
-    (merge
-     state
-     {:tree tree
-      :node-cache (mg/compute-tree-map (:seed (config/seeds (keyword seed-id))) tree)
-      :meshes {}
-      :seed-id seed-id
-      :selection nil
-      :tree-depth 3
-      :max-nodes-path [1]})))
-
 (defn node-at
   [tree path]
   (if (seq path) (get-in tree (mg/child-path path)) tree))
@@ -73,6 +60,26 @@
       (fn [[id m]]
         (.deleteBuffer gl (:buffer m))) d-meshes))
     meshes))
+
+(defn compute-tree-depth
+  [nodes]
+  (->> nodes keys (map count) (reduce max) (inc)))
+
+(defn init-tree-with-seed
+  [state seed-id]
+  (let [tree (mg/subdiv :cols 5 :out {1 (mg/subdiv-inset :dir :z :inset 0.2)})
+        ;;tree (mg/reflect-seq [:e :e :e :e :e])
+        ;;tree {}
+        nodes (mg/compute-tree-map (:seed (config/seeds (keyword seed-id))) tree)]
+    (merge
+     state
+     {:tree tree
+      :node-cache nodes
+      :meshes {}
+      :seed-id seed-id
+      :selection nil
+      :tree-depth (compute-tree-depth nodes)
+      :max-nodes-path [1]})))
 
 (defn update-meshes
   [state]

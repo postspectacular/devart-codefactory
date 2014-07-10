@@ -109,16 +109,24 @@
   [local]
   (let [{:keys [scroll]} @local
         {:keys [margin map-width map-height height]} config/editor]
-    [(:x scroll)
+    [(- (:x scroll))
      (:y scroll)
-     (mm/madd margin -2 (- (.-innerWidth js/window) map-width))
+     (mm/madd margin -3 (- (.-innerWidth js/window) map-width))
      height]))
+
+(defn map-focus-rect
+  [[x y w h] viz-width viz-height map-width map-height]
+  (let [x (m/map-interval x 0 viz-width 1 (- map-width 2))
+        y (m/map-interval y 0 viz-height 1 (- map-height 2))
+        w (m/map-interval w 0 viz-width 1 (- map-width 2))
+        h (m/map-interval h 0 viz-height 1 (- map-height 2))]
+    [x y w h]))
 
 (defn compute-required-width
   [editor]
   (let [{:keys [max-nodes-path tree]} @editor
         {:keys [gap margin min-size map-width]} config/editor
-        width (mm/madd margin -2 (- (.-innerWidth js/window) map-width))
+        width (mm/madd margin -3 (- (.-innerWidth js/window) map-width))
         cw (cell-size-at tree max-nodes-path width gap)]
     (if (< cw min-size)
       (loop [path max-nodes-path
@@ -166,6 +174,7 @@
         {:keys [gap margin height]} config/editor
         width  (compute-required-width editor)
         offset (g/+ scroll (.-offsetLeft viz) (- (.-innerHeight js/window) 270))]
+    (debug :scroll (:x scroll) (:x offset))
     ((resize-branch nodes tree gap offset) [] margin width)
     (swap! local assoc :width width)))
 
@@ -191,18 +200,36 @@
         {:keys [width height]} @local
         {:keys [tree tree-depth selection]} @editor
         {:keys [map-bg map-width map-height]} config/editor
-        [vx vy vw vh] (compute-viewport local)
-        vx' (m/map-interval vx 0 vw 1 (dec map-width))
-        vy' (m/map-interval vy 0 vh 1 (dec map-height))
-        vw' (m/map-interval vw 0 width 1 (dec map-width))
-        vh' (m/map-interval vh 0 height 1 (dec map-height))]
+        [vx vy vw vh] (map-focus-rect
+                       (compute-viewport local)
+                       width height map-width map-height)]
+    (swap! local assoc-in [:map :viewport] [vx vy vw vh])
     (set! (.-fillStyle ctx) map-bg)
     (set! (.-strokeStyle ctx) nil)
     (.fillRect ctx 0 0 map-width map-height)
     (map-branch ctx tree [] 0 map-height map-width (/ map-height tree-depth) selection)
+    (when (== 1 tree-depth)
+      (set! (.-fillStyle ctx) map-bg)
+      (set! (.-font ctx) "14px \"Abel\" sans-serif")
+      (set! (.-textAlign ctx) "center")
+      (set! (.-textBaseline ctx) "middle")
+      (.fillText ctx "CODE OVERVIEW" (/ map-width 2) (/ map-height 2)))
     (set! (.-strokeStyle ctx) "yellow")
     (set! (.-lineWidth ctx) 2)
-    (.strokeRect ctx vx' vy' vw' vh')))
+    (.strokeRect ctx vx vy vw vh)
+    ))
+
+(defn scroll-viewport
+  [editor local x]
+  (let [{:keys [map-width map-height]} config/editor
+        {:keys [width map]} @local
+        [_ _ viz-width] (compute-viewport local)
+        [_ _ vw] (:viewport map)
+        sx (m/map-interval-clamped x 0 (- map-width vw) 0 (- (- width viz-width)))]
+    (debug :vw vw :vis viz-width :x x :sx sx)
+    (swap! local assoc-in [:scroll :x] sx)
+    (resize-viz editor local)
+    (regenerate-map editor local)))
 
 (defn init
   [editor bus]
@@ -219,6 +246,10 @@
         node-deselected (async/subscribe bus :node-deselected)
         release         (async/subscribe bus :release-editor)
         resize          (async/subscribe bus :window-resize)
+        mdown           (dom/event-channel canvas "mousedown")
+        mmove           (dom/event-channel canvas "mousemove")
+        mup             (dom/event-channel canvas "mouseup")
+        map-inputs      (mapv first [mdown mmove mup])
         width           (compute-required-width editor)
         max-width       (mm/madd margin -2 (.-innerWidth js/window))
         local           (atom
@@ -227,6 +258,7 @@
                                   :node-toggle node-toggle
                                   :release-editor release
                                   :window-resize resize}
+                          :events [mdown mmove mup]
                           :map {:ctx (.getContext canvas "2d")}
                           :viz   viz
                           :scroll (vec2)
@@ -291,6 +323,16 @@
             (recur)))))
 
     (go
+      (loop [down? false]
+        (let [[e ch] (alts! map-inputs)
+              x (- (.-clientX e) (.-offsetLeft canvas) 10)]
+          (if (or (= ch (map-inputs 0))
+                  (and down? (= ch (map-inputs 1))))
+            (do (scroll-viewport editor local x)
+                (recur true))
+            (recur false)))))
+
+    (go
       (let [_ (<! release)
             {:keys [viz nodes subs]} @local]
         (debug :tedit-release)
@@ -298,6 +340,7 @@
         (dom/remove! canvas)
         (dom/remove-class! (dom/by-id "toolbar") "rollon")
         (remove-node-event-handlers bus nodes)
+        (dorun (map dom/destroy-event-channel (:events @local)))
         (async/unsubscribe-and-close-many bus subs)
         (reset! local nil)))
 

@@ -65,7 +65,7 @@
                {:source-paths ["src-async"]
                 :id "prod"
                 :compiler
-                {:pretty-print true
+                {:pretty-print false
                  :output-to "war/js/app.js"
                  :externs ["inc/hammer.externs.js"]
                  :optimizations :advanced}

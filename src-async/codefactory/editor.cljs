@@ -190,10 +190,11 @@
           (recur))))
 
     (go
-      (loop []
-        (let [_ (<! render)]
-          (render-scene local)
-          (recur))))
+      (let [render-fn (fn [& _] (render-scene local))]        
+        (loop []
+          (let [_ (<! render)]
+            (anim/animframe-provider render-fn)
+            (recur)))))
 
     (go
       (loop []
