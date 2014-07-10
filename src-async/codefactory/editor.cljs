@@ -59,7 +59,6 @@
     (let [{:keys [gl arcball shaders proj meshes selection sel-type start-time sel-time]} @state
           now         (utils/now)
           time        (mm/subm now start-time 0.001)
-          ;;view        (mat/look-at (vec3 0 1 -4) (vec3) (vec3 0 1 0))
           view        (arcball/get-view arcball)
           shared-unis {:view view
                        :model M44
@@ -71,7 +70,7 @@
         (webgl/render-with-selection
          gl shaders shared-unis
          (vals (dissoc meshes selection))
-         (vals (select-keys meshes [selection]))
+         [(meshes selection)]
          (col/hex->rgb (config/operator-color sel-type))
          time sel-time)
         (webgl/render-meshes gl (shaders 1) (vals meshes) shared-unis nil)))))
@@ -81,8 +80,7 @@
   (let [{:keys [gl canvas arcball]} @state
         [w h] (dom/size (dom/parent canvas))
         view-rect (r/rect 0 0 w h)]
-    (set! (.-width canvas) w)
-    (set! (.-height canvas) h)
+    (dom/set-attribs! canvas {:width w :height h})
     (swap!
      state merge
      {:canvas-width w :canvas-height h
@@ -145,7 +143,7 @@
           (go
             (loop []
               (let [[e ch] (alts! inputs)]
-                (when ch
+                (when e
                   (condp = ch
                     (inputs 0) (let [x (.-clientX e)
                                      y (.-clientY e)
@@ -180,7 +178,6 @@
 
                  (= cancel ch)
                  (route/set-route! "select" (:seed-id @local))
-                 ;;(route/set-route! "home")
 
                  (>= (- (utils/now) (:last-click @local)) module-timeout)
                  (route/set-route! "home")
@@ -193,7 +190,7 @@
       (let [render-fn (fn [& _] (render-scene local))]        
         (loop []
           (let [_ (<! render)]
-            (anim/animframe-provider render-fn)
+            (anim/animframe-provider render-fn) 
             (recur)))))
 
     (go

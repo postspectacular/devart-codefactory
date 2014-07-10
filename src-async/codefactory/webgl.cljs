@@ -161,7 +161,7 @@ void main() {
         alpha (get-in xray [:preset :uniforms :alpha])
         ;; alpha (m/mix 1.0 alpha (min (mm/subm time sel-time 0.2) 1.0))
         ]
-    (debug time sel-time)
+    (debug sel-meshes)
     (render-meshes
      gl solid sel-meshes shared-uniforms {:lightCol color})
     (render-meshes

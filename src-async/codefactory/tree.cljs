@@ -106,7 +106,7 @@
                      (transient meshes))
                     (persistent!))
         node-cache (merge node-cache branch)]
-    (debug :ct node-cache)
+    (debug :ct (keys node-cache) :meshes (keys meshes))
     (merge
      state
      {:node-cache node-cache

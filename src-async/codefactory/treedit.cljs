@@ -226,7 +226,6 @@
         [_ _ viz-width] (compute-viewport local)
         [_ _ vw] (:viewport map)
         sx (m/map-interval-clamped x 0 (- map-width vw) 0 (- (- width viz-width)))]
-    (debug :vw vw :vis viz-width :x x :sx sx)
     (swap! local assoc-in [:scroll :x] sx)
     (resize-viz editor local)
     (regenerate-map editor local)))
@@ -324,13 +323,13 @@
 
     (go
       (loop [down? false]
-        (let [[e ch] (alts! map-inputs)
-              x (- (.-clientX e) (.-offsetLeft canvas) 10)]
-          (if (or (= ch (map-inputs 0))
-                  (and down? (= ch (map-inputs 1))))
-            (do (scroll-viewport editor local x)
-                (recur true))
-            (recur false)))))
+        (let [[e ch] (alts! map-inputs)]
+          (when e
+            (if (or (= ch (map-inputs 0))
+                    (and down? (= ch (map-inputs 1))))
+              (do (scroll-viewport editor local (- (.-clientX e) (.-offsetLeft canvas) 10))
+                  (recur true))
+              (recur false))))))
 
     (go
       (let [_ (<! release)
