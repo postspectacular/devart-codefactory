@@ -419,6 +419,46 @@
       :default default
       :orig orig})))
 
+(defmethod handle-operator :extrude
+  [op editor local bus]
+  (let [{:keys [tree selection]} @editor
+        orig (tree/node-at tree selection)
+        default (mg/extrude :dir :e :len 1.0)
+        {:keys [dir len] :as args} (tree/op-args-or-default op orig default)]
+    (debug :path selection :args args :default default)
+    (show-op-controls
+     {:editor editor
+      :local local
+      :bus bus
+      :op op
+      :sliders [{:label "direction" :min 0 :max 5 :value (tree/face-idx dir) :step 1
+                 :listener (fn [n {:keys [len]}] (mg/extrude :dir (tree/face-ids (int n)) :len len))}
+                {:label "length" :min 0.02 :max 2.0 :value len :step 0.001
+                 :listener (fn [n {:keys [dir]}] (mg/extrude :dir dir :len n))}]
+      :default default
+      :orig orig})))
+
+(defmethod handle-operator :split-displace
+  [op editor local bus]
+  (let [{:keys [tree selection]} @editor
+        orig (tree/node-at tree selection)
+        default (mg/split-displace :x :z :offset 0.1)
+        {:keys [dir ref offset] :as args} (tree/op-args-or-default op orig default)]
+    (debug :path selection :args args :default default)
+    (show-op-controls
+     {:editor editor
+      :local local
+      :bus bus
+      :op op
+      :sliders [{:label "split direction" :min 0 :max 3 :value (tree/direction-idx dir) :step 1
+                 :listener (fn [n {:keys [ref len]}] (mg/split-displace (tree/direction-ids (int n)) ref :offset len))}
+                {:label "shift direction" :min 0 :max 3 :value (tree/direction-idx dir) :step 1
+                 :listener (fn [n {:keys [dir len]}] (mg/split-displace dir (tree/direction-ids (int n)) :offset len))}
+                {:label "shift length" :min 0.0 :max 2.0 :value len :step 0.001
+                 :listener (fn [n {:keys [dir ref]}] (mg/split-displace dir ref :offset n))}]
+      :default default
+      :orig orig})))
+
 (defn init
   [editor bus]
   (let [{:keys [gap margin height map-width map-height]} config/editor

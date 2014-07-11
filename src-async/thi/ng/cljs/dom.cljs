@@ -162,6 +162,6 @@
                    js/window (query nil id))
                  id)]
         (when el
-          (.addEventListener el (name eid) f))
+          (.removeEventListener el (name eid) f))
         (recur (next specs)))))
   specs)
