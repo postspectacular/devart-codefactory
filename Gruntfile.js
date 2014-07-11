@@ -47,7 +47,7 @@ module.exports = function(grunt) {
         tasks: ['less:dev']
       },
       prod: {
-        files: '<%= less.prod.options.paths %>',
+        files: 'src-less/*.less',
         tasks: ['less:prod']
       }
     }

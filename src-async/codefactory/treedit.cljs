@@ -38,7 +38,7 @@
 (def svg-ns "http://www.w3.org/2000/svg")
 
 (defn make-node
-  [parent path op x y w h bus]
+  [parent path op x y w h bus sel]
   (let [el (dom/create! "div" parent)
         id (node-id path)
         cls (str "op-" (name op))
@@ -72,6 +72,7 @@
             :height (->px h)}))
 
     (if (not= :delete op) (dom/add-class! el cls))
+    (if (= path sel) (dom/add-class! el "selected"))
 
     (go
       (loop []
@@ -98,10 +99,10 @@
    width (range (inc (count path)))))
 
 (defn generate-branch
-  [bus viz tree local]
-  (let [{:keys [scroll]} @local
-        gap (:gap config/editor)
-        off (g/+ scroll (.-offsetLeft viz) (- (.-innerHeight js/window) 270))]
+  [bus viz tree local sel]
+  (let [gap (:gap config/editor)
+        off (g/+ (:scroll @local)
+                 (.-offsetLeft viz) (- (.-innerHeight js/window) 270))]
     (fn gen-branch*
       [acc nodes path x y w h]
       (let [branch (tree/select-sub-paths nodes path)
@@ -110,7 +111,7 @@
             wc (cell-size w gap nc)
             cy (- y h gap)
             op (tree/node-operator (tree/node-at tree path))
-            acc (conj acc (make-node viz path op (+ x (:x off)) (+ (- y h) (:y off)) w h bus))]
+            acc (conj acc (make-node viz path op (+ x (:x off)) (+ (- y h) (:y off)) w h bus sel))]
         (if (pos? nc)
           (reduce
            (fn [acc [c i]]
@@ -153,11 +154,13 @@
 
 (defn regenerate-viz
   [editor local bus]
+  (tree/update-stats editor)
+  (swap! local assoc :scroll (vec2))
   (let [{:keys [viz nodes width node-height]} @local
-        {:keys [node-cache tree tree-depth]} @editor
+        {:keys [node-cache tree tree-depth selection]} @editor
         {:keys [gap margin height]} config/editor
         width (compute-required-width editor)
-        layout (generate-branch bus viz tree local)]
+        layout (generate-branch bus viz tree local selection)]
     (debug :height height node-height)
     (dom/set-html! viz "")
     (remove-node-event-handlers bus nodes)
@@ -239,7 +242,7 @@
         {:keys [width map]} @local
         [_ _ viz-width] (compute-viewport local)
         [_ _ vw] (:viewport map)
-        sx (m/map-interval-clamped x 0 (- map-width vw) 0 (- (- width viz-width)))]
+        sx (m/map-interval-clamped (mm/madd vw -0.5 x) 0 (- map-width vw) 0 (- (- width viz-width)))]
     (swap! local assoc-in [:scroll :x] sx)
     (resize-viz editor local)
     (regenerate-map editor local)))
@@ -267,13 +270,13 @@
    {:keys [label min max value step listener]
     :or {step 1}}]
   (let [el-id (str "ctrl" i)
-        el (dom/by-id el-id)
-        el-label (dom/by-id (str el-id "-label"))
-        cls (str "op-" (name op))]
-    (dom/set-attribs! el {:class cls :min min :max max :value value :step step})
+        cls (str "op-" (name op))
+        parent (dom/by-id "sliders")
+        el (dom/create! "input" parent
+                        {:id el-id :type "range" :class cls
+                         :min min :max max :value value :step step})
+        el-label (dom/create! "p" parent {:id (str el-id "-label")})]
     (dom/set-text! el-label label)
-    (dom/remove-class! el "hidden")
-    (dom/remove-class! el-label "hidden")
     [el "change"
      (fn [e]
        (let [n (utils/parse-float (.-value el))]
@@ -290,10 +293,11 @@
   (let [op-col (config/operator-color op)]
     (dom/set-style! (dom/by-id "ctrl-ok-path") #js {:fill op-col})
     (dom/set-style! (dom/by-id "ctrl-cancel-path") #js {:stroke op-col})
-    (dotimes [i 3]
-      (dom/add-class! (dom/by-id (str "ctrl" i)) "hidden")
-      (dom/add-class! (dom/by-id (str "ctrl" i "-label")) "hidden"))
-    (doall (map-indexed (fn [i spec] (init-op-slider editor bus path i op spec)) specs))))
+    (->> specs
+         (map-indexed
+          (fn [i spec]
+            (init-op-slider editor bus path i op spec)))
+         vec)))
 
 (defn show-op-controls
   [{:keys [editor local bus default sliders op orig]}]
@@ -303,27 +307,39 @@
         ctrl (dom/by-id "op-ctrl")
         listeners (init-op-controls editor bus path op sliders)
         listeners (conj listeners
-                        ["#ctrl-ok" "click" (fn [e]
-                                              (.preventDefault e)
-                                              (async/publish bus :commit-operator nil))]
-                        ["#ctrl-cancel" "click" (fn [e]
-                                                  (.preventDefault e)
-                                                  (async/publish bus :cancel-operator nil))])]
-    ;;(app/add-listeners listeners)
+                        ["#ctrl-ok" "click"
+                         (fn [e]
+                           (.preventDefault e)
+                           (async/publish bus :commit-operator nil))]
+                        ["#ctrl-cancel" "click"
+                         (fn [e]
+                           (.preventDefault e)
+                           (async/publish bus :cancel-operator nil))])]
+    (dom/add-listeners listeners)
     (dom/add-class! viz "hidden")
     (dom/add-class! canvas "hidden")
     (dom/remove-class! ctrl "hidden")
     (swap!
      editor merge
      {:sel-type op
-      :ctrl-active? true
       :tree (if (seq path) (assoc-in tree path default) default)})
     (swap!
      local merge
      {:orig-tree-value orig
-      :ctrls listeners})
+      :ctrl-active? true
+      :ctrl-listeners listeners})
     (debug :tree (:tree @editor))
-    (swap! editor tree/update-meshes true)))
+    (swap! editor tree/update-meshes true)
+    (async/publish bus :render-scene nil)))
+
+(defn hide-op-controls
+  [editor local]
+  (let [{:keys [viz ctrl-listeners] {:keys [canvas]} :map} @local]
+    (dom/remove-listeners ctrl-listeners)
+    (dom/add-class! (dom/by-id "op-ctrl") "hidden")
+    (dom/set-html! (dom/by-id "sliders") "")
+    (dom/remove-class! viz "hidden")
+    (dom/remove-class! canvas "hidden")))
 
 (defmulti handle-operator (fn [op editor local bus] op))
 
@@ -346,7 +362,8 @@
   (let [{:keys [tree selection]} @editor
         orig (tree/node-at tree selection)
         default (mg/subdiv)
-        {:keys [cols rows slices]} (tree/op-args-or-default op orig default)]
+        {:keys [cols rows slices] :as args} (tree/op-args-or-default op orig default)]
+    (debug :path selection :args args :default default)
     (show-op-controls
      {:editor editor
       :local local
@@ -376,6 +393,8 @@
         node-toggle     (async/subscribe bus :node-toggle)
         node-selected   (async/subscribe bus :node-selected)
         node-deselected (async/subscribe bus :node-deselected)
+        commit-op       (async/subscribe bus :commit-operator)
+        cancel-op       (async/subscribe bus :cancel-operator)
         release         (async/subscribe bus :release-editor)
         resize          (async/subscribe bus :window-resize)
         op-triggered    (async/subscribe bus :op-triggered)
@@ -393,6 +412,8 @@
                                        :release-editor release
                                        :window-resize resize
                                        :op-triggered op-triggered
+                                       :commit-operator commit-op
+                                       :cancel-operator cancel-op
                                        :regenerate-scene regenerate}
                           :events     [mdown mmove mup tmove]
                           :map        {:canvas canvas :ctx (.getContext canvas "2d")}
@@ -410,6 +431,7 @@
         (when (<! resize)
           (resize-viz editor local)
           (regenerate-map editor local)
+          (async/publish bus :user-action nil)
           (recur))))
 
     (go
@@ -430,6 +452,7 @@
               (do
                 (when sel (async/publish bus :node-deselected [sel false]))
                 (async/publish bus :node-selected id)))
+            (async/publish bus :user-action nil)
             (recur)))))
 
     (go
@@ -477,7 +500,16 @@
           (when op
             (debug :new-op op)
             (handle-operator op editor local bus)
+            (async/publish bus :user-action nil)
             (recur)))))
+
+    (go
+      (loop []
+        (when (<! commit-op)
+          (hide-op-controls editor local)
+          (async/publish bus :regenerate-scene nil)
+          (async/publish bus :user-action nil)
+          (recur))))
 
     (go
       (loop [down? false]
@@ -488,18 +520,21 @@
                     (and down? (= ch (mt-inputs 1))))
               (do
                 (scroll-viewport editor local (- (.-clientX e) (.-offsetLeft canvas) 10))
+                (async/publish bus :user-action nil)
                 (recur true))
               (recur false))))))
 
     (go
       (let [_ (<! release)
-            {:keys [nodes subs]} @local]
+            {:keys [nodes subs ctrls]} @local]
         (debug :tedit-release)
         (dom/remove! viz)
         (dom/remove! canvas)
         (dom/remove-class! (dom/by-id "toolbar") "rollon")
+        (dom/add-class! (dom/by-id "op-ctrl") "hidden")
         (remove-node-event-handlers bus nodes)
         (remove-op-triggers bus op-triggers)
+        ;;(remove-op-controllers bus ctrls)
         (dorun (map dom/destroy-event-channel (:events @local)))
         (async/unsubscribe-and-close-many bus subs)
         (reset! local nil)))

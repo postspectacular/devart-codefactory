@@ -103,9 +103,10 @@
         (let [[_ [state params]] (<! init)
               canvas  (dom/by-id "edit-canvas")
               resize  (async/subscribe bus :window-resize)
+              action  (async/subscribe bus :user-action)
               mdown   (dom/event-channel canvas "mousedown")
-              mup     (dom/event-channel js/window "mouseup")
-              mmove   (dom/event-channel js/window "mousemove")
+              mup     (dom/event-channel canvas "mouseup")
+              mmove   (dom/event-channel canvas "mousemove")
               tdown   (dom/event-channel canvas "touchstart" dom/touch-handler)
               tmove   (dom/event-channel canvas "touchmove" dom/touch-handler)
               tup     (dom/event-channel canvas "touchend" dom/touch-handler)
@@ -118,10 +119,11 @@
            local
            (-> (webgl/init-webgl canvas)
                (merge
-                {:subs {:window-resize resize}
+                {:subs {:window-resize resize
+                        :user-action action}
                  :events [mdown mup mmove mwheel tdown tmove tup]
                  :arcball arcball
-                 :last-click now
+                 :last-action now
                  :start-time now
                  :selection nil
                  :sel-time now
@@ -179,7 +181,7 @@
           ;; continue/cancel buttons & user timeout
           (go
             (loop []
-              (let [delay (- module-timeout (- (utils/now) (:last-click @local)))
+              (let [delay (- module-timeout (- (utils/now) (:last-action @local)))
                     [_ ch] (alts! [continue cancel (timeout delay)])]
                 (cond
                  (= continue ch)
@@ -188,10 +190,16 @@
                  (= cancel ch)
                  (route/set-route! "select" (:seed-id @local))
 
-                 (>= (- (utils/now) (:last-click @local)) module-timeout)
+                 (>= (- (utils/now) (:last-action @local)) module-timeout)
                  (route/set-route! "home")
 
                  :else (recur)))))
+
+          (go
+            (loop []
+              (when (<! action)
+                (swap! local assoc :last-action (utils/now))
+                (recur))))
 
           (recur))))
 

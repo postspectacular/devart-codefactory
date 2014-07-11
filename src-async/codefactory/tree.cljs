@@ -78,6 +78,20 @@
   [nodes]
   (->> nodes keys (map count) (reduce max) (inc)))
 
+(defn compute-densest-branch
+  [tree path w min-w max-p]
+  (let [children (:out (node-at tree path))
+        n (count children)]
+    (if (pos? n)
+      (let [w' (/ w n)
+            [min-w max-p] (if (< w' min-w) [w' path] [min-w max-p])]
+        (loop [i 0, min-w min-w, max-p max-p]
+          (if (< i n)
+            (let [[min-w max-p] (compute-densest-branch tree (conj path i) w' min-w max-p)]
+              (recur (inc i) min-w max-p))
+            [min-w max-p])))
+      [min-w max-p])))
+
 (defn init-tree-with-seed
   [state seed-id]
   (let [tree (mg/subdiv :cols 5 :out {1 (mg/subdiv-inset :dir :z :inset 0.2)})
@@ -92,7 +106,7 @@
       :seed-id seed-id
       :selection nil
       :tree-depth (compute-tree-depth nodes)
-      :max-nodes-path [1 1 1 1]})))
+      :max-nodes-path (peek (compute-densest-branch tree [] 1 1 []))})))
 
 (defn filter-leaves-and-selection
   [coll tree sel]
@@ -133,3 +147,12 @@
       :meshes meshes
       :selection selection
       :display-meshes (filter-leaves-and-selection meshes tree selection)})))
+
+(defn update-stats
+  [state]
+  (let [{:keys [node-cache tree]} @state
+        [min-w path] (compute-densest-branch tree [] 1 1 [])]
+    (swap!
+     state assoc
+     :max-nodes-path path
+     :tree-depth (compute-tree-depth node-cache))))

@@ -138,3 +138,30 @@
   [[ch handler ev el]]
   (.removeEventListener el ev handler)
   (close! ch))
+
+(defn add-listeners
+  [specs]
+  (loop [specs specs]
+    (if specs
+      (let [[id eid f cap?] (first specs)
+            el (if (string? id)
+                 (if (= "$window" id)
+                   js/window (query nil id))
+                 id)]
+        (when el (.addEventListener el (name eid) f cap?))
+        (recur (next specs)))))
+  specs)
+
+(defn remove-listeners
+  [specs]
+  (loop [specs specs]
+    (if specs
+      (let [[id eid f] (first specs)
+            el (if (string? id)
+                 (if (= "$window" id)
+                   js/window (query nil id))
+                 id)]
+        (when el
+          (.addEventListener el (name eid) f))
+        (recur (next specs)))))
+  specs)
