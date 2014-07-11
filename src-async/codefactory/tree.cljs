@@ -94,9 +94,9 @@
 
 (defn init-tree-with-seed
   [state seed-id]
-  (let [tree (mg/subdiv :cols 5 :out {1 (mg/subdiv-inset :dir :z :inset 0.2)})
-        tree (mg/reflect-seq [:e :e :e :e :e])
-        ;;tree {}
+  (let [;;tree (mg/subdiv :cols 5 :out {1 (mg/subdiv-inset :dir :z :inset 0.2)})
+        ;;tree (mg/reflect-seq [:e :e :e :e :e])
+        tree {}
         nodes (mg/compute-tree-map (:seed (config/seeds (keyword seed-id))) tree)]
     (merge
      state
@@ -151,8 +151,10 @@
 (defn update-stats
   [state]
   (let [{:keys [node-cache tree]} @state
-        [min-w path] (compute-densest-branch tree [] 1 1 [])]
+        [min-w path] (compute-densest-branch tree [] 1 1 [])
+        depth (compute-tree-depth node-cache)]
+    (debug :path path :depth depth)
     (swap!
      state assoc
      :max-nodes-path path
-     :tree-depth (compute-tree-depth node-cache))))
+     :tree-depth depth)))

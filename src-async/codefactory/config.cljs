@@ -47,6 +47,7 @@
   {:inset 11
    :gap 2
    :margin 10
+   :margin-bottom 70
    :height 200
    :min-size 20
    :map-width 200

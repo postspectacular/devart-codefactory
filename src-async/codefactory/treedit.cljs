@@ -99,10 +99,11 @@
    width (range (inc (count path)))))
 
 (defn generate-branch
-  [bus viz tree local sel]
-  (let [gap (:gap config/editor)
-        off (g/+ (:scroll @local)
-                 (.-offsetLeft viz) (- (.-innerHeight js/window) 270))]
+  [bus viz tree scroll sel]
+  (let [{:keys [gap height margin-bottom]} config/editor
+        off (g/+ scroll
+                 (.-offsetLeft viz)
+                 (- (.-innerHeight js/window) (+ height margin-bottom)))]
     (fn gen-branch*
       [acc nodes path x y w h]
       (let [branch (tree/select-sub-paths nodes path)
@@ -148,26 +149,29 @@
              width min-size]
         (let [width (mm/madd width num-sibs gap (dec num-sibs))]
           (if (seq path)
-            (recur (pop path) (tree/num-children-at tree path) width)
+            (let [path' (pop path)]
+              (recur path' (tree/num-children-at tree path') width))
             width)))
       width)))
 
 (defn regenerate-viz
   [editor local bus]
   (tree/update-stats editor)
-  (swap! local assoc :scroll (vec2))
-  (let [{:keys [viz nodes width node-height]} @local
+  (let [{:keys [viz nodes width scroll]} @local
         {:keys [node-cache tree tree-depth selection]} @editor
         {:keys [gap margin height]} config/editor
-        width (compute-required-width editor)
-        layout (generate-branch bus viz tree local selection)]
-    (debug :height height node-height)
+        width' (compute-required-width editor)
+        node-height (cell-size height gap tree-depth)
+        scroll (if (== width width') scroll (vec2))
+        layout (generate-branch bus viz tree scroll selection)]
     (dom/set-html! viz "")
     (remove-node-event-handlers bus nodes)
     (swap!
      local assoc
-     :width width
-     :nodes (layout {} node-cache [] margin height width node-height))))
+     :width       width'
+     :node-height node-height
+     :scroll      scroll
+     :nodes       (layout {} node-cache [] margin height width' node-height))))
 
 (defn resize-branch
   [nodes tree gap offset]
@@ -272,10 +276,10 @@
   (let [el-id (str "ctrl" i)
         cls (str "op-" (name op))
         parent (dom/by-id "sliders")
+        el-label (dom/create! "p" parent {:id (str el-id "-label")})
         el (dom/create! "input" parent
                         {:id el-id :type "range" :class cls
-                         :min min :max max :value value :step step})
-        el-label (dom/create! "p" parent {:id (str el-id "-label")})]
+                         :min min :max max :value value :step step})]
     (dom/set-text! el-label label)
     [el "change"
      (fn [e]
@@ -304,6 +308,7 @@
   (let [{:keys [tree selection]} @editor
         {:keys [viz] {:keys [canvas]} :map} @local
         path (mg/child-path selection)
+        node (if (:op orig) orig default)
         ctrl (dom/by-id "op-ctrl")
         listeners (init-op-controls editor bus path op sliders)
         listeners (conj listeners
@@ -322,7 +327,7 @@
     (swap!
      editor merge
      {:sel-type op
-      :tree (if (seq path) (assoc-in tree path default) default)})
+      :tree (if (seq path) (assoc-in tree path node) node)})
     (swap!
      local merge
      {:orig-tree-value orig
@@ -378,6 +383,42 @@
       :default default
       :orig orig})))
 
+(defmethod handle-operator :sd-inset
+  [op editor local bus]
+  (let [{:keys [tree selection]} @editor
+        orig (tree/node-at tree selection)
+        default (mg/subdiv-inset :dir :x :inset 0.05)
+        {:keys [dir inset] :as args} (tree/op-args-or-default op orig default)]
+    (debug :path selection :args args :default default)
+    (show-op-controls
+     {:editor editor
+      :local local
+      :bus bus
+      :op op
+      :sliders [{:label "direction" :min 0 :max 2 :value (tree/direction-idx dir) :step 1
+                 :listener (fn [n {:keys [inset]}] (mg/subdiv-inset :dir (tree/direction-ids (int n)) :inset inset))}
+                {:label "inset" :min 0.02 :max 0.45 :value inset :step 0.001
+                 :listener (fn [n {:keys [dir]}] (mg/subdiv-inset :dir dir :inset n))}]
+      :default default
+      :orig orig})))
+
+(defmethod handle-operator :reflect
+  [op editor local bus]
+  (let [{:keys [tree selection]} @editor
+        orig (tree/node-at tree selection)
+        default (mg/reflect :dir :e)
+        {:keys [dir] :as args} (tree/op-args-or-default op orig default)]
+    (debug :path selection :args args :default default)
+    (show-op-controls
+     {:editor editor
+      :local local
+      :bus bus
+      :op op
+      :sliders [{:label "direction" :min 0 :max 5 :value (tree/face-idx dir) :step 1
+                 :listener (fn [n _] (mg/reflect :dir (tree/face-ids (int n))))}]
+      :default default
+      :orig orig})))
+
 (defn init
   [editor bus]
   (let [{:keys [gap margin height map-width map-height]} config/editor
@@ -421,8 +462,7 @@
                           :scroll     (vec2)
                           :nodes      {}
                           :selected-id nil
-                          :height      map-height
-                          :node-height (cell-size height gap tree-depth)})]
+                          :height      height})]
     (regenerate-viz editor local bus)
     (regenerate-map editor local)
 

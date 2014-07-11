@@ -82,7 +82,9 @@
 (defn ^:export start
   []
   (let [bus (async/pub-sub
-             (fn [e] (debug :topic (first e)) (first e)))
+             (fn [e]
+               ;;(debug :topic (first e))
+               (first e)))
         state (atom {:bus bus
                      :ctrl-id :loader})
         satisfied? true]
