@@ -13,6 +13,15 @@
 
     div {
         position: absolute;
+
+        display: -webkit-flex;
+        display: -moz-flex;
+        display: flex;
+        -webkit-flex-flow: column nowrap;
+        -moz-flex-flow: column nowrap;
+        flex-flow: column nowrap;
+        align-content: center;
+        justify-content: center;
         text-align: center;
 
         &.op-sd { background-color: @op-col-sd; }
@@ -36,6 +45,8 @@
         &.op-leaf:hover { background-color: white; color: #333; }
 
         &.selected { background-color: yellow !important; }
+
+        h1, p { margin: 0; }
 
         svg {
             &.op-sd { stroke: @op-col-sd; }

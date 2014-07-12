@@ -54,12 +54,13 @@
 (defn render-scene
   [state]
   (if (:active? @state)
-    (let [{:keys [gl arcball shaders proj display-meshes selection sel-type start-time sel-time]} @state
+    (let [{:keys [gl arcball shaders proj display-meshes bounds
+                  selection sel-type start-time sel-time]} @state
           now         (utils/now)
           time        (mm/subm now start-time 0.001)
           view        (arcball/get-view arcball)
           shared-unis {:view view
-                       :model M44
+                       :model (g/translate M44 (g/- (g/centroid bounds)))
                        :proj proj
                        :normalMat (-> (g/invert view) (g/transpose))}]
       (apply gl/clear-color-buffer gl (:bg-col config/webgl))

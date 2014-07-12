@@ -44,12 +44,13 @@
         cls (str "op-" (name op))
         [ch handler] (dom/event-channel el "click")
         label (fn [l]
-                (dom/set-text! el l)
-                (dom/set-style! el #js {:line-height (->px h)}))]
+                (dom/set-html! el l)
+                ;;(dom/set-style! el #js {:line-height (->px h)})
+                )]
 
     (cond
      (= :leaf op)
-     (label (if (empty? path) "TAP TO BEGIN" "+"))
+     (label (if (empty? path) (:root-label config/editor) "+"))
 
      (= :delete op)
      (let [svg (dom/create-ns!
@@ -92,10 +93,12 @@
   [tree path width gap]
   (reduce
    (fn [width n]
-     (->> path
-          (take n)
-          (tree/num-children-at tree)
-          (cell-size width gap)))
+     (let [w (->> path
+                  (take n)
+                  (tree/num-children-at tree)
+                  (cell-size width gap))]
+       (debug :w w :n n :path (take n path))
+       w))
    width (range (inc (count path)))))
 
 (defn generate-branch
@@ -199,6 +202,11 @@
     ((resize-branch nodes tree gap offset) [] margin width)
     (swap! local assoc :width width)))
 
+(def map-op-color
+  (memoize
+   (fn [op]
+     (-> op config/operator-color (col/gray-offset-hex (:map-color-offset config/editor))))))
+
 (defn map-branch
   [ctx tree path x y w h sel]
   (let [{:keys [op out] :as node} (tree/node-at tree path)
@@ -206,7 +214,7 @@
         wc (cell-size w 1 nc)
         col (if (= path sel)
               (:map-selection config/editor)
-              (config/operator-color (tree/node-operator node)))] ;; TODO highlight sel
+              (map-op-color (tree/node-operator node)))]
     (set! (.-fillStyle ctx) col)
     (.fillRect ctx x (inc (- y h)) w h)
     (if (pos? nc)
@@ -234,7 +242,10 @@
       (set! (.-font ctx) "14px \"Abel\" sans-serif")
       (set! (.-textAlign ctx) "center")
       (set! (.-textBaseline ctx) "middle")
-      (.fillText ctx "CODE OVERVIEW" (/ map-width 2) (/ map-height 2)))
+      (.fillText ctx "CODE OVERVIEW" (/ map-width 2) (mm/madd map-height 0.5 -18))
+      (.fillText ctx "This area always shows", (/ map-width 2) (mm/madd map-height 0.5 0))
+      (.fillText ctx "the entire code structure", (/ map-width 2) (mm/madd map-height 0.5 18))
+      )
     (set! (.-strokeStyle ctx) "yellow")
     (set! (.-lineWidth ctx) 2)
     (.strokeRect ctx vx vy vw vh)
@@ -358,8 +369,9 @@
         tree (tree/delete-node-at tree selection)]
     (reset! editor
             (-> @editor
-                (assoc :tree tree)
+                (assoc :tree tree :selection nil)
                 (tree/update-meshes true)))
+    (swap! local assoc :selected-id nil)
     (async/publish bus :regenerate-scene nil)))
 
 (defmethod handle-operator :sd
@@ -403,6 +415,23 @@
       :orig orig})))
 
 (defmethod handle-operator :reflect
+  [op editor local bus]
+  (let [{:keys [tree selection]} @editor
+        orig (tree/node-at tree selection)
+        default (mg/reflect :dir :e)
+        {:keys [dir] :as args} (tree/op-args-or-default op orig default)]
+    (debug :path selection :args args :default default)
+    (show-op-controls
+     {:editor editor
+      :local local
+      :bus bus
+      :op op
+      :sliders [{:label "direction" :min 0 :max 5 :value (tree/face-idx dir) :step 1
+                 :listener (fn [n _] (mg/reflect :dir (tree/face-ids (int n))))}]
+      :default default
+      :orig orig})))
+
+(defmethod handle-operator :skew
   [op editor local bus]
   (let [{:keys [tree selection]} @editor
         orig (tree/node-at tree selection)

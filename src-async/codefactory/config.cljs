@@ -52,8 +52,10 @@
    :min-size 20
    :map-width 200
    :map-height 200
-   :map-bg "#333336"
-   :map-selection "#ffff00"})
+   :map-bg "#222223"
+   :map-selection "#cccc00"
+   :map-color-offset -0.33
+   :root-label "<h1>TAP TO BEGIN</h1><p>This is your code edit area.</p><p>Assign operations to elements to create your artwork.</p><p>Each operation creates more shapes, forming a hierarchy.</p>"})
 
 (def operators
   {:sd             {:col "#56ffee" :label "split"}

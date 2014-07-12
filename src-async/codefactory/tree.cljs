@@ -8,6 +8,7 @@
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
    [thi.ng.geom.basicmesh :as bm]
+   [thi.ng.geom.types.utils :as tu]
    [thi.ng.morphogen.core :as mg]
    [thi.ng.common.math.core :as m]))
 
@@ -150,11 +151,13 @@
 
 (defn update-stats
   [state]
-  (let [{:keys [node-cache tree]} @state
+  (let [{:keys [node-cache tree display-meshes]} @state
         [min-w path] (compute-densest-branch tree [] 1 1 [])
-        depth (compute-tree-depth node-cache)]
+        depth (compute-tree-depth node-cache)
+        bounds (tu/coll-bounds (vals (select-keys node-cache (keys display-meshes))))]
     (debug :path path :depth depth)
     (swap!
      state assoc
      :max-nodes-path path
-     :tree-depth depth)))
+     :tree-depth depth
+     :bounds bounds)))
