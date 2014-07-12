@@ -12,8 +12,7 @@
 (def webgl
   {:min-aa-res 480
    :bg-col [0.2 0.2 0.211 1]
-   :shader-preset-ids [:xray-strong :lambert-default]
-   :initial-view [0.10196 0.90405 -0.30269 -0.2838]})
+   :shader-preset-ids [:xray-strong :lambert-default]})
 
 (def seeds
   (->> {:box  {:seed (a/aabb 1)}
@@ -50,6 +49,7 @@
    :margin-bottom 70
    :height 200
    :min-size 24
+   :initial-view [0.1011 0.904 -0.3027 -0.284]
    :map-width 200
    :map-height 200
    :map-bg "#222223"

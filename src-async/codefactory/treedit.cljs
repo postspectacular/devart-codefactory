@@ -19,6 +19,8 @@
    [thi.ng.common.math.core :as m]
    [thi.ng.morphogen.core :as mg]))
 
+(def svg-ns "http://www.w3.org/2000/svg")
+
 (defn ->px [x] (str x "px"))
 
 (def node-id
@@ -35,22 +37,16 @@
           (close! channel)))
        dorun))
 
-(def svg-ns "http://www.w3.org/2000/svg")
-
 (defn make-node
   [parent path op x y w h bus sel]
   (let [el (dom/create! "div" parent)
         id (node-id path)
         cls (str "op-" (name op))
-        [ch handler] (dom/event-channel el "click")
-        label (fn [l]
-                (dom/set-html! el l)
-                ;;(dom/set-style! el #js {:line-height (->px h)})
-                )]
+        [ch handler] (dom/event-channel el "click")]
 
     (cond
      (= :leaf op)
-     (label (if (empty? path) (:root-label config/editor) "+"))
+     (dom/set-html! el (if (empty? path) (:root-label config/editor) "+"))
 
      (= :delete op)
      (let [svg (dom/create-ns!
@@ -284,7 +280,7 @@
     :or {step 1}}]
   (let [el-id (str "ctrl" i)
         cls (str "op-" (name op))
-        parent (dom/by-id "sliders")
+        parent (dom/by-id "op-sliders")
         el-label (dom/create! "p" parent {:id (str el-id "-label")})
         el (dom/create! "input" parent
                         {:id el-id :type "range" :class cls
@@ -332,7 +328,7 @@
     (dom/add-listeners listeners)
     (dom/add-class! viz "hidden")
     (dom/add-class! canvas "hidden")
-    (dom/remove-class! ctrl "hidden")
+    (dom/set-attribs! ctrl {:class (str "op-" (name op))})
     (swap!
      editor merge
      {:sel-type op
@@ -353,7 +349,7 @@
       (swap! local assoc :ctrl-active? false :ctrl-listeners nil)
       (dom/remove-listeners ctrl-listeners)
       (dom/add-class! (dom/by-id "op-ctrl") "hidden")
-      (dom/set-html! (dom/by-id "sliders") "")
+      (dom/set-html! (dom/by-id "op-sliders") "")
       (dom/remove-class! viz "hidden")
       (dom/remove-class! canvas "hidden"))))
 
