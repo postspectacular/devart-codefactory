@@ -46,3 +46,7 @@
         (unsubscribe bus k v)
         (close! v)
         (recur (next coll))))))
+
+(defn subscription-channels
+  [bus ids]
+  (reduce (fn [subs id] (assoc subs id (subscribe bus id))) {} ids))

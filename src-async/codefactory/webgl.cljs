@@ -2,7 +2,6 @@
   (:require-macros
    [thi.ng.macromath.core :as mm])
   (:require
-   [codefactory.config :as config]
    [codefactory.color :as col]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.dom :as dom]
@@ -116,12 +115,12 @@ void main() {
     :shaders (mapv #(init-shader gl %) preset-ids)))
 
 (defn init-webgl
-  [canvas]
+  [canvas config]
   (try
-    (let [aa? (not (dom/match-media (str "(max-width: " (:min-aa-res config/webgl) "px)")))
+    (let [aa? (not (dom/match-media (str "(max-width: " (:min-aa-res config) "px)")))
           gl (gl/gl-context canvas {:antialias aa?})]
       (-> {:canvas canvas :gl gl}
-          (init-shaders (:shader-preset-ids config/webgl))))
+          (init-shaders (:shader-preset-ids config))))
     (catch js/Error e false)))
 
 (defn prepare-render-state
