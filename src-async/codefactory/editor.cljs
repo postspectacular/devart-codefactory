@@ -88,6 +88,42 @@
     (gl/set-viewport gl view-rect)
     (arcball/resize arcball w h)))
 
+(defn handle-arcball
+  [canvas arcball inputs bus]
+  (go
+    (loop []
+      (let [[e ch] (alts! inputs)]
+        (when e
+          (cond
+
+           (or (= ch (inputs 0))
+               (= ch (inputs 4)))
+           (let [x (.-clientX e)
+                 y (.-clientY e)
+                 h (.-clientHeight canvas)]
+             (when (m/in-range? 0 h y)
+               (arcball/down arcball x (- h y))))
+
+           (or (= ch (inputs 1))
+               (= ch (inputs 5)))
+           (let [x (.-clientX e)
+                 y (.-clientY e)
+                 h (.-clientHeight canvas)]
+             (when (and (m/in-range? 0 h y)
+                        (arcball/drag arcball x (- h y)))
+               (async/publish bus :render-scene nil)))
+
+           (or (= ch (inputs 2))
+               (= ch (inputs 6)))
+           (arcball/up arcball)
+
+           (inputs 3) (let [delta (or (aget e "deltaY") (aget e "wheelDeltaY"))]
+                        (arcball/zoom-delta arcball delta)
+                        (async/publish bus :render-scene nil))
+
+           :else (debug :ev e))
+          (recur))))))
+
 (defn init
   [bus]
   (let [canvas     (dom/by-id "edit-canvas")
@@ -145,39 +181,7 @@
                   (render-scene local)
                   (recur)))))
 
-          (go
-            (loop []
-              (let [[e ch] (alts! inputs)]
-                (when e
-                  (cond
-
-                   (or (= ch (inputs 0))
-                       (= ch (inputs 4)))
-                   (let [x (.-clientX e)
-                         y (.-clientY e)
-                         h (.-clientHeight canvas)]
-                     (when (m/in-range? 0 h y)
-                       (arcball/down arcball x (- h y))))
-
-                   (or (= ch (inputs 1))
-                       (= ch (inputs 5)))
-                   (let [x (.-clientX e)
-                         y (.-clientY e)
-                         h (.-clientHeight canvas)]
-                     (when (and (m/in-range? 0 h y)
-                                (arcball/drag arcball x (- h y)))
-                       (async/publish bus :render-scene nil)))
-
-                   (or (= ch (inputs 2))
-                       (= ch (inputs 6)))
-                   (arcball/up arcball)
-
-                   (inputs 3) (let [delta (or (aget e "deltaY") (aget e "wheelDataY"))]
-                                (arcball/zoom-delta arcball delta)
-                                (async/publish bus :render-scene nil))
-
-                   :else (debug :ev e))
-                  (recur)))))
+          (handle-arcball canvas arcball inputs bus)
 
           ;; continue/cancel buttons & user timeout
           (go

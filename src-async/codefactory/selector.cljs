@@ -13,6 +13,7 @@
    [thi.ng.cljs.route :as route]
    [thi.ng.cljs.utils :as utils]
    [thi.ng.cljs.dom :as dom]
+   [thi.ng.cljs.detect :as detect]
    [thi.ng.geom.webgl.core :as gl]
    [thi.ng.geom.webgl.animator :as anim]
    [thi.ng.geom.webgl.buffers :as buf]
@@ -109,6 +110,8 @@
   (let [{:keys [meshes selection]} @state
         spec (mesh-spec-for-id meshes selection)]
     (swap! state assoc :active? false)
+    #_(when detect/safari? ;; FIXME
+      (dom/add-class! (dom/by-id "seed-canvas") "hidden"))
     (route/set-route! "objects" "new" (name (:id spec)))))
 
 (defn init
@@ -140,6 +143,7 @@
             :selection sel
             :camx (* sel (:space config/seed-select))
             :active? true})
+          #_(dom/remove-class! (dom/by-id "seed-canvas") "hidden") ;; FIXME
           (resize-canvas local)
           (render-scene local)
 
