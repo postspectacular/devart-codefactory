@@ -226,10 +226,12 @@
   (let [{:keys [ctx]} (:map @local)
         {:keys [width height]} @local
         {:keys [tree tree-depth selection]} @editor
-        {:keys [map-bg map-width map-height]} config/editor
+        {:keys [map-bg map-width map-height map-labels]} config/editor
         [vx vy vw vh] (map-focus-rect
                        (compute-viewport local)
-                       width height map-width map-height)]
+                       width height map-width map-height)
+        cy (/ map-height 2)
+        nl (count map-labels)]
     (swap! local assoc-in [:map :viewport] [vx vy vw vh])
     (set! (.-fillStyle ctx) map-bg)
     (set! (.-strokeStyle ctx) nil)
@@ -237,13 +239,13 @@
     (map-branch ctx tree [] 0 map-height map-width (/ map-height tree-depth) selection)
     (when (== 1 tree-depth)
       (set! (.-fillStyle ctx) map-bg)
-      (set! (.-font ctx) "14px \"Abel\" sans-serif")
+      (set! (.-font ctx) "14px \"Abel\", sans-serif")
       (set! (.-textAlign ctx) "center")
       (set! (.-textBaseline ctx) "middle")
-      (.fillText ctx "CODE OVERVIEW" (/ map-width 2) (mm/madd map-height 0.5 -18))
-      (.fillText ctx "This area always shows", (/ map-width 2) (mm/madd map-height 0.5 0))
-      (.fillText ctx "the entire code structure", (/ map-width 2) (mm/madd map-height 0.5 18))
-      )
+      (loop [i 0, y (int (/ nl -2))]
+        (when (< i nl)
+          (.fillText ctx (map-labels i) (/ map-width 2) (mm/madd 18 y cy))
+          (recur (inc i) (inc y)))))
     (set! (.-strokeStyle ctx) "yellow")
     (set! (.-lineWidth ctx) 2)
     (.strokeRect ctx vx vy vw vh)
@@ -346,14 +348,16 @@
     (swap! editor tree/update-meshes true)
     (async/publish bus :render-scene nil)))
 
-(defn hide-op-controls
-  [editor local]
-  (let [{:keys [viz ctrl-listeners] {:keys [canvas]} :map} @local]
-    (dom/remove-listeners ctrl-listeners)
-    (dom/add-class! (dom/by-id "op-ctrl") "hidden")
-    (dom/set-html! (dom/by-id "sliders") "")
-    (dom/remove-class! viz "hidden")
-    (dom/remove-class! canvas "hidden")))
+(defn remove-op-controls
+  [local]
+  (let [{:keys [viz ctrl-active? ctrl-listeners] {:keys [canvas]} :map} @local]
+    (when ctrl-active?
+      (swap! local assoc :ctrl-active? false :ctrl-listeners nil)
+      (dom/remove-listeners ctrl-listeners)
+      (dom/add-class! (dom/by-id "op-ctrl") "hidden")
+      (dom/set-html! (dom/by-id "sliders") "")
+      (dom/remove-class! viz "hidden")
+      (dom/remove-class! canvas "hidden"))))
 
 (defmulti handle-operator (fn [op editor local bus] op))
 
@@ -461,10 +465,10 @@
       :bus bus
       :op op
       :sliders [{:label "split direction" :min 0 :max 3 :value (tree/direction-idx dir) :step 1
-                 :listener (fn [n {:keys [ref len]}] (mg/split-displace (tree/direction-ids (int n)) ref :offset len))}
+                 :listener (fn [n {:keys [ref offset]}] (mg/split-displace (tree/direction-ids (int n)) ref :offset offset))}
                 {:label "shift direction" :min 0 :max 3 :value (tree/direction-idx dir) :step 1
-                 :listener (fn [n {:keys [dir len]}] (mg/split-displace dir (tree/direction-ids (int n)) :offset len))}
-                {:label "shift length" :min 0.0 :max 2.0 :value len :step 0.001
+                 :listener (fn [n {:keys [dir offset]}] (mg/split-displace dir (tree/direction-ids (int n)) :offset offset))}
+                {:label "shift length" :min 0.0 :max 2.0 :value offset :step 0.001
                  :listener (fn [n {:keys [dir ref]}] (mg/split-displace dir ref :offset n))}]
       :default default
       :orig orig})))
@@ -606,6 +610,7 @@
               {:keys [tree selection]} @editor]
           (when op
             (debug :new-op op)
+            (remove-op-controls local)
             (handle-operator op editor local bus)
             (async/publish bus :user-action nil)
             (recur)))))
@@ -613,7 +618,7 @@
     (go
       (loop []
         (when (<! commit-op)
-          (hide-op-controls editor local)
+          (remove-op-controls local)
           (async/publish bus :regenerate-scene nil)
           (async/publish bus :user-action nil)
           (recur))))
@@ -641,7 +646,7 @@
         (dom/add-class! (dom/by-id "op-ctrl") "hidden")
         (remove-node-event-handlers bus nodes)
         (remove-op-triggers bus op-triggers)
-        ;;(remove-op-controllers bus ctrls)
+        (remove-op-controls local)
         (dorun (map dom/destroy-event-channel (:events @local)))
         (async/unsubscribe-and-close-many bus subs)
         (reset! local nil)))

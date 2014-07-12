@@ -53,9 +53,10 @@
    :map-width 200
    :map-height 200
    :map-bg "#222223"
-   :map-selection "#cccc00"
+   :map-selection "#a8a800"
    :map-color-offset -0.33
-   :root-label "<h1>TAP TO BEGIN</h1><p>This is your code edit area.</p><p>Assign operations to elements to create your artwork.</p><p>Each operation creates more shapes, forming a hierarchy.</p>"})
+   :root-label "<h1>TAP HERE TO BEGIN</h1><p>This is your workspace area.</p><p>Assign operations to elements to create your artwork.</p><p>Each operation creates more shapes, forming a hierarchy.</p>"
+   :map-labels ["CODE OVERVIEW" "This area always shows" "the entire code structure"]})
 
 (def operators
   {:sd             {:col "#56ffee" :label "split"}
@@ -65,7 +66,7 @@
    :extrude        {:col "#3fa6f2" :label "stretch"}
    :reflect        {:col "#89c33f" :label "mirror"}
    :leaf           {:col "#ffffff" :label "leaf"}
-   :shift-displace {:col "#b9c500" :label "shift"}
+   :split-displace {:col "#b9c500" :label "shift"}
    :delete         {:col "#aaaaaa" :label "delete"}
    })
 
