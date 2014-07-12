@@ -215,31 +215,37 @@
           (map-branch ctx tree (conj path i) (mm/madd i wc i 1 x) (- y h) wc h sel)
           (recur (inc i)))))))
 
+(defn draw-map-labels
+  [ctx labels cx cy col font leading]
+  (let [num (count labels)]
+    (set! (.-fillStyle ctx) col)
+    (set! (.-font ctx) font)
+    (set! (.-textAlign ctx) "center")
+    (set! (.-textBaseline ctx) "middle")
+    (loop [i 0, y (int (/ num -2))]
+      (when (< i num)
+        (.fillText ctx (labels i) cx (mm/madd leading y cy))
+        (recur (inc i) (inc y))))))
+
 (defn regenerate-map
   [editor local]
   (let [{:keys [ctx]} (:map @local)
         {:keys [width height]} @local
         {:keys [tree tree-depth selection]} @editor
-        {:keys [map-bg map-width map-height map-labels]} config/editor
-        [vx vy vw vh] (map-focus-rect
-                       (compute-viewport local)
-                       width height map-width map-height)
-        cy (/ map-height 2)
-        nl (count map-labels)]
-    (swap! local assoc-in [:map :viewport] [vx vy vw vh])
+        {:keys [map-bg map-width map-height]} config/editor
+        [vx vy vw vh :as vp] (map-focus-rect
+                              (compute-viewport local)
+                              width height map-width map-height)]
+    (swap! local assoc-in [:map :viewport] vp)
     (set! (.-fillStyle ctx) map-bg)
     (set! (.-strokeStyle ctx) nil)
     (.fillRect ctx 0 0 map-width map-height)
     (map-branch ctx tree [] 0 map-height map-width (/ map-height tree-depth) selection)
     (when (== 1 tree-depth)
-      (set! (.-fillStyle ctx) map-bg)
-      (set! (.-font ctx) "14px \"Abel\", sans-serif")
-      (set! (.-textAlign ctx) "center")
-      (set! (.-textBaseline ctx) "middle")
-      (loop [i 0, y (int (/ nl -2))]
-        (when (< i nl)
-          (.fillText ctx (map-labels i) (/ map-width 2) (mm/madd 18 y cy))
-          (recur (inc i) (inc y)))))
+      (let [{:keys [map-labels map-label-font map-label-size]} config/editor]
+        (draw-map-labels ctx map-labels
+                         (/ map-width 2) (/ map-height 2)
+                         map-bg map-label-font map-label-size)))
     (set! (.-strokeStyle ctx) "yellow")
     (set! (.-lineWidth ctx) 2)
     (.strokeRect ctx vx vy vw vh)
@@ -613,6 +619,15 @@
       (loop []
         (when (<! commit-op)
           (remove-op-controls local)
+          (async/publish bus :regenerate-scene nil)
+          (async/publish bus :user-action nil)
+          (recur))))
+
+    (go
+      (loop []
+        (when (<! cancel-op)
+          (remove-op-controls local)
+
           (async/publish bus :regenerate-scene nil)
           (async/publish bus :user-action nil)
           (recur))))

@@ -55,6 +55,8 @@
    :map-bg "#222223"
    :map-selection "#a8a800"
    :map-color-offset -0.33
+   :map-label-font "14px \"Abel\",sans-serif"
+   :map-label-size 18
    :root-label "<h1>TAP HERE TO BEGIN</h1><p>This is your workspace area.</p><p>Assign operations to elements to create your artwork.</p><p>Each operation creates more shapes, forming a hierarchy.</p>"
    :map-labels ["CODE OVERVIEW" "This area always shows" "the entire code structure"]})
 
