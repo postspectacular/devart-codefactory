@@ -5,12 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
     <meta name="author" content="Karsten Schmidt" />
+    <meta name="description" content="Co(de)Factory - Create a piece of art using simple code operations. Commissioned as part of DevArt by Google and Barbican Centre of Arts, London." />
     <title>Google DevArt: Co(de)Factory</title>
     <link rel="stylesheet" href="/css/app.css" type="text/css" media="screen" />
     <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.3/webfont.js"></script>
-    <script>
-      WebFont.load({google: {families: ['Abel']}});
-    </script>
+    <script>WebFont.load({google: {families: ['Abel']}});</script>
   </head>
   <body>
     <nav class="hidden">
@@ -30,7 +29,7 @@
       <!--
       <div class="flex-item right icons">
         <a href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2fdevartcodefactory.com"
-        target="_blank"><svg width="40" height="40">
+           target="_blank"><svg width="40" height="40">
             <g transform="matrix(1.0526316,0,0,-1.0526316,-965.78282,917.89474)" style="fill:#ccc;fill-opacity:1;fill-rule:nonzero;stroke:none">
               <g transform="translate(936.4937,872)">
                 <path d="m 0,0 c -10.477,0 -19,-8.523 -19,-19 0,-10.477 8.523,-19 19,-19 10.477,0 19,8.523 19,19 C 19,-8.523 10.477,0 0,0 m 0,-3 c 8.836,0 16,-7.164 16,-16 0,-8.838 -7.164,-16 -16,-16 -8.836,0 -16,7.162 -16,16 0,8.836 7.164,16 16,16" />
@@ -40,7 +39,7 @@
               </g>
         </g></svg></a>
         <a href="https://twitter.com/intent/tweet?text=Create+your+own+piece+of+art+using+simple+code+operations&url=http%3A%2F%2Fdevartcodefactory.com"
-        target="_blank"><svg width="40" height="40">
+           target="_blank"><svg width="40" height="40">
             <g transform="matrix(1.0526316,0,0,-1.0526316,-1021.5907,917.89474)" style="fill:#ccc;fill-opacity:1;fill-rule:nonzero;stroke:none">
               <g transform="translate(989.5112,872)">
                 <path d="m 0,0 c -10.477,0 -19,-8.523 -19,-19 0,-10.477 8.523,-19 19,-19 10.477,0 19,8.523 19,19 C 19,-8.523 10.477,0 0,0 m 0,-3 c 8.836,0 16,-7.164 16,-16 0,-8.838 -7.164,-16 -16,-16 -8.836,0 -16,7.162 -16,16 0,8.836 7.164,16 16,16" />
@@ -67,6 +66,7 @@
         </div>
       </section>
 
+      <!--
       <section id="login" class="future" data-transition="concave">
         <div class="flex-container">
           <div class="content center">
@@ -82,6 +82,7 @@
           </div>
         </div>
       </section>
+      -->
 
       <section id="home" class="future" data-transition="concave">
         <div class="flex-container">
@@ -183,7 +184,7 @@
                 <svg width="50%" height="50" viewbox="0 0 1 1">
                   <g fill="none" stroke="#89c33f" stroke-width="0.05">
                     <!-- <path d="M0.2,0.6 L0.2,0.8 L0.8,0.8 L0.8,0.6 M0.3,0.4 L0.5,0.2 L0.7,0.4 M0.5,0.2 L0.5,0.7"/> -->
-                  <path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                    <path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
                 </svg>
               </div>
             </div>
@@ -193,18 +194,14 @@
 
       <section id="submit-form" class="future" data-transition="concave">
         <div class="flex-container">
-          <div class="flex-item preview-wrapper">
-            <canvas id="submit-canvas"></canvas>
-          </div>
-          <div id="toolbar" class="flex-item toolbar center">
-            <h1>SUBMIT YOUR ARTWORK</h1>
-          </div>
           <div id="submit-form-wrapper" class="flex-item center">
-            <form id="submit-art">
-              <p><input type="text" placeholder="ARTWORK TITLE" name="title" /></p>
-              <p><input type="text" placeholder="AUTHOR NAME" name="name" /></p>
-              <p><input type="submit" value="SUBMIT"/></p>
-            </form>
+              <h1>SUBMIT YOUR ARTWORK</h1>
+              <form id="submit-art">
+                <p><input type="text" placeholder="ARTWORK TITLE" name="title" /></p>
+                <p><input type="text" placeholder="AUTHOR NAME" name="name" /></p>
+                <p><input type="submit" value="SUBMIT"/></p>
+              </form>
+              <div>By clicking 'Submit' your sculpture will be entered into the Co(de)Factory gallery and will put forward to the Digital Revolution curator for a chance to be printed and displayed in the Digital Revolution exhibition.</div>
           </div>
           <div class="flex-item buttonbar">
             <div class="inner">

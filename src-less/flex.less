@@ -18,15 +18,15 @@
     -webkit-justify-content: center;
     -moz-justify-content: center;
     justify-content: center;
-}
 
-.flex-container .inner {
-    display: -webkit-flex;
-    display: -moz-flex;
-    display: flex;
-    -webkit-flex-flow: row nowrap;
-    -moz-flex-flow: row nowrap;
-    flex-flow: row nowrap;
+    .inner {
+        display: -webkit-flex;
+        display: -moz-flex;
+        display: flex;
+        -webkit-flex-flow: row nowrap;
+        -moz-flex-flow: row nowrap;
+        flex-flow: row nowrap;
+    }
 }
 
 .flex-item {
@@ -191,3 +191,20 @@
 a:link { color: @op-col-sd; }
 
 a:hover { color: lighten(@op-col-sd,10); }
+
+#submit-form-wrapper {
+    display: flex;
+    display: -webkit-flex;
+    display: -moz-flex;
+    -webkit-flex-flow: column nowrap;
+    -moz-flex-flow: column nowrap;
+    flex-flow: column nowrap;
+    -webkit-justify-content: center;
+    -moz-justify-content: center;
+    justify-content: center;
+
+    div {
+        max-width: 50%;
+        margin: 0 auto;
+    }
+}

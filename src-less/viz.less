@@ -15,7 +15,7 @@
 
     div {
         position: fixed;
-
+        overflow: hidden;
         display: -webkit-flex;
         display: -moz-flex;
         display: flex;
@@ -48,7 +48,7 @@
 
         &.selected { background-color: yellow !important; }
 
-        h1, p { margin: 0; }
+        h1, p { margin: 0; padding: 0 10px; }
 
         svg {
             &.op-sd { stroke: @op-col-sd; }

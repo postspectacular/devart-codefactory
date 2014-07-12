@@ -49,7 +49,7 @@
    :margin 10
    :margin-bottom 70
    :height 200
-   :min-size 20
+   :min-size 24
    :map-width 200
    :map-height 200
    :map-bg "#222223"

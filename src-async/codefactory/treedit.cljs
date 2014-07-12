@@ -106,19 +106,19 @@
                  (.-offsetLeft viz)
                  (- (.-innerHeight js/window) (+ height margin-bottom)))]
     (fn gen-branch*
-      [acc nodes path x y w h]
-      (let [branch (tree/select-sub-paths nodes path)
-            children (tree/select-direct-children branch path)
-            nc (count children)
+      [acc path x y w h]
+      (let [node (tree/node-at tree path)
+            nc (count (:out node))
             wc (cell-size w gap nc)
             cy (- y h gap)
-            op (tree/node-operator (tree/node-at tree path))
+            op (tree/node-operator node)
             acc (conj acc (make-node viz path op (+ x (:x off)) (+ (- y h) (:y off)) w h bus sel))]
         (if (pos? nc)
-          (reduce
-           (fn [acc [c i]]
-             (gen-branch* acc branch c (mm/madd i wc i gap x) cy wc h))
-           acc (zipmap (sort (keys children)) (range)))
+          (loop [acc acc, i 0]
+            (if (< i nc)
+              (recur (gen-branch* acc (conj path i) (mm/madd i wc i gap x) cy wc h)
+                     (inc i))
+              acc))
           acc)))))
 
 (defn compute-viewport
@@ -159,7 +159,7 @@
   [editor local bus]
   (tree/update-stats editor)
   (let [{:keys [viz nodes width scroll]} @local
-        {:keys [node-cache tree tree-depth selection]} @editor
+        {:keys [tree tree-depth selection]} @editor
         {:keys [gap margin height]} config/editor
         width' (compute-required-width editor)
         node-height (cell-size height gap tree-depth)
@@ -172,16 +172,14 @@
      :width       width'
      :node-height node-height
      :scroll      scroll
-     :nodes       (layout {} node-cache [] margin height width' node-height))))
+     :nodes       (layout {} [] margin height width' node-height))))
 
 (defn resize-branch
   [nodes tree gap offset]
   (fn resize-branch*
     [path x w]
-    (let [id (node-id path)
-          el (:el (nodes id))
-          children (:out (tree/node-at tree path))
-          nc (count children)
+    (let [el (:el (nodes (node-id path)))
+          nc (tree/num-children-at tree path)
           wc (cell-size w gap nc)]
       (dom/set-style! el #js {:left (->px (+ x (:x offset))) :width (->px w)})
       (if (pos? nc)

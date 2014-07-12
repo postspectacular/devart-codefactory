@@ -83,7 +83,7 @@
   []
   (let [bus (async/pub-sub
              (fn [e]
-               (debug :topic (first e))
+               ;;(debug :topic (first e))
                (first e)))
         state (atom {:bus bus
                      :ctrl-id :loader})
@@ -96,4 +96,4 @@
        config/routes-unsupported config/default-route-unsupported))
     state))
 
-(def app (start))
+(.addEventListener js/window "load" start)
