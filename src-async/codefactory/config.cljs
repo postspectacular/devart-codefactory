@@ -45,7 +45,7 @@
                      mg/seed-box))))
         {})))
 
-(def app
+(def ^:export app
   {:webgl
    {:min-aa-res 480
     :bg-col [0.2 0.2 0.211 1]

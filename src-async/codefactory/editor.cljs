@@ -16,6 +16,7 @@
    [thi.ng.cljs.utils :as utils]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.io :as io]
+   [thi.ng.cljs.gestures :as gest]
    [thi.ng.geom.webgl.core :as gl]
    [thi.ng.geom.webgl.animator :as anim]
    [thi.ng.geom.webgl.buffers :as buf]
@@ -105,38 +106,38 @@
 (defn handle-arcball
   [canvas ball events bus]
   (go
-    (loop []
-      (let [[e ch] (alts! events)]
+    (loop [state nil]
+      (let [[[e data] ch] (alts! events)]
         (when e
-          (cond
+          (recur
+           (case e
+             :drag-start (let [[x y] (:p data)
+                               h (.-clientHeight canvas)]
+                           (when (m/in-range? 0 h y)
+                             (arcball/down ball x (- h y)))
+                           state)
+             :drag-move  (let [[x y] (:p data)
+                               h (.-clientHeight canvas)]
+                           (when (and (m/in-range? 0 h y)
+                                      (arcball/drag ball x (- h y)))
+                             (async/publish bus :render-scene nil))
+                           state)
 
-           (or (= ch (events 0))
-               (= ch (events 4)))
-           (let [x (.-clientX e)
-                 y (.-clientY e)
-                 h (.-clientHeight canvas)]
-             (when (m/in-range? 0 h y)
-               (arcball/down ball x (- h y))))
+             :dual-start [(:dist data) 0]
 
-           (or (= ch (events 1))
-               (= ch (events 5)))
-           (let [x (.-clientX e)
-                 y (.-clientY e)
-                 h (.-clientHeight canvas)]
-             (when (and (m/in-range? 0 h y)
-                        (arcball/drag ball x (- h y)))
-               (async/publish bus :render-scene nil)))
+             :dual-move (let [[start-dist delta] state
+                              abs-delta (- (:dist data) start-dist)
+                              delta' (mm/subm delta abs-delta 0.1)]
+                          (arcball/zoom-delta ball delta')
+                          (async/publish bus :render-scene nil)
+                          [start-dist delta'])
+             :mouse-wheel (let [delta (:delta data)]
+                            (arcball/zoom-delta ball delta)
+                            (async/publish bus :render-scene nil)
+                            state)
 
-           (or (= ch (events 2))
-               (= ch (events 6)))
-           (arcball/up ball)
-
-           (events 3) (let [delta (or (aget e "deltaY") (aget e "wheelDeltaY"))]
-                        (arcball/zoom-delta ball delta)
-                        (async/publish bus :render-scene nil))
-
-           :else nil)
-          (recur))))))
+             :gesture-end (do (arcball/up ball) state)
+             state)))))))
 
 (defn handle-buttons
   [continue cancel module-timeout local]
@@ -208,13 +209,14 @@
               canvas  (dom/by-id "edit-canvas")
               subs    (async/subscription-channels
                        bus [:window-resize :user-action])
-              e-specs [(dom/event-channel canvas "mousedown")
-                       (dom/event-channel canvas "mousemove")
-                       (dom/event-channel canvas "mouseup")
-                       (dom/event-channel js/window (dom/wheel-event-type))
-                       (dom/event-channel canvas "touchstart" dom/touch-handler)
-                       (dom/event-channel canvas "touchmove" dom/touch-handler)
-                       (dom/event-channel canvas "touchend" dom/touch-handler)]
+              e-specs [(dom/event-channel canvas "mousedown" gest/mouse-gesture-start)
+                       (dom/event-channel canvas "mousemove" gest/mouse-gesture-move)
+                       (dom/event-channel js/window "mouseup" gest/gesture-end)
+                       (dom/event-channel js/window (dom/wheel-event-type)
+                                          gest/mousewheel-proxy)
+                       (dom/event-channel canvas "touchstart" gest/touch-gesture-start)
+                       (dom/event-channel canvas "touchmove" gest/touch-gesture-move)
+                       (dom/event-channel js/window "touchend" gest/gesture-end)]
               events  (mapv first e-specs)
               arcball (init-arcball config params)
               now     (utils/now)]

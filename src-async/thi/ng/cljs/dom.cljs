@@ -118,12 +118,6 @@
   (set-style! el #js {:display "none"})
   (set-style! el #js {:display "block"}))
 
-(defn touch-handler
-  [ch]
-  (fn [e]
-    (.preventDefault e)
-    (put! ch (aget (.-touches e) 0))))
-
 (defn event-channel
   [el id & [f]]
   (let [el (if (string? el) (query nil el) el)

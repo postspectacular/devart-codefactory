@@ -2,7 +2,7 @@
 
 (enable-console-print!)
 
-(def log-level 2)
+(def ^:export log-level 1)
 
 (defn log
   [prefix msg]

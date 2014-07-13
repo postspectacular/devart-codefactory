@@ -13,6 +13,7 @@
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.utils :as utils]
    [thi.ng.cljs.dom :as dom]
+   [thi.ng.cljs.gestures :as gest]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.matrix :as mat :refer [M44]]
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
@@ -388,13 +389,12 @@
   (let [canvas (:canvas @local)]
     (go
       (loop [down? false]
-        (let [[e ch] (alts! events)]
+        (let [[[e data] ch] (alts! events)]
           (when e
-            (if (or (= ch (events 0))
-                    (= ch (events 3))
-                    (and down? (= ch (events 1))))
+            (if (or (= :drag-start e) (and down? (= :drag-move e)))
               (do
-                (scroll-viewport editor local (- (.-clientX e) (.-offsetLeft canvas) 10))
+                (scroll-viewport
+                 editor local (- (:x (:p data)) (.-offsetLeft canvas) 10))
                 (async/publish bus :user-action nil)
                 (recur true))
               (recur false))))))))
@@ -434,10 +434,10 @@
                       :commit-operator :cancel-operator :op-triggered
                       :window-resize :regenerate-scene
                       :release-editor])
-        e-specs [(dom/event-channel canvas "mousedown")
-                 (dom/event-channel canvas "mousemove")
-                 (dom/event-channel canvas "mouseup")
-                 (dom/event-channel canvas "touchmove" dom/touch-handler)]
+        e-specs [(dom/event-channel canvas "mousedown" gest/mouse-gesture-start)
+                 (dom/event-channel canvas "mousemove" gest/mouse-gesture-move)
+                 (dom/event-channel canvas "mouseup" gest/gesture-end)
+                 (dom/event-channel canvas "touchmove" gest/touch-gesture-move)]
         events  (mapv first e-specs)
         local   (atom
                  {:config      config
