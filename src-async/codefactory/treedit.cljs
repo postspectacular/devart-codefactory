@@ -328,7 +328,7 @@
   (let [{:keys [tree selection]} @editor
         {:keys [viz canvas config]} @local
         path (mg/child-path selection)
-        node (if (:op orig) orig default)
+        node (if (= op (:op orig)) orig default)
         ctrl (dom/by-id "op-ctrl")
         listeners (init-op-controls editor bus path op sliders config)
         listeners (conj listeners
