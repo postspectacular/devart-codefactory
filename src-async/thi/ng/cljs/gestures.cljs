@@ -14,13 +14,13 @@
           (.preventDefault e)
           (case (.-length touches)
             1 (let [t (aget touches 0)]
-                (put! ch [drag {:p (vec2 (.-clientX t) (.-clientY t))}]))
+                (put! ch [drag {:p (vec2 (.-clientX t) (.-clientY t)) :touch? true}]))
             2 (let [t1 (aget touches 0)
                     t2 (aget touches 1)
                     tp1 (vec2 (.-clientX t1) (.-clientY t1))
                     tp2 (vec2 (.-clientX t2) (.-clientY t2))
                     dist (g/dist tp1 tp2)]
-                (put! ch [dual {:p tp1 :q tp2 :dist dist}]))
+                (put! ch [dual {:p tp1 :q tp2 :dist dist :touch? true}]))
             nil))))))
 
 (def touch-gesture-start (touch-gesture* "start"))

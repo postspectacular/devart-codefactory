@@ -405,7 +405,9 @@
       (loop [down? false]
         (let [[[e data] ch] (alts! events)]
           (when e
-            (if (or (= :drag-start e) (and down? (= :drag-move e)))
+            (if (or (= :drag-start e)
+                    (and (or down? (:touch? data))
+                         (= :drag-move e)))
               (do
                 (scroll-viewport
                  editor local (- (:x (:p data)) (.-offsetLeft canvas) 10))
