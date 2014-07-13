@@ -13,10 +13,12 @@
    [thi.ng.morphogen.core :as mg]
    [thi.ng.common.math.core :as m]))
 
-(def direction-ids [:x :y :z])
-(def direction-idx {:x 0 :y 1 :z 2})
-(def face-ids      [:e :w :n :s :f :b])
-(def face-idx      {:e 0 :w 1 :n 2 :s 3 :f 4 :b 5})
+(def direction-ids    [:x :y :z])
+(def direction-idx    {:x 0 :y 1 :z 2})
+(def face-ids         [:e :w :n :s :f :b])
+(def face-idx         {:e 0 :w 1 :n 2 :s 3 :f 4 :b 5})
+(def face-labels      ["east" "west" "north" "south" "front" "back"])
+(def direction-labels ["x" "y" "z"])
 
 (defn op-args-or-default
   [id node default]

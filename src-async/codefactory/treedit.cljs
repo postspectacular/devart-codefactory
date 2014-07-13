@@ -424,7 +424,6 @@
       (dom/remove! viz)
       (dom/remove! canvas)
       (dom/remove-class! (dom/by-id "toolbar") "rollon")
-      (dom/add-class! (dom/by-id "op-ctrl") "hidden")
       (remove-node-event-handlers bus nodes)
       (ops/remove-op-triggers bus op-triggers)
       (ops/remove-op-controls local)

@@ -82,7 +82,8 @@
     :map-labels ["CODE OVERVIEW" "This area always shows" "the entire code structure"]}
 
    :operators
-   {:sd             {:col "#56ffee" :label "split"}
+   {:sd             {:col "#56ffee" :label "split"
+                     :help "This operation splits the selected shape into smaller pieces using a regular grid"}
     :skew           {:col "#ffd641" :label "tilt"}
     :sd-inset       {:col "#ed732a" :label "inset"}
     :scale-side     {:col "#bd10d5" :label "scale"}

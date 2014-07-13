@@ -56,3 +56,32 @@
     -moz-animation-name: @name;
     animation-name: @name;
 }
+
+.flex(@flow) {
+    display: flex;
+    display: -webkit-flex;
+    display: -moz-flex;
+    -webkit-flex-flow: @flow;
+    -moz-flex-flow: @flow;
+    flex-flow: @flow;
+}
+
+.flexbox(@box) {
+    -webkit-flex: @box;
+    -moz-flex: @box;
+    flex: @box;
+}
+
+.flex-justify(@align) {
+    -webkit-justify-content: @align;
+    -moz-justify-content: @align;
+    -ms-justify-content: @align;
+    justify-content: @align;
+}
+
+.flex-align(@align) {
+    -webkit-align-items: @align;
+    -moz-align-items: @align;
+    -ms-align-items: @align;
+    align-items: @align;
+}

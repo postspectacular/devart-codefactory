@@ -28,21 +28,24 @@
         (recur (next coll))))))
 
 (defn init-op-slider
-  [editor bus path i op {:keys [label min max value step listener]}]
-  (let [el-id    (str "ctrl" i)
-        cls      (str "op-" (name op))
-        parent   (dom/by-id "op-sliders")
-        el-label (dom/create! "p" parent {:id (str el-id "-label")})
-        el       (dom/create!
-                  "input" parent
-                  {:id el-id :type "range" :class cls
-                   :min min :max max :value value :step step})]
-    (dom/set-text! el-label label)
+  [editor bus path i op {:keys [label min max value step listener format]}]
+  (let [el-id      (str "ctrl" i)
+        cls        (str "op-" (name op))
+        parent     (dom/by-id "op-sliders")
+        el-label   (dom/create! "p" parent {:id (str el-id "-label")})
+        el         (dom/create!
+                    "input" parent
+                    {:id el-id :type "range" :class cls
+                     :min min :max max :value value :step step})
+        set-label! (fn [x]
+                     (dom/set-text! el-label (str label " (" (format x) ")")))]
+    (set-label! value)
     [el "change"
      (fn [e]
        (let [n (utils/parse-float (.-value el))]
          (swap! editor assoc-in (cons :tree path)
                 (listener n (get-in (:tree @editor) (conj path :args))))
+         (set-label! n)
          (debug :tree (:tree @editor))
          (swap! editor tree/update-meshes false)
          (async/publish bus :render-scene nil)))]))
@@ -63,7 +66,7 @@
         {:keys [viz canvas config]} @local
         path (mg/child-path selection)
         node (if (= op (:op orig)) orig default)
-        ctrl (dom/by-id "op-ctrl")
+        parent (dom/by-id "op-container")
         listeners (init-op-controls editor bus path op sliders config)
         listeners (conj listeners
                         ["#ctrl-ok" "click"
@@ -77,7 +80,8 @@
     (dom/add-listeners listeners)
     (dom/add-class! viz "hidden")
     (dom/add-class! canvas "hidden")
-    (dom/set-attribs! ctrl {:class (str "op-" (name op))})
+    (dom/set-attribs! parent {:class (str "op-" (name op))})
+    (dom/set-html! (dom/by-id "op-help") (get-in config [:operators op :help] ""))
     (swap!
      editor assoc
      :sel-type op
@@ -97,16 +101,24 @@
     (when ctrl-active?
       (swap! local assoc :ctrl-active? false :ctrl-listeners nil)
       (dom/remove-listeners ctrl-listeners)
-      (dom/add-class! (dom/by-id "op-ctrl") "hidden")
+      (dom/add-class! (dom/by-id "op-container") "hidden")
       (dom/set-html! (dom/by-id "op-sliders") "")
       (dom/remove-class! viz "hidden")
       (dom/remove-class! canvas "hidden"))))
 
-(defrecord SliderSpec [label min max value step listener])
+
+(def float-label (utils/float-formatter 3))
+
+(def int-label str)
+
+(def face-label tree/face-labels)
+
+(def direction-label tree/direction-labels)
+
+(defrecord SliderSpec [label min max value step listener format])
 
 (defn slider-specs
   [& specs] (mapv #(apply ->SliderSpec %) specs))
-
 
 (defmulti handle-operator (fn [op editor local bus] op))
 
@@ -123,7 +135,6 @@
                 (tree/update-meshes true)
                 (assoc :selection selection
                        :sel-type (tree/node-operator (tree/node-at tree selection)))))
-    ;;(swap! local assoc :selected-id nil)
     (async/publish bus :regenerate-scene nil)))
 
 (defmethod handle-operator :sd
@@ -141,13 +152,16 @@
       :sliders (slider-specs
                 ["columns" 1 5 cols 1
                  (fn [n {:keys [rows slices]}]
-                   (mg/subdiv :cols (int n) :rows rows :slices slices))]
+                   (mg/subdiv :cols (int n) :rows rows :slices slices))
+                 int-label]
                 ["rows" 1 5 rows 1
                  (fn [n {:keys [cols slices]}]
-                   (mg/subdiv :cols cols :rows (int n) :slices slices))]
+                   (mg/subdiv :cols cols :rows (int n) :slices slices))
+                 int-label]
                 ["slices" 1 5 slices 1
                  (fn [n {:keys [rows cols]}]
-                   (mg/subdiv :cols cols :rows rows :slices (int n)))])
+                   (mg/subdiv :cols cols :rows rows :slices (int n)))
+                 int-label])
       :default default
       :orig orig})))
 
@@ -171,10 +185,12 @@
                 ["direction" 0 2 (tree/direction-idx dir) 1
                  (fn [n {:keys [inset]}]
                    (mg/subdiv-inset
-                    :dir (tree/direction-ids (int n)) :inset inset))]
+                    :dir (tree/direction-ids (int n)) :inset inset))
+                 direction-label]
                 ["inset" min-inset max-inset inset step
                  (fn [n {:keys [dir]}]
-                   (mg/subdiv-inset :dir dir :inset n))])
+                   (mg/subdiv-inset :dir dir :inset n))
+                 float-label])
       :default default
       :orig orig})))
 
@@ -192,7 +208,8 @@
       :op op
       :sliders (slider-specs
                 ["direction" 0 5 (tree/face-idx dir) 1
-                 (fn [n _] (mg/reflect :dir (tree/face-ids (int n))))])
+                 (fn [n _] (mg/reflect :dir (tree/face-ids (int n))))
+                 face-label])
       :default default
       :orig orig})))
 
@@ -211,9 +228,11 @@
       :sliders (slider-specs
                 ["direction" 0 5 (tree/face-idx dir) 1
                  (fn [n {:keys [len]}]
-                   (mg/extrude :dir (tree/face-ids (int n)) :len len))]
+                   (mg/extrude :dir (tree/face-ids (int n)) :len len))
+                 face-label]
                 ["length" 0.02 2.0 len 0.001
-                 (fn [n {:keys [dir]}] (mg/extrude :dir dir :len n))])
+                 (fn [n {:keys [dir]}] (mg/extrude :dir dir :len n))
+                 float-label])
       :default default
       :orig orig})))
 
@@ -233,14 +252,17 @@
                 ["split direction" 0 3 (tree/direction-idx dir) 1
                  (fn [n {:keys [ref offset]}]
                    (mg/split-displace
-                    (tree/direction-ids (int n)) ref :offset offset))]
+                    (tree/direction-ids (int n)) ref :offset offset))
+                 direction-label]
                 ["shift direction" 0 3 (tree/direction-idx dir) 1
                  (fn [n {:keys [dir offset]}]
                    (mg/split-displace
-                    dir (tree/direction-ids (int n)) :offset offset))]
+                    dir (tree/direction-ids (int n)) :offset offset))
+                 direction-label]
                 ["shift length" 0.0 2.0 offset 0.001
                  (fn [n {:keys [dir ref]}]
-                   (mg/split-displace dir ref :offset n))])
+                   (mg/split-displace dir ref :offset n))
+                 float-label])
       :default default
       :orig orig})))
 
@@ -258,6 +280,7 @@
       :op op
       :sliders (slider-specs
                 ["direction" 0 5 (tree/face-idx dir) 1
-                 (fn [n _] (mg/reflect :dir (tree/face-ids (int n))))])
+                 (fn [n _] (mg/reflect :dir (tree/face-ids (int n))))
+                 face-label])
       :default default
       :orig orig})))
