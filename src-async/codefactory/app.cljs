@@ -53,11 +53,12 @@
 
 (defn listen-dom
   [bus]
-  (let [listeners [[js/window "resize"
-                     (fn [_] (async/publish bus :window-resize
-                                           [(.-innerWidth js/window)
-                                            (.-innerHeight js/window)]))]]]
-    (dom/add-listeners listeners)))
+  (dom/add-listeners
+   [[js/window "resize"
+     (fn [_]
+       (async/publish
+        bus :window-resize
+        [(.-innerWidth js/window) (.-innerHeight js/window)]))]]))
 
 (defn init-router
   [bus state routes default-route-id]
@@ -75,16 +76,17 @@
   (editor/init bus config)
   (init-router bus state (:routes config) (:default-route config)))
 
-(defn ^:export start
+(defn start
   []
   (let [bus    (async/pub-sub
                 (fn [e]
                   ;;(debug :topic (first e))
                   (first e)))
         config (js/eval (aget js/window "__APP_CONFIG__"))
-        state  (atom {:bus bus
-                      :ctrl-id :loader
-                      :config config})
+        state  (atom
+                {:bus bus
+                 :ctrl-id :loader
+                 :config config})
         satisfied? true]
     ;; TODO add feature check and redirect if not-supported
     (if satisfied?

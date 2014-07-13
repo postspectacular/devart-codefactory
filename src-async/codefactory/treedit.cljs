@@ -7,6 +7,7 @@
    [codefactory.config :as config]
    [codefactory.color :as col]
    [codefactory.tree :as tree]
+   [codefactory.operators :as ops]
    [codefactory.shared :as shared]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
@@ -16,8 +17,7 @@
    [thi.ng.geom.core.matrix :as mat :refer [M44]]
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
    [thi.ng.geom.rect :as r]
-   [thi.ng.common.math.core :as m]
-   [thi.ng.morphogen.core :as mg]))
+   [thi.ng.common.math.core :as m]))
 
 (def svg-ns "http://www.w3.org/2000/svg")
 
@@ -257,8 +257,7 @@
                          map-bg map-label-font map-label-size)))
     (set! (.-strokeStyle ctx) "yellow")
     (set! (.-lineWidth ctx) 2)
-    (.strokeRect ctx vx vy vw vh)
-    ))
+    (.strokeRect ctx vx vy vw vh)))
 
 (defn scroll-viewport
   [editor local x]
@@ -266,238 +265,12 @@
         {:keys [map-width map-height]} (:editor config)
         [_ _ viz-width] (compute-viewport local)
         [_ _ vw] viewport
-        sx (m/map-interval-clamped (mm/madd vw -0.5 x) 0 (- map-width vw) 0 (- (- width viz-width)))]
+        sx (m/map-interval-clamped (mm/madd vw -0.5 x)
+                                   0 (- map-width vw)
+                                   0 (- (- width viz-width)))]
     (swap! local assoc-in [:scroll :x] sx)
     (resize-viz editor local)
     (regenerate-map editor local)))
-
-(defn init-op-triggers
-  [bus config]
-  (mapv
-   (fn [op]
-     (let [el (dom/by-id (str "op-" (name op)))
-           f (fn [e] (.preventDefault e) (async/publish bus :op-triggered op))]
-       (.addEventListener el "click" f)
-       [el f]))
-   (keys (dissoc (:operators config) :leaf))))
-
-(defn remove-op-triggers
-  [bus coll]
-  (loop [coll coll]
-    (if coll
-      (let [[el f] (first coll)]
-        (.removeEventListener el "click" f)
-        (recur (next coll))))))
-
-(defn init-op-slider
-  [editor bus path i op
-   {:keys [label min max value step listener]
-    :or {step 1}}]
-  (let [el-id (str "ctrl" i)
-        cls (str "op-" (name op))
-        parent (dom/by-id "op-sliders")
-        el-label (dom/create! "p" parent {:id (str el-id "-label")})
-        el (dom/create! "input" parent
-                        {:id el-id :type "range" :class cls
-                         :min min :max max :value value :step step})]
-    (dom/set-text! el-label label)
-    [el "change"
-     (fn [e]
-       (let [n (utils/parse-float (.-value el))]
-         (swap!
-          editor
-          assoc-in (cons :tree path)
-          (listener n (get-in (:tree @editor) (conj path :args))))
-         (debug :tree (:tree @editor))
-         (swap! editor tree/update-meshes false)
-         (async/publish bus :render-scene nil)))]))
-
-(defn init-op-controls
-  [editor bus path op specs config]
-  (let [op-col (config/operator-color config op)]
-    (dom/set-style! (dom/by-id "ctrl-ok-path") #js {:fill op-col})
-    (dom/set-style! (dom/by-id "ctrl-cancel-path") #js {:stroke op-col})
-    (->> specs
-         (map-indexed
-          (fn [i spec]
-            (init-op-slider editor bus path i op spec)))
-         vec)))
-
-(defn show-op-controls
-  [{:keys [editor local bus default sliders op orig]}]
-  (let [{:keys [tree selection]} @editor
-        {:keys [viz canvas config]} @local
-        path (mg/child-path selection)
-        node (if (= op (:op orig)) orig default)
-        ctrl (dom/by-id "op-ctrl")
-        listeners (init-op-controls editor bus path op sliders config)
-        listeners (conj listeners
-                        ["#ctrl-ok" "click"
-                         (fn [e]
-                           (.preventDefault e)
-                           (async/publish bus :commit-operator nil))]
-                        ["#ctrl-cancel" "click"
-                         (fn [e]
-                           (.preventDefault e)
-                           (async/publish bus :cancel-operator nil))])]
-    (dom/add-listeners listeners)
-    (dom/add-class! viz "hidden")
-    (dom/add-class! canvas "hidden")
-    (dom/set-attribs! ctrl {:class (str "op-" (name op))})
-    (swap!
-     editor merge
-     {:sel-type op
-      :tree (if (seq path) (assoc-in tree path node) node)})
-    (swap!
-     local merge
-     {:orig-tree-value orig
-      :ctrl-active? true
-      :ctrl-listeners listeners})
-    (debug :tree (:tree @editor))
-    (swap! editor tree/update-meshes true)
-    (async/publish bus :render-scene nil)))
-
-(defn remove-op-controls
-  [local]
-  (let [{:keys [viz canvas ctrl-active? ctrl-listeners]} @local]
-    (when ctrl-active?
-      (swap! local assoc :ctrl-active? false :ctrl-listeners nil)
-      (dom/remove-listeners ctrl-listeners)
-      (dom/add-class! (dom/by-id "op-ctrl") "hidden")
-      (dom/set-html! (dom/by-id "op-sliders") "")
-      (dom/remove-class! viz "hidden")
-      (dom/remove-class! canvas "hidden"))))
-
-(defmulti handle-operator (fn [op editor local bus] op))
-
-(defmethod handle-operator :default
-  [op & _]
-  (warn :not-implemented op))
-
-(defmethod handle-operator :delete
-  [_ editor local bus]
-  (let [{:keys [tree selection]} @editor
-        tree (tree/delete-node-at tree selection)]
-    (reset! editor
-            (-> @editor
-                (assoc :tree tree :selection nil)
-                (tree/update-meshes true)))
-    (swap! local assoc :selected-id nil)
-    (async/publish bus :regenerate-scene nil)))
-
-(defmethod handle-operator :sd
-  [op editor local bus]
-  (let [{:keys [tree selection]} @editor
-        orig (tree/node-at tree selection)
-        default (mg/subdiv)
-        {:keys [cols rows slices] :as args} (tree/op-args-or-default op orig default)]
-    (debug :path selection :args args :default default)
-    (show-op-controls
-     {:editor editor
-      :local local
-      :bus bus
-      :op op
-      :sliders [{:label "columns" :min 1 :max 5 :value cols :step 1
-                 :listener (fn [n {:keys [rows slices]}] (mg/subdiv :cols (int n) :rows rows :slices slices))}
-                {:label "rows" :min 1 :max 5 :value rows :step 1
-                 :listener (fn [n {:keys [cols slices]}] (mg/subdiv :cols cols :rows (int n) :slices slices))}
-                {:label "slices" :min 1 :max 5 :value slices :step 1
-                 :listener (fn [n {:keys [rows cols]}] (mg/subdiv :cols cols :rows rows :slices (int n)))}]
-      :default default
-      :orig orig})))
-
-(defmethod handle-operator :sd-inset
-  [op editor local bus]
-  (let [{:keys [tree selection]} @editor
-        orig (tree/node-at tree selection)
-        default (mg/subdiv-inset :dir :x :inset 0.05)
-        {:keys [dir inset] :as args} (tree/op-args-or-default op orig default)]
-    (debug :path selection :args args :default default)
-    (show-op-controls
-     {:editor editor
-      :local local
-      :bus bus
-      :op op
-      :sliders [{:label "direction" :min 0 :max 2 :value (tree/direction-idx dir) :step 1
-                 :listener (fn [n {:keys [inset]}] (mg/subdiv-inset :dir (tree/direction-ids (int n)) :inset inset))}
-                {:label "inset" :min 0.02 :max 0.45 :value inset :step 0.001
-                 :listener (fn [n {:keys [dir]}] (mg/subdiv-inset :dir dir :inset n))}]
-      :default default
-      :orig orig})))
-
-(defmethod handle-operator :reflect
-  [op editor local bus]
-  (let [{:keys [tree selection]} @editor
-        orig (tree/node-at tree selection)
-        default (mg/reflect :dir :e)
-        {:keys [dir] :as args} (tree/op-args-or-default op orig default)]
-    (debug :path selection :args args :default default)
-    (show-op-controls
-     {:editor editor
-      :local local
-      :bus bus
-      :op op
-      :sliders [{:label "direction" :min 0 :max 5 :value (tree/face-idx dir) :step 1
-                 :listener (fn [n _] (mg/reflect :dir (tree/face-ids (int n))))}]
-      :default default
-      :orig orig})))
-
-(defmethod handle-operator :extrude
-  [op editor local bus]
-  (let [{:keys [tree selection]} @editor
-        orig (tree/node-at tree selection)
-        default (mg/extrude :dir :e :len 1.0)
-        {:keys [dir len] :as args} (tree/op-args-or-default op orig default)]
-    (debug :path selection :args args :default default)
-    (show-op-controls
-     {:editor editor
-      :local local
-      :bus bus
-      :op op
-      :sliders [{:label "direction" :min 0 :max 5 :value (tree/face-idx dir) :step 1
-                 :listener (fn [n {:keys [len]}] (mg/extrude :dir (tree/face-ids (int n)) :len len))}
-                {:label "length" :min 0.02 :max 2.0 :value len :step 0.001
-                 :listener (fn [n {:keys [dir]}] (mg/extrude :dir dir :len n))}]
-      :default default
-      :orig orig})))
-
-(defmethod handle-operator :split-displace
-  [op editor local bus]
-  (let [{:keys [tree selection]} @editor
-        orig (tree/node-at tree selection)
-        default (mg/split-displace :x :z :offset 0.1)
-        {:keys [dir ref offset] :as args} (tree/op-args-or-default op orig default)]
-    (debug :path selection :args args :default default)
-    (show-op-controls
-     {:editor editor
-      :local local
-      :bus bus
-      :op op
-      :sliders [{:label "split direction" :min 0 :max 3 :value (tree/direction-idx dir) :step 1
-                 :listener (fn [n {:keys [ref offset]}] (mg/split-displace (tree/direction-ids (int n)) ref :offset offset))}
-                {:label "shift direction" :min 0 :max 3 :value (tree/direction-idx dir) :step 1
-                 :listener (fn [n {:keys [dir offset]}] (mg/split-displace dir (tree/direction-ids (int n)) :offset offset))}
-                {:label "shift length" :min 0.0 :max 2.0 :value offset :step 0.001
-                 :listener (fn [n {:keys [dir ref]}] (mg/split-displace dir ref :offset n))}]
-      :default default
-      :orig orig})))
-
-(defmethod handle-operator :skew
-  [op editor local bus]
-  (let [{:keys [tree selection]} @editor
-        orig (tree/node-at tree selection)
-        default (mg/reflect :dir :e)
-        {:keys [dir] :as args} (tree/op-args-or-default op orig default)]
-    (debug :path selection :args args :default default)
-    (show-op-controls
-     {:editor editor
-      :local local
-      :bus bus
-      :op op
-      :sliders [{:label "direction" :min 0 :max 5 :value (tree/face-idx dir) :step 1
-                 :listener (fn [n _] (mg/reflect :dir (tree/face-ids (int n))))}]
-      :default default
-      :orig orig})))
 
 (defn handle-resize
   [ch bus editor local]
@@ -584,8 +357,8 @@
             {:keys [tree selection]} @editor]
         (when op
           (debug :new-op op)
-          (remove-op-controls local)
-          (handle-operator op editor local bus)
+          (ops/remove-op-controls local)
+          (ops/handle-operator op editor local bus)
           (async/publish bus :user-action nil)
           (recur))))))
 
@@ -594,7 +367,7 @@
   (go
     (loop []
       (when (<! ch)
-        (remove-op-controls local)
+        (ops/remove-op-controls local)
         (async/publish bus :regenerate-scene nil)
         (async/publish bus :user-action nil)
         (recur)))))
@@ -604,7 +377,7 @@
   (go
     (loop []
       (when (<! ch)
-        (remove-op-controls local)
+        (ops/remove-op-controls local)
         ;; TODO
         (async/publish bus :regenerate-scene nil)
         (async/publish bus :user-action nil)
@@ -637,8 +410,8 @@
       (dom/remove-class! (dom/by-id "toolbar") "rollon")
       (dom/add-class! (dom/by-id "op-ctrl") "hidden")
       (remove-node-event-handlers bus nodes)
-      (remove-op-triggers bus op-triggers)
-      (remove-op-controls local)
+      (ops/remove-op-triggers bus op-triggers)
+      (ops/remove-op-controls local)
       (dorun (map dom/destroy-event-channel (:events @local)))
       (async/unsubscribe-and-close-many bus subs)
       (reset! local nil))))
@@ -677,7 +450,7 @@
                   :nodes       {}
                   :selected-id nil
                   :height      height
-                  :op-triggers (init-op-triggers bus config)})]
+                  :op-triggers (ops/init-op-triggers bus config)})]
     (debug :init-tedit)
     (regenerate-viz editor local bus)
     (regenerate-map editor local)
