@@ -9,17 +9,28 @@
    [thi.ng.cljs.utils :as utils]
    [thi.ng.validate.core :as v]))
 
+(defn operator-color
+  [config op] (get-in config [:operators op :col]))
+
 (def api-prefix "/api/1.0/")
 
 (def seeds
-  (->> {:box  {:seed (a/aabb 1)
-               :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2.5}}
-        :hex2 {:seed (cub/cuboid (mg/circle-lattice-seg 6 1 0.5))
-               :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.75}}
-        :oct2 {:seed (cub/cuboid (mg/circle-lattice-seg 8 1 0.5))
-               :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.75}}
-        :tri2 {:seed (cub/cuboid (mg/circle-lattice-seg 3 1 0.4))
-               :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.5}}}
+  (->> {:box   {:seed (a/aabb 1)
+                :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2.5}}
+        :pent3 {:seed (cub/cuboid (mg/sphere-lat 5 5 0.25))
+                :initial-view {:view [-0.707 0.558 -0.423 0.092] :dist 1.5}}
+        :hex3  {:seed (cub/cuboid (mg/sphere-lat 6 12 0.25))
+                :initial-view {:view [-0.707 0.558 -0.423 0.092] :dist 1.5}}
+        :oct3  {:seed (cub/cuboid (mg/sphere-lat 8 8 0.25))
+                :initial-view {:view [-0.707 0.558 -0.423 0.092] :dist 1.5}}
+        :pent2 {:seed (cub/cuboid (mg/circle-lattice-seg 5 1 0.5))
+                :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2}}
+        :hex2  {:seed (cub/cuboid (mg/circle-lattice-seg 6 1 0.5))
+                :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2}}
+        :oct2  {:seed (cub/cuboid (mg/circle-lattice-seg 8 1 0.5))
+                :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.75}}
+        :tri2  {:seed (cub/cuboid (mg/circle-lattice-seg 3 1 0.4))
+                :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.5}}}
        (reduce-kv
         (fn [acc k v]
           (assoc
@@ -56,7 +67,8 @@
     :gap 2
     :margin 10
     :margin-bottom 70
-    :width 200
+    :map-width 200
+    :map-height 200
     :height 200
     :min-size 24
     :map-bg "#222223"
@@ -141,6 +153,3 @@
           (fn [acc k v] (assoc acc k (str api-prefix v)))
           {}))}
    })
-
-(defn operator-color
-  [config op] (get-in config [:operators op :col]))
