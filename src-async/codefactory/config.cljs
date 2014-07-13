@@ -6,6 +6,7 @@
    [thi.ng.geom.aabb :as a]
    [thi.ng.geom.cuboid :as cub]
    [thi.ng.morphogen.core :as mg]
+   [thi.ng.common.math.core :refer [HALF_PI]]
    [thi.ng.cljs.utils :as utils]
    [thi.ng.validate.core :as v]))
 
@@ -17,12 +18,12 @@
 (def seeds
   (->> {:box   {:seed (a/aabb 1)
                 :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2.5}}
-        :pent3 {:seed (cub/cuboid (mg/sphere-lat 5 5 0.25))
-                :initial-view {:view [-0.707 0.558 -0.423 0.092] :dist 1.5}}
-        :hex3  {:seed (cub/cuboid (mg/sphere-lat 6 12 0.25))
-                :initial-view {:view [-0.707 0.558 -0.423 0.092] :dist 1.5}}
-        :oct3  {:seed (cub/cuboid (mg/sphere-lat 8 8 0.25))
-                :initial-view {:view [-0.707 0.558 -0.423 0.092] :dist 1.5}}
+        :pent3 {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 5 5 0.25)) (- HALF_PI))
+                :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+        :hex3  {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 6 12 0.25)) (- HALF_PI))
+                :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+        :oct3  {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 8 8 0.25)) (- HALF_PI))
+                :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
         :pent2 {:seed (cub/cuboid (mg/circle-lattice-seg 5 1 0.5))
                 :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2}}
         :hex2  {:seed (cub/cuboid (mg/circle-lattice-seg 6 1 0.5))
