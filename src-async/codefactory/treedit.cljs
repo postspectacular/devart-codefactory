@@ -47,17 +47,17 @@
         (recur)))))
 
 (defn make-node
-  [parent path op x y w h bus sel config]
+  [parent path op x y w h bus sel min-label-width config]
   (let [el (dom/create! "div" parent)
         id (node-id path)
         cls (str "op-" (name op))
+        econf (:editor config)
         [ch handler] (dom/event-channel el "click")]
 
     (cond
      (= :leaf op)
-     (dom/set-html! el (if (empty? path)
-                         (get-in config [:editor :root-label])
-                         "+"))
+     (dom/set-html! el (if (empty? path) (:root-label econf) "+"))
+
      (= :delete op)
      (let [svg (dom/create-ns! svg-ns "svg" el
                                {:width "100%" :height "100%"
@@ -66,7 +66,9 @@
                                 :class "op-delete"})]
        (dom/create-ns! svg-ns "path" svg {:d "M0,0 L1,1 M0,1 L1,0"})
        (dom/create-ns! svg-ns "rect" svg {:x 0 :y 0 :width 1 :height 1}))
-     :else nil)
+     :else
+     (when (>= w min-label-width)
+       (dom/set-text! el (get-in config [:operators op :label]))))
 
     (doto el
       (dom/set-attribs! {:id id})
@@ -98,31 +100,6 @@
           (tree/num-children-at tree)
           (cell-size width gap)))
    width (range (inc (count path)))))
-
-(defn generate-branch
-  [bus viz tree scroll sel config]
-  (let [{:keys [gap height margin-bottom]} (:editor config)
-        off (g/+ scroll
-                 (.-offsetLeft viz)
-                 (- (.-innerHeight js/window) (+ height margin-bottom)))]
-    (fn gen-branch*
-      [acc path x y w h]
-      (let [node (tree/node-at tree path)
-            nc (count (:out node))
-            wc (cell-size w gap nc)
-            cy (- y h gap)
-            op (tree/node-operator node)
-            acc (conj acc
-                      (make-node viz path op
-                                 (+ x (:x off)) (+ (- y h) (:y off)) w h
-                                 bus sel config))]
-        (if (pos? nc)
-          (loop [acc acc, i 0]
-            (if (< i nc)
-              (recur (gen-branch* acc (conj path i) (mm/madd i wc i gap x) cy wc h)
-                     (inc i))
-              acc))
-          acc)))))
 
 (defn compute-viewport
   [local]
@@ -158,6 +135,31 @@
             width)))
       width)))
 
+(defn generate-branch
+  [bus viz tree scroll sel config]
+  (let [{:keys [gap height margin-bottom min-label-width]} (:editor config)
+        [offx offy] (g/+ scroll
+                         (.-offsetLeft viz)
+                         (mm/sub (.-innerHeight js/window) height margin-bottom))]
+    (fn gen-branch*
+      [acc path x y w h]
+      (let [node (tree/node-at tree path)
+            nc (count (:out node))
+            wc (cell-size w gap nc)
+            cy (mm/sub y h gap)
+            op (tree/node-operator node)
+            acc (conj acc
+                      (make-node viz path op
+                                 (+ x offx) (+ (- y h) offy) w h
+                                 bus sel min-label-width config))]
+        (if (pos? nc)
+          (loop [acc acc, i 0]
+            (if (< i nc)
+              (recur (gen-branch* acc (conj path i) (mm/madd i wc i gap x) cy wc h)
+                     (inc i))
+              acc))
+          acc)))))
+
 (defn regenerate-viz
   [editor local bus]
   (tree/update-stats editor)
@@ -178,28 +180,34 @@
      :nodes       (layout {} [] margin height width' node-height))))
 
 (defn resize-branch
-  [nodes tree gap offset]
+  [nodes tree gap [offx offy]]
   (fn resize-branch*
-    [path x w]
+    [path x y w h]
     (let [el (:el (nodes (node-id path)))
           nc (tree/num-children-at tree path)
+          cy (mm/sub y h gap)
           wc (cell-size w gap nc)]
-      (dom/set-style! el #js {:left (->px (+ x (:x offset))) :width (->px w)})
+      (dom/set-style! el #js {:left (->px (+ x offx))
+                              :top (->px (+ (- y h) offy))
+                              :width (->px w)})
       (if (pos? nc)
         (loop [i 0]
           (when (< i nc)
-            (resize-branch* (conj path i) (mm/madd i wc i gap x) wc)
+            (resize-branch* (conj path i) (mm/madd i wc i gap x) cy wc h)
             (recur (inc i))))))))
 
 (defn resize-viz
   [editor local]
   (let [{:keys [viz nodes scroll config]} @local
         {:keys [node-cache tree tree-depth]} @editor
-        {:keys [gap margin height]} (:editor config)
+        {:keys [gap margin margin-bottom height]} (:editor config)
         width  (compute-required-width editor)
-        offset (g/+ scroll (.-offsetLeft viz) (- (.-innerHeight js/window) 270))]
-    ((resize-branch nodes tree gap offset) [] margin width)
-    (swap! local assoc :width width)))
+        node-height (cell-size height gap tree-depth)
+        offset (g/+ scroll
+                    (.-offsetLeft viz)
+                    (mm/sub (.-innerHeight js/window) height margin-bottom))]
+    ((resize-branch nodes tree gap offset) [] margin height width node-height)
+    (swap! local assoc :width width :node-height node-height)))
 
 (def map-op-color
   (memoize
@@ -378,11 +386,17 @@
   (go
     (loop []
       (when (<! ch)
-        (ops/remove-op-controls local)
-        ;; TODO
-        (async/publish bus :regenerate-scene nil)
-        (async/publish bus :user-action nil)
-        (recur)))))
+        (let [{:keys [orig-edit-node]} @local
+              {:keys [tree selection]} @editor]
+          (swap!
+           editor assoc
+           :tree (tree/set-node-at tree selection orig-edit-node)
+           :sel-type (tree/node-operator orig-edit-node))
+          (swap! editor tree/update-meshes true)
+          (ops/remove-op-controls local)
+          (async/publish bus :regenerate-scene nil)
+          (async/publish bus :user-action nil)
+          (recur))))))
 
 (defn handle-viz-interactions
   [events bus editor local]

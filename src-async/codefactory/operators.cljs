@@ -79,22 +79,17 @@
     (dom/add-class! canvas "hidden")
     (dom/set-attribs! ctrl {:class (str "op-" (name op))})
     (swap!
-     editor merge
-     {:sel-type op
-      :tree (if (seq path) (assoc-in tree path node) node)})
+     editor assoc
+     :sel-type op
+     :tree (if (seq path) (assoc-in tree path node) node))
     (swap!
      local merge
-     {:orig-tree-value orig
+     {:orig-edit-node orig
       :ctrl-active? true
       :ctrl-listeners listeners})
     (debug :tree (:tree @editor))
     (swap! editor tree/update-meshes true)
     (async/publish bus :render-scene nil)))
-
-(defrecord SliderSpec [label min max val step listener])
-
-(defn slider-specs
-  [& specs] (mapv #(apply ->SliderSpec %) specs))
 
 (defn remove-op-controls
   [local]
@@ -107,6 +102,12 @@
       (dom/remove-class! viz "hidden")
       (dom/remove-class! canvas "hidden"))))
 
+(defrecord SliderSpec [label min max value step listener])
+
+(defn slider-specs
+  [& specs] (mapv #(apply ->SliderSpec %) specs))
+
+
 (defmulti handle-operator (fn [op editor local bus] op))
 
 (defmethod handle-operator :default
@@ -118,16 +119,18 @@
         tree (tree/delete-node-at tree selection)]
     (reset! editor
             (-> @editor
-                (assoc :tree tree :selection nil)
-                (tree/update-meshes true)))
-    (swap! local assoc :selected-id nil)
+                (assoc :tree tree)
+                (tree/update-meshes true)
+                (assoc :selection selection
+                       :sel-type (tree/node-operator (tree/node-at tree selection)))))
+    ;;(swap! local assoc :selected-id nil)
     (async/publish bus :regenerate-scene nil)))
 
 (defmethod handle-operator :sd
   [op editor local bus]
   (let [{:keys [tree selection]} @editor
         orig (tree/node-at tree selection)
-        default (mg/subdiv)
+        default (mg/subdiv :cols 2)
         {:keys [cols rows slices] :as args} (tree/op-args-or-default op orig default)]
     (debug :path selection :args args :default default)
     (show-op-controls
@@ -150,11 +153,15 @@
 
 (defmethod handle-operator :sd-inset
   [op editor local bus]
-  (let [{:keys [tree selection]} @editor
-        orig    (tree/node-at tree selection)
-        default (mg/subdiv-inset :dir :x :inset 0.05)
+  (let [{:keys [tree node-cache selection]} @editor
+        orig      (tree/node-at tree selection)
+        min-len   (tree/node-shortest-edge (node-cache selection))
+        min-inset (* 0.025 min-len)
+        max-inset (* 0.45 min-len)
+        step      (* 0.025 min-len)
+        default   (mg/subdiv-inset :dir :x :inset (m/mix min-inset max-inset 0.5))
         {:keys [dir inset] :as args} (tree/op-args-or-default op orig default)]
-    (debug :path selection :args args :default default)
+    (debug :path selection :minlen min-len :args args :default default)
     (show-op-controls
      {:editor editor
       :local local
@@ -165,7 +172,7 @@
                  (fn [n {:keys [inset]}]
                    (mg/subdiv-inset
                     :dir (tree/direction-ids (int n)) :inset inset))]
-                ["inset" 0.02 0.45 inset 0.001
+                ["inset" min-inset max-inset inset step
                  (fn [n {:keys [dir]}]
                    (mg/subdiv-inset :dir dir :inset n))])
       :default default

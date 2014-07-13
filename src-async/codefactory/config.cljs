@@ -69,8 +69,9 @@
     :margin 10
     :margin-bottom 70
     :map-width 200
-    :map-height 200
-    :height 200
+    :map-height 300
+    :min-label-width 50
+    :height 300
     :min-size 24
     :map-bg "#222223"
     :map-selection "#a8a800"

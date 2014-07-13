@@ -8,6 +8,7 @@
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
    [thi.ng.geom.basicmesh :as bm]
+   [thi.ng.geom.cuboid :as cu]
    [thi.ng.geom.types.utils :as tu]
    [thi.ng.morphogen.core :as mg]
    [thi.ng.common.math.core :as m]))
@@ -29,9 +30,13 @@
   [tree path]
   (count (:out (node-at tree path))))
 
+(defn set-node-at
+  [tree path node]
+  (if (seq path) (assoc-in tree (mg/child-path path) node) node))
+
 (defn delete-node-at
   [tree path]
-  (assoc-in tree (mg/child-path path) nil))
+  (if (seq path) (assoc-in tree (mg/child-path path) nil) {}))
 
 (defn node-operator
   [n] (cond (:op n) (:op n), n :leaf, :else :delete))
@@ -161,3 +166,12 @@
      :max-nodes-path path
      :tree-depth depth
      :bounds bounds)))
+
+(defn node-shortest-edge
+  [node]
+  (->> node
+      (:points)
+      (thi.ng.geom.types.Cuboid.)
+      (g/edges)
+      (reduce (fn [acc e] (min acc (apply g/dist-squared e))) 1e9)
+      (Math/sqrt)))
