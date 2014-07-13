@@ -53,14 +53,11 @@
 
 (defn listen-dom
   [bus]
-  (let [[resize] (dom/event-channel js/window "resize")]
-    (go
-      (loop []
-        (let [_ (<! resize)]
-          (async/publish bus :window-resize
-                         [(.-innerWidth js/window)
-                          (.-innerHeight js/window)])
-          (recur))))))
+  (let [listeners [[js/window "resize"
+                     (fn [_] (async/publish bus :window-resize
+                                           [(.-innerWidth js/window)
+                                            (.-innerHeight js/window)]))]]]
+    (dom/add-listeners listeners)))
 
 (defn init-router
   [bus state routes default-route-id]
