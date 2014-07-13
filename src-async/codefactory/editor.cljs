@@ -53,7 +53,7 @@
 
 (defn render-scene
   [local]
-  (if (:active? @local)
+  (when (:active? @local)
     (let [{:keys [gl arcball shaders proj display-meshes bounds
                   selection sel-type start-time sel-time bg-col config]} @local
                   now         (utils/now)
@@ -103,7 +103,7 @@
           (recur))))))
 
 (defn handle-arcball
-  [canvas arcball events bus]
+  [canvas ball events bus]
   (go
     (loop []
       (let [[e ch] (alts! events)]
@@ -116,7 +116,7 @@
                  y (.-clientY e)
                  h (.-clientHeight canvas)]
              (when (m/in-range? 0 h y)
-               (arcball/down arcball x (- h y))))
+               (arcball/down ball x (- h y))))
 
            (or (= ch (events 1))
                (= ch (events 5)))
@@ -124,18 +124,18 @@
                  y (.-clientY e)
                  h (.-clientHeight canvas)]
              (when (and (m/in-range? 0 h y)
-                        (arcball/drag arcball x (- h y)))
+                        (arcball/drag ball x (- h y)))
                (async/publish bus :render-scene nil)))
 
            (or (= ch (events 2))
                (= ch (events 6)))
-           (arcball/up arcball)
+           (arcball/up ball)
 
            (events 3) (let [delta (or (aget e "deltaY") (aget e "wheelDeltaY"))]
-                        (arcball/zoom-delta arcball delta)
+                        (arcball/zoom-delta ball delta)
                         (async/publish bus :render-scene nil))
 
-           :else (debug :ev e))
+           :else nil)
           (recur))))))
 
 (defn handle-buttons
@@ -168,12 +168,12 @@
   [ch bus local]
   (go
     (loop []
-      (let [[_ [local]] (<! ch)
-            {:keys [resize]} @local]
+      (let [_ (<! ch)
+            {:keys [subs events]} @local]
         (debug :release-editor)
         (swap! local assoc :active? false)
-        (async/unsubscribe-and-close-many bus (:subs @local))
-        (dorun (map dom/destroy-event-channel (:events @local)))
+        (async/unsubscribe-and-close-many bus subs)
+        (dorun (map dom/destroy-event-channel events))
         (recur)))))
 
 (defn render-loop
@@ -187,7 +187,8 @@
 
 (defn init-arcball
   [config params]
-  (let [{:keys [view dist]} (get-in config [:seeds (:seed-id params) :initial-view])]
+  (let [id (keyword (:seed-id params))
+        {:keys [view dist]} (get-in config [:seeds id :initial-view])]
     (arcball/make-arcball :init view :dist dist)))
 
 (defn init
@@ -198,15 +199,15 @@
         render     (async/subscribe bus :render-scene)
         [continue] (dom/event-channel "#edit-submit" "click")
         [cancel]   (dom/event-channel "#edit-cancel" "click")
-        local      (atom nil)
+        local      (atom {})
         module-timeout (get-in config [:timeouts :editor])]
 
     (go
       (loop []
-        (let [[_ [local params]] (<! init)
+        (let [[_ [_ params]] (<! init)
               canvas  (dom/by-id "edit-canvas")
-              subs    {:resize (async/subscribe bus :window-resize)
-                       :action (async/subscribe bus :user-action)}
+              subs    (async/subscription-channels
+                       bus [:window-resize :user-action])
               e-specs [(dom/event-channel canvas "mousedown")
                        (dom/event-channel canvas "mousemove")
                        (dom/event-channel canvas "mouseup")
@@ -222,26 +223,27 @@
            local
            (-> (webgl/init-webgl canvas (:webgl config))
                (merge
-                {:config config
-                 :bg-col (get-in config [:webgl :bg-col])
-                 :subs subs
-                 :events e-specs
-                 :arcball arcball
+                {:config      config
+                 :bg-col      (get-in config [:webgl :bg-col])
+                 :subs        subs
+                 :events      e-specs
+                 :arcball     arcball
                  :last-action now
-                 :start-time now
-                 :selection nil
-                 :sel-time now
-                 :time now
-                 :active? true})
+                 :start-time  now
+                 :selection   nil
+                 :sel-time    now
+                 :time        now
+                 :active?     true})
                (tree/init-tree-with-seed (:seed-id params))
                (tree/update-meshes false)))
           (tedit/init local bus config)
           (resize-canvas local)
           (render-scene local)
-          (handle-resize (:resize subs) local)
-          (handle-reset-timeout (:action subs) local)
-          (handle-arcball canvas arcball events bus)
-          (handle-buttons continue cancel module-timeout local)
+
+          (handle-resize        (:window-resize subs) local)
+          (handle-reset-timeout (:user-action subs) local)
+          (handle-arcball       canvas arcball events bus)
+          (handle-buttons       continue cancel module-timeout local)
           (recur))))
 
     (render-loop render local)

@@ -74,6 +74,7 @@
           target (vec3)
           up (g/transform V3Y q)]
       (set! view (mat/look-at eye target up))
+      ;;(prn :arcball (pr-str curr-rot) dist)
       view))
   (get-view [_] (or view (update-view _))))
 

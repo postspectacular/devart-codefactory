@@ -2,7 +2,6 @@
   (:require-macros
    [cljs.core.async.macros :as asm :refer [go]])
   (:require
-   [codefactory.config :as config]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
@@ -11,10 +10,11 @@
    [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
 
 (defn init
-  [bus]
+  [bus config]
   (let [chan-i (async/subscribe bus :init-home)
         chan-r (async/subscribe bus :release-home)
         [click] (dom/event-channel (dom/by-id "home-continue") "click")]
+    ;; TODO enable gallery button
     (go
       (loop []
         (let [[_ [state]] (<! chan-i)]

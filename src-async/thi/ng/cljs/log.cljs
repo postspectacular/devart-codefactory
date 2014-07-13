@@ -2,7 +2,7 @@
 
 (enable-console-print!)
 
-(def log-level 100)
+(def log-level 2)
 
 (defn log
   [prefix msg]
