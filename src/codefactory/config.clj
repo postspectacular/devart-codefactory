@@ -1,20 +1,16 @@
 (ns codefactory.config
   (:require
-   [thi.ng.validate.core :as v]))
+   [thi.ng.validate.core :as v]
+   [thi.ng.gae.util :as util]))
+
+(def query-result-limit 50)
 
 (def app
-  {:author "Karsten Schmidt"
+  {:author       "Karsten Schmidt"
    :title-prefix "Co(de)Factory : "
-   :angular {:module "codefactory" :controller "MainController"}
-   :includes {:css    ["/css/bootstrap.min.css"
-                       "/css/main.css"
+   :includes {:css    ["/css/app.css"
                        "//fonts.googleapis.com/css?family=Abel"]
-              :js     ["/js/lib/angular.js"
-                       "/js/lib/angular-route.js"
-                       "/js/lib/angular-animate.js"
-                       "/js/lib/angular-strap.js"
-                       "/js/lib/angular-strap.tpl.js"
-                       "/js/app.js"]
+              :js     ["/js/app.js"]
               :js-ie9 ["https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"
                        "https://oss.maxcdn.com/respond/1.4.2/respond.min.js"]}
    :tracking ["UA-51939449-1" "devartcodefactory.com"]
@@ -33,11 +29,22 @@
                {:icon "delete.svg" :label "delete"}]
 
    :validators
-   {:api {:new-object {"tree"   [(v/required)
-                                 (v/max-length (* 16 1024))]
-                       "title"  [(v/min-length 3 (constantly "Untitled"))
-                                 (v/max-length 16 (fn [_ v] (subs v 0 16)))]
-                       "author" [(v/min-length 3 (constantly "Anonymous"))
-                                 (v/max-length 16 (fn [_ v] (subs v 0 16)))]
-                       "parent" [(v/optional (v/uuid4))]}
-          :get-object {:id [(v/uuid4)]}}}})
+   {:api {:new-object
+          {"tree"   [(v/required)
+                     (v/max-length (* 16 1024))]
+           "title"  [(v/min-length 3 (constantly "Untitled"))
+                     (v/max-length 16 (fn [_ v] (subs v 0 16)))]
+           "author" [(v/min-length 3 (constantly "Anonymous"))
+                     (v/max-length 16 (fn [_ v] (subs v 0 16)))]
+           "parent" [(v/optional (v/uuid4))]}
+
+          :get-object {:id [(v/uuid4)]}
+
+          :query-objects
+          {"limit" [(v/optional (v/number (fn [_ v] (util/parse-int v 25))))
+                    (v/optional (v/in-range 1 query-result-limit))]
+           "offset" [(v/optional (v/number (fn [_ v] (util/parse-int v 0))))]}}}
+
+   :db
+   {:query-result-limit query-result-limit
+    :public-codetree-keys [:id :parent-id :title :author :created :preview-uri]}})

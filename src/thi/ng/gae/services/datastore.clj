@@ -12,7 +12,8 @@
    [com.google.appengine.api.datastore
     Query PreparedQuery
     Query$Filter Query$FilterOperator Query$FilterPredicate Query$CompositeFilterOperator
-    Query$SortDirection]))
+    Query$SortDirection
+    FetchOptions$Builder]))
 
 (defservice datastore-service
   *datastore-service* DatastoreService
@@ -145,15 +146,25 @@
 
 (defn attach-query-sorting
   [^Query q sort]
-  (doseq [[id dir] sort] (.addSort q (name id) (sort-ops dir)))
+  (doseq [[id dir] sort]
+    (.addSort q (name id) (sort-ops dir)))
   q)
 
+(defn apply-fetch-options
+  [{:keys [limit offset]} ^PreparedQuery q]
+  (let [fetch (cond-> (FetchOptions$Builder/withDefaults)
+                      limit (.limit limit)
+                      offset (.offset offset))]
+    (.asIterable q fetch)))
+
 (defn query
-  [type & {:keys [parent filter sort]}]
-  (let [[ns kind] (util/class-name-vec type)
-        q (Query. kind)
-        q (if filter (.setFilter q (compile-filter filter)) q)
-        q (if parent (.setAncestor q (entity-key parent)) q)
-        q (if sort (attach-query-sorting q sort) q)
-        pq (.prepare (datastore-service) q)]
-    (map #(as-entity ns kind %) (.asIterable pq))))
+  [type & {:keys [parent filter sort keys-only? limit offset]}]
+  (let [[ns kind] (util/class-name-vec type)]
+    (->> (cond-> (Query. kind)
+                 filter     (.setFilter (compile-filter filter))
+                 parent     (.setAncestor (entity-key parent))
+                 sort       (attach-query-sorting sort)
+                 keys-only? (.setKeysOnly)) ;; TODO handle results
+         (.prepare (datastore-service))
+         (apply-fetch-options {:limit limit :offset offset})
+         (map #(as-entity ns kind %)))))

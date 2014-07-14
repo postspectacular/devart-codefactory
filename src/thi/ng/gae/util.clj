@@ -28,3 +28,9 @@
 
 (defn str-contains?
   [^String str ^String x] (not (neg? (.indexOf str x))))
+
+(defn parse-int
+  [x nf] (try (Integer/parseInt x) (catch Exception e)))
+
+(defn parse-double
+  [x nf] (try (Double/parseDouble x) (catch Exception e)))

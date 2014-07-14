@@ -70,15 +70,28 @@
       (resp/status 406)
       (resp/content-type (:text mime-types))))
 
+(defn public-entity
+  [e key-id]
+  (select-keys e (get-in config/app [:db key-id])))
+
 (def api-v1-handlers
   (routes
-   
+
    (GET "/objects" [:as req]
+        (prn :params (:query-params req))
         (if (valid-api-accept? req)
-          (let [entities (ds/query CodeTree :sort [[:created :desc]])]
-            (api-response req (map #(into {} %) entities) 200))
+          (let [[params err] (validate-params (:query-params req) :api :query-objects)]
+            (if (nil? err)
+              (let [{:strs [limit offset]} params
+                    entities (ds/query CodeTree
+                                       :sort [[:created :desc]]
+                                       :limit limit
+                                       :offset offset)
+                    entities (mapv #(public-entity % :public-codetree-keys) entities)]
+                (api-response req entities 200))
+              (api-response req err 400)))
           (invalid-api-response)))
-   
+
    (POST "/objects" {:keys [params] :as req}
          (prn :api params)
          (if (valid-api-accept? req)
@@ -95,20 +108,21 @@
                                 :created (time/datetime->epoch (time/utc-now))})]
                    (prn :created-entity (:id entity))
                    (ds/save! entity)
-                   (api-response req (into {} entity) 201))
+                   (api-response req (public-entity entity :public-codetree-keys) 201))
                  (catch Exception e
                    (.printStackTrace e)
                    {:status 500
                     :body "Error saving tree"}))
                (api-response req err 400)))
            (invalid-api-response)))
-   
+
    (GET "/objects/:id" [id :as req]
         (if (valid-api-accept? req)
           (let [[params err] (validate-params {:id id} :api :get-object)]
             (if (nil? err)
               (if-let [entity (ds/retrieve CodeTree id)]
-                (api-response req (into {} entity) 200)
+                (api-response
+                 req (public-entity entity :public-codetree-keys) 200)
                 (api-response req {:reason (str "Unknown ID: " id)} 404))
               (api-response req err 400)))
           (invalid-api-response)))))
