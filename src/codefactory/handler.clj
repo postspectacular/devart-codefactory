@@ -5,6 +5,7 @@
    [codefactory.view :as view]
    [thi.ng.gae.services.datastore :as ds]
    [thi.ng.gae.middleware.multipart-params :refer [wrap-multipart-params]]
+   [thi.ng.gae.util :as util]
    [thi.ng.validate.core :as v]
    [compojure.core :refer [defroutes context routes GET POST]]
    [compojure.route :as route]
@@ -21,59 +22,66 @@
    :json "application/json"
    :text "text/plain"})
 
+(def api-mime-types [:edn :json])
+
 (defn validate-params
   [params & val-keys]
   (v/validate params (get-in config/app (cons :validators val-keys))))
-
-(defn format-validation-errors
-  [errs]
-  (->> errs
-       (map (fn [[k msg]] (str "param("(name k) "): " (first msg) "\n")))
-       (concat ["The request had the following errors:\n"])
-       (apply str)))
 
 (defn valid-accept?
   [req & types]
   (let [^String accept (:accept (:headers req))]
     (or (= accept "*/*")
-        (some (fn [^String mime] (not (neg? (.indexOf accept mime))))
+        (some (fn [^String mime] (util/str-contains? accept mime))
               (vals (select-keys mime-types types))))))
 
-(defn valid-api-request?
-  [req]
-  (valid-accept? req :edn :json))
+(defn valid-api-accept?
+  [req] (apply valid-accept? req api-mime-types))
+
+(defn basic-api-response-body
+  [data status]
+  (if (< status 400)
+    {:status "ok" :body data}
+    {:status "error" :errors data}))
+
+(defn api-response
+  [req data status]
+  (let [^String accept (:accept (:headers req))
+        {:keys [edn json text]} mime-types
+        body (basic-api-response-body data status)
+        [body type] (cond
+                     (or (= accept "*/*") (util/str-contains? accept edn))
+                     [(pr-str body) edn]
+
+                     (util/str-contains? accept json)
+                     [(json/write-str body) json]
+
+                     :else [(pr-str body) text])]
+    (-> (resp/response body)
+        (resp/status status)
+        (resp/content-type type))))
 
 (defn invalid-api-response
   []
-  (-> (str "Only the following content types are supported: "
-           (:edn mime-types) ", " (:json mime-types))
+  (-> (apply str
+             "Only the following content types are supported: "
+             (interpose ", " (vals (select-keys mime-types api-mime-types))))
       (resp/response)
       (resp/status 406)
       (resp/content-type (:text mime-types))))
 
-(defn api-response
-  [req data]
-  (let [^String accept (:accept (:headers req))
-        {:keys [edn json text]} mime-types]
-    (cond
-     (or (= accept "*/*") (not (neg? (.indexOf accept ^String edn))))
-     (-> data pr-str resp/response (resp/content-type edn))
-
-     (not (neg? (.indexOf accept ^String json)))
-     (-> data json/write-str resp/response (resp/content-type json))
-
-     :else (invalid-api-response))))
-
 (def api-v1-handlers
   (routes
+   
    (GET "/objects" [:as req]
-        (if (valid-api-request? req)
+        (if (valid-api-accept? req)
           (let [entities (ds/query CodeTree :sort [[:created :desc]])]
-            (api-response req (map #(into {} %) entities)))
+            (api-response req (map #(into {} %) entities) 200))
           (invalid-api-response)))
+   
    (POST "/objects" {:keys [params] :as req}
          (prn :api params)
-         (if (valid-api-request? req)
+         (if (valid-api-accept? req)
            (let [[params err] (validate-params params :api :new-object)]
              (if (nil? err)
                (try
@@ -87,23 +95,22 @@
                                 :created (time/datetime->epoch (time/utc-now))})]
                    (prn :created-entity (:id entity))
                    (ds/save! entity)
-                   (api-response req entity))
+                   (api-response req (into {} entity) 201))
                  (catch Exception e
                    (.printStackTrace e)
                    {:status 500
                     :body "Error saving tree"}))
-               {:status 406
-                :body (format-validation-errors err)}))
+               (api-response req err 400)))
            (invalid-api-response)))
+   
    (GET "/objects/:id" [id :as req]
-        (if (valid-api-request? req)
+        (if (valid-api-accept? req)
           (let [[params err] (validate-params {:id id} :api :get-object)]
             (if (nil? err)
               (if-let [entity (ds/retrieve CodeTree id)]
-                (api-response req (into {} entity))
-                {:status 404})
-              {:status 406
-               :body (format-validation-errors err)}))
+                (api-response req (into {} entity) 200)
+                (api-response req {:reason (str "Unknown ID: " id)} 404))
+              (api-response req err 400)))
           (invalid-api-response)))))
 
 (defroutes handlers

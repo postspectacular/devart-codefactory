@@ -25,3 +25,6 @@
   given coll, each passed through f. Returns array."
   [type f xs]
   (->> xs (map f) (into-array type)))
+
+(defn str-contains?
+  [^String str ^String x] (not (neg? (.indexOf str x))))
