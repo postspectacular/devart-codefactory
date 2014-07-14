@@ -1,9 +1,30 @@
 (ns codefactory.config
   (:require
+   [clojure.edn :as edn]
    [thi.ng.validate.core :as v]
    [thi.ng.gae.util :as util]))
 
 (def query-result-limit 50)
+
+(defn validate-node
+  [node]
+  (cond
+   (map? node) (let [{:keys [op args out]} node]
+                 (if op
+                   (and (map? args)
+                        (vector? out)
+                        (pos? (count out))
+                        (every? validate-node out))
+                   (nil? (seq node))))
+   (nil? node) true
+   :else false))
+
+(def valid-tree
+  (v/validator
+   (fn [_ v]
+     (when-let [tree (try (edn/read-string v) (catch Exception e))]
+       (and (map? tree) (:op tree) (:out tree) (validate-node tree))))
+   "must be a valid operator tree"))
 
 (def app
   {:author       "Karsten Schmidt"
@@ -31,7 +52,8 @@
    :validators
    {:api {:new-object
           {"tree"   [(v/required)
-                     (v/max-length (* 16 1024))]
+                     (v/max-length (* 16 1024))
+                     (valid-tree)]
            "title"  [(v/min-length 3 (constantly "Untitled"))
                      (v/max-length 16 (fn [_ v] (subs v 0 16)))]
            "author" [(v/min-length 3 (constantly "Anonymous"))
