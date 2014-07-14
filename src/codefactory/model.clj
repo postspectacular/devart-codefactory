@@ -4,6 +4,15 @@
     [user :as user]
     [datastore :as ds :refer [defentity]]]))
 
-(defentity User [name email] :key :email)
-
-(defentity CodeTree [id title user ^:clj tree stl? date] :key :id)
+(defentity CodeTree
+  [id title author
+   ^:clj tree
+   stl-uri
+   video-uri
+   preview-uri
+   created
+   stl-created
+   video-created
+   preview-created
+   parent-id]
+  :key :id)

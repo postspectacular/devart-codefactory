@@ -1,4 +1,6 @@
-(ns codefactory.config)
+(ns codefactory.config
+  (:require
+   [thi.ng.validate.core :as v]))
 
 (def app
   {:author "Karsten Schmidt"
@@ -28,4 +30,14 @@
                {:icon "tilt.svg" :label "tilt"}
                {:icon "scale.svg" :label "scale"}
                {:icon "shift.svg" :label "shift"}
-               {:icon "delete.svg" :label "delete"}]})
+               {:icon "delete.svg" :label "delete"}]
+
+   :validators
+   {:api {:new-object {"tree"   [(v/required)
+                                 (v/max-length (* 16 1024))]
+                       "title"  [(v/min-length 3 (constantly "Untitled"))
+                                 (v/max-length 16 (fn [_ v] (subs v 0 16)))]
+                       "author" [(v/min-length 3 (constantly "Anonymous"))
+                                 (v/max-length 16 (fn [_ v] (subs v 0 16)))]
+                       "parent" [(v/optional (v/uuid4))]}
+          :get-object {:id [(v/uuid4)]}}}})

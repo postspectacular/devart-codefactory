@@ -5,16 +5,13 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/data.json "0.2.5"]
                  [org.clojure/core.async "0.1.301.0-deb34a-alpha"]
-                 ;;[org.clojure/data.fressian "0.2.0"]
                  
                  [ring/ring-core "1.2.2"]
                  [compojure "1.1.8"]
                  [hiccup "1.0.5"]
                  [camel-snake-kebab "0.1.5"]
-                 [garden "1.1.7"]
                  [simple-time "0.1.1"]
                  
                  [thi.ng/geom-core "0.3.0-SNAPSHOT"]
@@ -45,13 +42,11 @@
                  [com.google.appengine/appengine-testing "1.9.5"]
 
                  ;; CLJS
-                 [thi.ng/geom-webgl "0.3.0-SNAPSHOT"]
-                 ;;[hiccups "0.3.0" :exclusions [org.clojure/clojurescript]]
-                 ;;[net.unit8/fressian-cljs "0.1.0"]
-                 ]
+                 [thi.ng/geom-webgl "0.3.0-SNAPSHOT"]]
 
   :profiles {:dev {:dependencies [[org.clojure/clojurescript "0.0-2246"]]
-                   :plugins [[lein-cljsbuild "1.0.3"]]}}
+                   :plugins [[lein-cljsbuild "1.0.3"]
+                             [lein-cooper "0.0.1"]]}}
 
   :cljsbuild {:builds
               [{:source-paths ["src-async"]
@@ -59,7 +54,6 @@
                 :compiler
                 {:pretty-print true
                  :output-to "war/js/app.js"
-                 :externs ["inc/hammer.externs.js"]
                  :optimizations :whitespace}
                 :jar false}
                {:source-paths ["src-async"]
@@ -67,7 +61,6 @@
                 :compiler
                 {:pretty-print false
                  :output-to "war/js/app.js"
-                 :externs ["inc/hammer.externs.js"]
                  :optimizations :advanced}
                 :jar false}]}
 

@@ -66,7 +66,9 @@
             (reduce
              (fn [e' [k v]]
                (let [k (keyword k)]
-                 (assoc e' k (if (clj-props k) (read-string v) v))))
+                 (assoc e' k (if (clj-props k)
+                               (read-string (.getValue ^Text v))
+                               v))))
              e')))))
 
 (defn retrieve
