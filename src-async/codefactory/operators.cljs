@@ -107,6 +107,11 @@
       (dom/remove-class! canvas "hidden"))))
 
 
+(defrecord SliderSpec [label min max value step listener format])
+
+(defn slider-specs
+  [& specs] (mapv #(apply ->SliderSpec %) specs))
+
 (def float-label (utils/float-formatter 3))
 
 (def int-label str)
@@ -114,11 +119,6 @@
 (def face-label tree/face-labels)
 
 (def direction-label tree/direction-labels)
-
-(defrecord SliderSpec [label min max value step listener format])
-
-(defn slider-specs
-  [& specs] (mapv #(apply ->SliderSpec %) specs))
 
 (defmulti handle-operator (fn [op editor local bus] op))
 
@@ -165,7 +165,7 @@
       :default default
       :orig orig})))
 
-(defmethod handle-operator :sd-inset
+(defmethod handle-operator :inset
   [op editor local bus]
   (let [{:keys [tree node-cache selection]} @editor
         orig      (tree/node-at tree selection)
@@ -213,11 +213,11 @@
       :default default
       :orig orig})))
 
-(defmethod handle-operator :extrude
+(defmethod handle-operator :stretch
   [op editor local bus]
   (let [{:keys [tree selection]} @editor
         orig (tree/node-at tree selection)
-        default (mg/extrude :dir :e :len 1.0)
+        default (mg/extrude-prop :dir :e :len 1.0)
         {:keys [dir len] :as args} (tree/op-args-or-default op orig default)]
     (debug :path selection :args args :default default)
     (show-op-controls
@@ -228,15 +228,15 @@
       :sliders (slider-specs
                 ["direction" 0 5 (tree/face-idx dir) 1
                  (fn [n {:keys [len]}]
-                   (mg/extrude :dir (tree/face-ids (int n)) :len len))
+                   (mg/extrude-prop :dir (tree/face-ids (int n)) :len len))
                  face-label]
                 ["length" 0.02 2.0 len 0.001
-                 (fn [n {:keys [dir]}] (mg/extrude :dir dir :len n))
+                 (fn [n {:keys [dir]}] (mg/extrude-prop :dir dir :len n))
                  float-label])
       :default default
       :orig orig})))
 
-(defmethod handle-operator :split-displace
+(defmethod handle-operator :shift
   [op editor local bus]
   (let [{:keys [tree selection]} @editor
         orig (tree/node-at tree selection)
@@ -266,11 +266,11 @@
       :default default
       :orig orig})))
 
-(defmethod handle-operator :skew
+(defmethod handle-operator :tilt
   [op editor local bus]
   (let [{:keys [tree selection]} @editor
         orig (tree/node-at tree selection)
-        default (mg/reflect :dir :e)
+        default (mg/skew :dir :e)
         {:keys [dir] :as args} (tree/op-args-or-default op orig default)]
     (debug :path selection :args args :default default)
     (show-op-controls

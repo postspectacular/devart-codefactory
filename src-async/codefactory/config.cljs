@@ -13,15 +13,21 @@
 (defn operator-color
   [config op] (get-in config [:operators op :col]))
 
+(defn translate-mg-op
+  [config op] (get-in config [:mg->op op]))
+
 (def api-prefix "/api/1.0/")
 
 (def op-aliases
   {:sd             :sd
-   :sd-inset       :sd-inset
+   :inset          :sd-inset
    :reflect        :reflect
-   :skew           :skew2
-   :split-displace :split-displace
-   :extrude        :extrude-prop})
+   :tilt           :skew2
+   :shift          :split-displace2
+   :stretch        :ext-prop
+   :scale          :scale-side
+   :delete         :delete
+   :leaf           :leaf})
 
 (def seeds
   (->> {:box   {:seed (a/aabb 1)
@@ -95,17 +101,17 @@
    :operators
    {:sd             {:col "#56ffee" :label "split"
                      :help "This operation splits the selected shape into smaller pieces using a regular grid."}
-    :skew           {:col "#ffd641" :label "tilt"}
-    :sd-inset       {:col "#ed732a" :label "inset"
+    :tilt           {:col "#ffd641" :label "tilt"}
+    :inset       {:col "#ed732a" :label "inset"
                      :help "This operation splits the selected shape into five smaller pieces by moving its corners towards the center."}
-    :scale-side     {:col "#bd10d5" :label "scale"
+    :scale         {:col "#bd10d5" :label "scale"
                      :help "This operation deforms the selected shape by scaling one of its sides."}
-    :extrude        {:col "#3fa6f2" :label "stretch"
+    :stretch        {:col "#3fa6f2" :label "stretch"
                      :help "This operation stretches the selected shape into the direction of one of its six sides."}
     :reflect        {:col "#89c33f" :label "mirror"
                      :help "This operation mirrors the selected shape on one of its six sides. Depending on the shape, repeated use will result in rings."}
     :leaf           {:col "#ffffff" :label "leaf"}
-    :split-displace {:col "#b9c500" :label "shift"
+    :shift          {:col "#b9c500" :label "shift"
                      :help "This operation splits the selected shape in the middle and tilts the resulting halves to form a chevron."}
     :delete         {:col "#aaaaaa" :label "delete"}}
 

@@ -147,7 +147,7 @@
             nc (count (:out node))
             wc (cell-size w gap nc)
             cy (mm/sub y h gap)
-            op (tree/node-operator node)
+            op (config/translate-mg-op config (tree/node-operator node))
             acc (conj acc
                       (make-node viz path op
                                  (+ x offx) (+ (- y h) offy) w h
@@ -212,6 +212,7 @@
 (def map-op-color
   (memoize
    (fn [config op]
+     (debug :col-op op)
      (col/gray-offset-hex
       (config/operator-color config op)
       (get-in config [:editor :map-color-offset])))))
@@ -223,7 +224,7 @@
         wc (cell-size w 1 nc)
         col (if (= path sel)
               (get-in config [:editor :map-selection])
-              (map-op-color config (tree/node-operator node)))]
+              (map-op-color config (config/translate-mg-op config (tree/node-operator node))))]
     (set! (.-fillStyle ctx) col)
     (.fillRect ctx x (inc (- y h)) w h)
     (if (pos? nc)
@@ -317,7 +318,7 @@
           (recur))))))
 
 (defn handle-node-selected
-  [ch bus editor local]
+  [ch bus editor local config]
   (let [toolbar (dom/by-id "toolbar")]
     (go
       (loop []
@@ -329,7 +330,10 @@
             (swap!
              editor assoc
              :selection path
-             :sel-type (tree/node-operator (tree/node-at tree path))
+             :sel-type (->> path
+                            (tree/node-at tree)
+                            (tree/node-operator)
+                            (config/translate-mg-op config))
              :display-meshes (tree/filter-leaves-and-selection meshes tree path))
             (dom/add-class! el "selected")
             (dom/add-class! toolbar "rollon")
@@ -473,7 +477,7 @@
     (handle-resize          (:window-resize subs)    bus editor local)
     (handle-regen           (:regenerate-scene subs) bus editor local)
     (handle-node-toggle     (:node-toggle subs)      bus local)
-    (handle-node-selected   (:node-selected subs)    bus editor local)
+    (handle-node-selected   (:node-selected subs)    bus editor local config)
     (handle-node-deselected (:node-deselected subs)  bus editor local)
     (handle-op-triggered    (:op-triggered subs)     bus editor local)
     (handle-commit-op       (:commit-operator subs)  bus local)
