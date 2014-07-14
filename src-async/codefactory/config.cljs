@@ -15,6 +15,14 @@
 
 (def api-prefix "/api/1.0/")
 
+(def op-aliases
+  {:sd             :sd
+   :sd-inset       :sd-inset
+   :reflect        :reflect
+   :skew           :skew2
+   :split-displace :split-displace
+   :extrude        :extrude-prop})
+
 (def seeds
   (->> {:box   {:seed (a/aabb 1)
                 :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2.5}}
@@ -46,7 +54,10 @@
         {})))
 
 (def ^:export app
-  {:webgl
+  {:modules {:home true
+             :selector true
+             :editor true}
+   :webgl
    {:min-aa-res 480
     :bg-col [0.2 0.2 0.211 1]
     :shader-preset-ids [:xray-strong :lambert-default]}
@@ -78,20 +89,28 @@
     :map-color-offset -0.33
     :map-label-font "14px \"Abel\",sans-serif"
     :map-label-size 18
-    :root-label "<h1>TAP HERE TO BEGIN</h1><p>This is your workspace area.</p><p>Assign operations to elements to create your artwork.</p><p>Each operation creates more shapes, forming a hierarchy.</p>"
-    :map-labels ["CODE OVERVIEW" "This area always shows" "the entire code structure"]}
+    :root-label "<h1>TAP HERE TO BEGIN</h1><p>This is your workspace area.</p><p>Here, each shape is visualized as box.</p><p>Assign operations to these elements to create your artwork.</p><p>Each operation creates more shapes, forming a hierarchy.</p><p>You can also delete elements to create more complex forms.</p>"
+    :map-labels ["CODE OVERVIEW" "This area always shows" "the entire code structure." "Use this widget" "to navigate your code."]}
 
    :operators
    {:sd             {:col "#56ffee" :label "split"
-                     :help "This operation splits the selected shape into smaller pieces using a regular grid"}
+                     :help "This operation splits the selected shape into smaller pieces using a regular grid."}
     :skew           {:col "#ffd641" :label "tilt"}
-    :sd-inset       {:col "#ed732a" :label "inset"}
-    :scale-side     {:col "#bd10d5" :label "scale"}
-    :extrude        {:col "#3fa6f2" :label "stretch"}
-    :reflect        {:col "#89c33f" :label "mirror"}
+    :sd-inset       {:col "#ed732a" :label "inset"
+                     :help "This operation splits the selected shape into five smaller pieces by moving its corners towards the center."}
+    :scale-side     {:col "#bd10d5" :label "scale"
+                     :help "This operation deforms the selected shape by scaling one of its sides."}
+    :extrude        {:col "#3fa6f2" :label "stretch"
+                     :help "This operation stretches the selected shape into the direction of one of its six sides."}
+    :reflect        {:col "#89c33f" :label "mirror"
+                     :help "This operation mirrors the selected shape on one of its six sides. Depending on the shape, repeated use will result in rings."}
     :leaf           {:col "#ffffff" :label "leaf"}
-    :split-displace {:col "#b9c500" :label "shift"}
+    :split-displace {:col "#b9c500" :label "shift"
+                     :help "This operation splits the selected shape in the middle and tilts the resulting halves to form a chevron."}
     :delete         {:col "#aaaaaa" :label "delete"}}
+
+   :op->mg op-aliases
+   :mg->op (zipmap (vals op-aliases) (keys op-aliases))
 
    :routes
    [{:match ["home"]
@@ -156,3 +175,9 @@
           (fn [acc k v] (assoc acc k (str api-prefix v)))
           {}))}
    })
+
+(def ^:export maintenance
+  (-> app
+      (assoc :modules nil
+             :routes [(get-in app [:routes 0])]
+             :routes-unsupported [(get-in app [:routes 0])])))

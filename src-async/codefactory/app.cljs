@@ -71,9 +71,10 @@
 (defn init-modules
   [bus state config]
   (listen-dom bus)
-  (home/init bus config)
-  (selector/init bus config)
-  (editor/init bus config)
+  (let [modules (:modules config)]
+    (when (:home modules) (home/init bus config))
+    (when (:selector modules) (selector/init bus config))
+    (when (:editor modules) (editor/init bus config)))
   (init-router bus state (:routes config) (:default-route config)))
 
 (defn start
