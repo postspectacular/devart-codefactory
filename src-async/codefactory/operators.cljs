@@ -106,7 +106,6 @@
       (dom/remove-class! viz "hidden")
       (dom/remove-class! canvas "hidden"))))
 
-
 (defrecord SliderSpec [label min max value step listener format])
 
 (defn slider-specs

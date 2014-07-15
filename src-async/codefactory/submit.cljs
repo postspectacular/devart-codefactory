@@ -16,7 +16,7 @@
    :uri     (get-in config [:api :routes :submit-object])
    :method  :post
    :edn?    true
-   :data    data
+   :data    (merge (get-in config [:api :inject]) data)
    :success (fn [status body]
               (debug :success-response status body)
               (async/publish bus :submit-model-success body))

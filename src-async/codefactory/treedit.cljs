@@ -282,6 +282,11 @@
     (resize-viz editor local)
     (regenerate-map editor local)))
 
+(defn update-submit-button
+  [tree]
+  ((if (seq tree) dom/remove-class! dom/add-class!)
+   (dom/by-id "edit-submit") "hidden"))
+
 (defn handle-resize
   [ch bus editor local]
   (go
@@ -297,6 +302,7 @@
   (go
     (loop []
       (when (<! ch)
+        (update-submit-button (:tree @editor))
         (regenerate-viz editor local bus)
         (regenerate-map editor local)
         (async/publish bus :render-scene nil)
@@ -369,7 +375,7 @@
       (let [[_ op] (<! ch)
             {:keys [tree selection]} @editor]
         (when op
-          (debug :new-op op)
+          (debug :new-op op (:ctrl-active? @local))
           (ops/remove-op-controls local)
           (ops/handle-operator op editor local bus)
           (async/publish bus :user-action nil)
@@ -391,11 +397,11 @@
     (loop []
       (when (<! ch)
         (let [{:keys [orig-edit-node]} @local
-              {:keys [tree selection]} @editor]
+              {:keys [tree selection config]} @editor]
           (swap!
            editor assoc
            :tree (tree/set-node-at tree selection orig-edit-node)
-           :sel-type (tree/node-operator orig-edit-node))
+           :sel-type (config/translate-mg-op config (tree/node-operator orig-edit-node)))
           (swap! editor tree/update-meshes true)
           (ops/remove-op-controls local)
           (async/publish bus :regenerate-scene nil)
@@ -471,6 +477,7 @@
                   :height      height
                   :op-triggers (ops/init-op-triggers bus config)})]
     (debug :init-tedit)
+    (update-submit-button (:tree @editor))
     (regenerate-viz editor local bus)
     (regenerate-map editor local)
 

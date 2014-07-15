@@ -102,16 +102,16 @@
 
    :operators
    {:sd             {:col "#56ffee" :label "split"
-                     :help "This operation splits the selected shape into smaller pieces using a regular grid."}
+                     :help "This operation splits the selected shape into smaller pieces using a regular grid. The shape can be split in all 3 directions."}
     :tilt           {:col "#ffd641" :label "tilt"}
     :inset       {:col "#ed732a" :label "inset"
-                  :help "This operation splits the selected shape into five smaller pieces by moving its corners towards the center."}
+                  :help "This operation splits the selected shape into five smaller pieces by moving its corners towards the center. The resulting shapes are four walls and the core enclosed by them."}
     :scale         {:col "#bd10d5" :label "scale"
-                    :help "This operation deforms the selected shape by scaling one of its sides."}
+                    :help "This operation deforms the selected shape by scaling one of its sides. This is useful to create cones or rings (if combined with the MIRROR operation)."}
     :stretch        {:col "#3fa6f2" :label "stretch"
                      :help "This operation stretches the selected shape into the direction of one of its six sides."}
     :reflect        {:col "#89c33f" :label "mirror"
-                     :help "This operation mirrors the selected shape on one of its six sides. Depending on the shape, repeated use will result in rings."}
+                     :help "This operation mirrors the selected shape on one of its six sides. Depending on the shape, repeated use with the same direction will result in rings."}
     :leaf           {:col "#ffffff" :label "leaf"}
     :shift          {:col "#b9c500" :label "shift"
                      :help "This operation splits the selected shape in the middle and tilts the resulting halves to form a chevron."}
@@ -194,3 +194,7 @@
       (assoc :modules nil
              :routes [(get-in app [:routes 0])]
              :routes-unsupported [(get-in app [:routes 0])])))
+
+(def ^:export barbican
+  (-> app
+      (assoc-in [:api :inject] {:location "barbican"})))
