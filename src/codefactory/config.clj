@@ -51,14 +51,15 @@
 
    :validators
    {:api {:new-object
-          {"tree"   [(v/required)
-                     (v/max-length (* 16 1024))
-                     (valid-tree)]
-           "title"  [(v/min-length 3 (constantly "Untitled"))
-                     (v/max-length 16 (fn [_ v] (subs v 0 16)))]
-           "author" [(v/min-length 3 (constantly "Anonymous"))
-                     (v/max-length 16 (fn [_ v] (subs v 0 16)))]
-           "parent" [(v/optional (v/uuid4))]}
+          {"tree"     [(v/required)
+                       (v/max-length (* 16 1024))
+                       (valid-tree)]
+           "title"    [(v/min-length 3 (constantly "Untitled"))
+                       (v/max-length 16 (fn [_ v] (subs v 0 16)))]
+           "author"   [(v/min-length 3 (constantly "Anonymous"))
+                       (v/max-length 16 (fn [_ v] (subs v 0 16)))]
+           "location" [(v/optional (v/max-length 16))]
+           "parent"   [(v/optional (v/uuid4))]}
 
           :get-object {:id [(v/uuid4)]}
 

@@ -8,6 +8,7 @@
   [id title author
    ^:clj tree
    seed
+   author-location
    stl-uri
    video-uri
    preview-uri

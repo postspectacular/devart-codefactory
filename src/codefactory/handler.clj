@@ -98,12 +98,13 @@
            (let [[params err] (validate-params params :api :new-object)]
              (if (nil? err)
                (try
-                 (let [{:strs [tree author title parent]} params
+                 (let [{:strs [tree author title parent location]} params
                        entity (model/make-code-tree
                                {:id (str (java.util.UUID/randomUUID))
                                 :parent-id parent
                                 :tree tree
                                 :author author
+                                :author-location location
                                 :title title
                                 :created (time/datetime->epoch (time/utc-now))})]
                    (prn :created-entity (:id entity))
