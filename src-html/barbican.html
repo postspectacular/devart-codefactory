@@ -200,8 +200,8 @@
           <div id="submit-form-wrapper" class="flex-item center">
             <h1>SUBMIT YOUR ARTWORK</h1>
             <form id="submit-art-form">
-              <p><input type="text" placeholder="ARTWORK TITLE" name="title" /></p>
-              <p><input type="text" placeholder="AUTHOR NAME" name="name" /></p>
+              <p><input type="text" placeholder="ARTWORK TITLE" name="title" maxlength="16"/></p>
+              <p><input type="text" placeholder="AUTHOR NAME" name="author" maxlength="16"/></p>
               <p><input id="bt-submit" type="submit" value="SUBMIT"/></p>
             </form>
             <div>By clicking 'Submit' your sculpture will be entered into the Co(de)Factory gallery and will be put forward to the Digital Revolution curator for a chance to be printed and displayed in the Digital Revolution exhibition.</div>
@@ -209,6 +209,25 @@
           <div class="flex-item buttonbar">
             <div class="inner">
               <div id="submit-cancel" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 1 1">
+                  <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g></svg></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="submit-confirm" class="future" data-transition="concave">
+        <div class="flex-container">
+          <div id="thanks-wrapper" class="flex-item center">
+            <h1>THANK YOU!</h1>
+            <div>
+              <p>Your artwork has been received.</p>
+              <p>We keep our fingers crossed that your piece will be chosen to be printed here at the Barbican!</p>
+            </div>
+          </div>
+          <div class="flex-item buttonbar">
+            <div class="inner">
+              <div id="thanks-cancel" class="flex-item center flash-border flash">
                 <svg width="50%" height="50" viewbox="0 0 1 1">
                   <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g></svg></div>
             </div>

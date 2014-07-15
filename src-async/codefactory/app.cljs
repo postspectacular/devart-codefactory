@@ -7,6 +7,7 @@
    [codefactory.editor :as editor]
    [codefactory.selector :as selector]
    [codefactory.submit :as submit]
+   [codefactory.thanks :as thanks]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
@@ -76,7 +77,8 @@
     (when (:home modules)     (home/init bus config))
     (when (:selector modules) (selector/init bus config))
     (when (:editor modules)   (editor/init bus config))
-    (when (:submit modules)   (submit/init bus config)))
+    (when (:submit modules)   (submit/init bus config))
+    (when (:thanks modules)   (thanks/init bus config)))
   (init-router bus state (:routes config) (:default-route config)))
 
 (defn start

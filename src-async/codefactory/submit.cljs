@@ -13,28 +13,35 @@
 (defn submit-model
   [bus config data]
   (io/request
-   :uri     (get-in config [:api-routes :submit-object])
+   :uri     (get-in config [:api :routes :submit-object])
    :method  :post
    :edn?    true
    :data    data
-   :success (fn [_ data]
-              (async/publish bus :subit-model-success data))
+   :success (fn [status body]
+              (debug :success-response status body)
+              (async/publish bus :submit-model-success body))
    :error   (fn [status body]
-              (async/publish bus :submit-model-fail [status body]))))
+              (debug :error-response status body)
+              (async/publish bus :submit-model-fail body))))
 
 (defn init
   [bus config]
   (let [init-chan    (async/subscribe bus :init-submit)
         release-chan (async/subscribe bus :release-submit)
         tree-chan    (async/subscribe bus :broadcast-tree)
+        success      (async/subscribe bus :submit-model-success)
         [submit]     (dom/event-channel (dom/by-id "bt-submit") "click")
         [cancel]     (dom/event-channel (dom/by-id "submit-cancel") "click")
         local        (atom {})]
     ;; TODO enable gallery button
     (go
       (loop []
-        (let [[_ [state]] (<! init-chan)]
+        (let [[_ [state]] (<! init-chan)
+              form (aget (.-forms js/document) "submit-art-form")]
+          (dom/set-attr! (aget form "title") {:value ""})
+          (dom/set-attr! (aget form "author") {:value ""})
           (debug :init-submit)
+
           (recur))))
 
     (go
@@ -53,9 +60,24 @@
     (go
       (loop []
         (<! submit)
-        (let [form (dom/by-id "submit-art-form")]
-          (.log js/console form)
-          ;;(submit-model bus config form)
+        (let [form   (aget (.-forms js/document) "submit-art-form")
+              title  (.-value (aget form "title"))
+              author (.-value (aget form "author"))
+              {:keys [tree seed]} @local]
+          (submit-model
+           bus config
+           {:tree (pr-str tree)
+            :seed seed
+            :title title
+            :author author})
+          (recur))))
+
+    (go
+      (loop []
+        (let [[_ data] (<! success)
+              {:keys [id]} (:body data)]
+          (debug :success id)
+          (route/set-route! "thanks" id)
           (recur))))
     
     (go

@@ -105,9 +105,9 @@
                      :help "This operation splits the selected shape into smaller pieces using a regular grid."}
     :tilt           {:col "#ffd641" :label "tilt"}
     :inset       {:col "#ed732a" :label "inset"
-                     :help "This operation splits the selected shape into five smaller pieces by moving its corners towards the center."}
+                  :help "This operation splits the selected shape into five smaller pieces by moving its corners towards the center."}
     :scale         {:col "#bd10d5" :label "scale"
-                     :help "This operation deforms the selected shape by scaling one of its sides."}
+                    :help "This operation deforms the selected shape by scaling one of its sides."}
     :stretch        {:col "#3fa6f2" :label "stretch"
                      :help "This operation stretches the selected shape into the direction of one of its six sides."}
     :reflect        {:col "#89c33f" :label "mirror"
@@ -137,13 +137,16 @@
      :controller :selector}
     {:match ["objects" "submit"]
      :controller :submit-form}
-    {:match ["gallery" :page]
-     :bindings {:page {:coerce utils/parse-int :validate [(v/number) (v/pos)]}}
-     :controller :gallery}
-    {:match ["gallery"]
-     :controller :gallery}
-    {:match ["login"]
-     :controller :login}]
+    {:match ["thanks" :id]
+     :bindings {:id {:validate [(v/uuid4)]}}
+     :controller :submit-confirm}
+    #_{:match ["gallery" :page]
+       :bindings {:page {:coerce utils/parse-int :validate [(v/number) (v/pos)]}}
+       :controller :gallery}
+    #_{:match ["gallery"]
+       :controller :gallery}
+    #_{:match ["login"]
+       :controller :login}]
 
    :routes-unsupported
    [{:match ["not-supported"]
@@ -165,6 +168,8 @@
     [:editor :selector] 1
     [:editor :submit-form] -1
     [:submit-form :editor] 1
+    [:submit-form :submit-confirm] -1
+    [:submit-confirm :home] 1
     [:selector :home] 1
     [:login :home] -1
     }
@@ -175,8 +180,8 @@
     :controller-release-delay 900}
 
    :api
-   {:api-prefix api-prefix
-    :api-routes
+   {:prefix api-prefix
+    :routes
     (->> {:get-object "objects/"
           :submit-object "objects"}
          (reduce-kv
