@@ -1,5 +1,6 @@
 (ns thi.ng.cljs.dom
   (:require
+   [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]
    [goog.style :as style]
    [goog.dom :as dom]
    [goog.dom.classes :as classes]
