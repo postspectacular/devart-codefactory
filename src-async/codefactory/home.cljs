@@ -14,6 +14,13 @@
   (let [chan-i (async/subscribe bus :init-home)
         chan-r (async/subscribe bus :release-home)
         [click] (dom/event-channel (dom/by-id "home-continue") "click")]
+
+    (dom/add-listeners
+     [["#fs-toggle" "click"
+       (fn []
+         (dom/request-fullscreen)
+         (dom/add-class! (dom/by-id "fs-toggle") "hidden"))]])
+    
     ;; TODO enable gallery button
     (go
       (loop []
@@ -29,4 +36,3 @@
         (let [[_ [state]] (<! chan-r)]
           (debug :release-home)
           (recur))))))
-

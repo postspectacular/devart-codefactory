@@ -75,6 +75,16 @@ a:hover { color: lighten(@op-col-sd,10); }
     }
 }
 
+.flex-content {
+    .flex(column nowrap);
+    .flex-justify(center);
+    text-align: center;
+    div {
+        max-width: 50%;
+        margin: 0 auto;
+    }
+}
+
 .flex-item {
     .flexbox(1 100%);
 }
@@ -114,15 +124,6 @@ a:hover { color: lighten(@op-col-sd,10); }
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
-
-    .content {
-        display: -webkit-flex;
-        display: -moz-flex;
-        display: flex;
-        .flex-align(center);
-        .flex-justify(center);
-        height: 100%;
-    }
 }
 
 #home-fs-toggle {
@@ -195,15 +196,5 @@ a:hover { color: lighten(@op-col-sd,10); }
 
     .content div {
         margin: 0 auto 1em auto;
-    }
-}
-
-#submit-form-wrapper, #thanks-wrapper {
-    .flex(column nowrap);
-    .flex-justify(center);
-
-    div {
-        max-width: 50%;
-        margin: 0 auto;
     }
 }
