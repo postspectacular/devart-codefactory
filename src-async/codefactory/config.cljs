@@ -103,11 +103,12 @@
    :operators
    {:sd             {:col "#56ffee" :label "split"
                      :help "This operation splits the selected shape into smaller pieces using a regular grid. The shape can be split in all 3 directions."}
-    :tilt           {:col "#ffd641" :label "tilt"}
-    :inset       {:col "#ed732a" :label "inset"
-                  :help "This operation splits the selected shape into five smaller pieces by moving its corners towards the center. The resulting shapes are four walls and the core enclosed by them."}
-    :scale         {:col "#bd10d5" :label "scale"
-                    :help "This operation deforms the selected shape by scaling one of its sides. This is useful to create cones or rings (if combined with the MIRROR operation)."}
+    :tilt           {:col "#ffd641" :label "tilt"
+                     :help "This operation moves one of the shape's sides in a given direction to create a possibly more diamond-like shape."}
+    :inset          {:col "#ed732a" :label "inset"
+                     :help "This operation splits the selected shape into five smaller pieces by moving its corners towards the center. The resulting shapes are four walls and the core enclosed by them."}
+    :scale          {:col "#bd10d5" :label "scale"
+                     :help "This operation deforms the selected shape by scaling one of its sides. This is useful to create cones or rings (if combined with the MIRROR operation)."}
     :stretch        {:col "#3fa6f2" :label "stretch"
                      :help "This operation stretches the selected shape into the direction of one of its six sides."}
     :reflect        {:col "#89c33f" :label "mirror"
