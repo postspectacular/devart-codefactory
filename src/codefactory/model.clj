@@ -7,6 +7,7 @@
 (defentity CodeTree
   [id title author
    ^:clj tree
+   seed
    stl-uri
    video-uri
    preview-uri

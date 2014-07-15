@@ -69,4 +69,5 @@
 
    :db
    {:query-result-limit query-result-limit
-    :public-codetree-keys [:id :parent-id :title :author :created :preview-uri]}})
+    :public-codetree-keys [:id :parent-id :tree :seed
+                           :title :author :created :preview-uri :stl-uri]}})
