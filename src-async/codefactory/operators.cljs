@@ -270,8 +270,8 @@
   [op editor local bus]
   (let [{:keys [tree selection]} @editor
         orig (tree/node-at tree selection)
-        default (mg/skew :dir :e)
-        {:keys [dir] :as args} (tree/op-args-or-default op orig default)]
+        default (mg/skew :n :f :offset 0.2)
+        {:keys [side ref offset] :as args} (tree/op-args-or-default op orig default)]
     (debug :path selection :args args :default default)
     (show-op-controls
      {:editor editor
@@ -279,8 +279,43 @@
       :bus bus
       :op op
       :sliders (slider-specs
-                ["direction" 0 5 (tree/face-idx dir) 1
-                 (fn [n _] (mg/reflect :dir (tree/face-ids (int n))))
-                 face-label])
+                ["side" 0 5 (tree/face-idx side) 1
+                 (fn [n {:keys [ref offset]}]
+                   (mg/skew (tree/face-ids (int n)) ref :offset offset))
+                 face-label]
+                ["direction" 0 5 (tree/face-idx ref) 1
+                 (fn [n {:keys [side offset]}]
+                   (mg/skew side (tree/face-ids (int n)) :offset offset))
+                 face-label]
+                ["offset" 0.0 2.0 offset 0.001
+                 (fn [n {:keys [side ref]}]
+                   (mg/skew side ref :offset n))
+                 float-label])
+      :default default
+      :orig orig})))
+
+(defmethod handle-operator :scale
+  [op editor local bus]
+  (let [{:keys [tree selection]} @editor
+        orig (tree/node-at tree selection)
+        ctor (fn [side scale & [out]]
+               {:op :scale-side
+                :args {:side side :scale scale}
+                :out (mg/operator-output 1 out false)})
+        default (ctor :n 0.5)
+        {:keys [side scale] :as args} (tree/op-args-or-default op orig default)]
+    (debug :path selection :args args :default default)
+    (show-op-controls
+     {:editor editor
+      :local local
+      :bus bus
+      :op op
+      :sliders (slider-specs
+                ["side" 0 5 (tree/face-idx side) 1
+                 (fn [n {:keys [scale]}] (ctor (tree/face-ids (int n)) scale))
+                 face-label]
+                ["scale" 0.1 2.0 scale 0.001
+                 (fn [n {:keys [side]}] (ctor side n))
+                 float-label])
       :default default
       :orig orig})))

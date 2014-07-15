@@ -22,7 +22,7 @@
   {:sd             :sd
    :inset          :sd-inset
    :reflect        :reflect
-   :tilt           :skew2
+   :tilt           :skew
    :shift          :split-displace2
    :stretch        :ext-prop
    :scale          :scale-side
