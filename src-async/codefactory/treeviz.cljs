@@ -300,8 +300,9 @@
   (go
     (loop []
       (when (<! ch)
-        (resize-viz editor local)
-        (regenerate-map editor local)
+        (when-not (:ctrl-active? @local)
+          (resize-viz editor local)
+          (regenerate-map editor local))
         (async/publish bus :user-action nil)
         (recur)))))
 
