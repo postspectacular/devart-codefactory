@@ -133,6 +133,10 @@
   (.removeEventListener el ev handler)
   (close! ch))
 
+(defn event-publisher
+  [bus el ev id]
+  (.addEventListener el ev (fn [e] (async/publish bus id e))))
+
 (defn add-listeners
   [specs]
   (loop [specs specs]

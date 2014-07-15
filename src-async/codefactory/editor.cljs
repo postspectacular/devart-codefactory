@@ -9,7 +9,7 @@
    [codefactory.webgl :as webgl]
    [codefactory.shared :as shared]
    [codefactory.tree :as tree]
-   [codefactory.treedit :as tedit]
+   [codefactory.treeviz :as viz]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
@@ -257,7 +257,7 @@
                  :time        now
                  :active?     true})
                (init-tree local (:seed-id params))))
-          (tedit/init local bus config)
+          (viz/init local bus config)
           (resize-canvas local)
           (render-scene local)
 

@@ -1,4 +1,4 @@
-(ns codefactory.treedit
+(ns codefactory.treeviz
   (:require-macros
    [cljs.core.async.macros :refer [go]]
    [thi.ng.macromath.core :as mm])
