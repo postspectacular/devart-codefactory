@@ -248,17 +248,17 @@
       :bus bus
       :op op
       :sliders (slider-specs
-                ["split direction" 0 3 (tree/direction-idx dir) 1
+                ["split direction" 0 2 (tree/direction-idx dir) 1
                  (fn [n {:keys [ref offset]}]
                    (mg/split-displace
                     (tree/direction-ids (int n)) ref :offset offset))
                  direction-label]
-                ["shift direction" 0 3 (tree/direction-idx dir) 1
+                ["shift direction" 0 2 (tree/direction-idx dir) 1
                  (fn [n {:keys [dir offset]}]
                    (mg/split-displace
                     dir (tree/direction-ids (int n)) :offset offset))
                  direction-label]
-                ["shift length" 0.0 2.0 offset 0.001
+                ["shift length" 0.0 1.0 offset 0.001
                  (fn [n {:keys [dir ref]}]
                    (mg/split-displace dir ref :offset n))
                  float-label])

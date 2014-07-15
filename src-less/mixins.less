@@ -1,20 +1,22 @@
+.prefixed(@prop; @val) {
+  -webkit-@{prop}: @val;
+  -moz-@{prop}: @val;
+  -o-@{prop}: @val;
+  -ms-@{prop}: @val;
+  @{prop}: @val;
+}
+
 .fullsize() {
     width: 100%;
     height: 100%;
 }
 
 .transform-style(@style) {
-    -webkit-transform-style: @style;
-    -moz-transform-style: @style;
-    -ms-transform-style: @style;
-    transform-style: @style;
+    .prefixed(transform-style; @style);
 }
 
 .transform-origin(@x; @y) {
-    -webkit-transform-origin: @x @y;
-    -moz-transform-origin: @x @y;
-    -ms-transform-origin: @x @y;
-    transform-origin: @x @y;
+    .prefixed(transform-origin; @x @y);
 }
 
 .transform(@t) {
@@ -31,57 +33,68 @@
     transition: e(replace(@t,"\$","","gi"));
 }
 
-.perspective(@dist) {
-    -webkit-perspective: @dist;
-    -moz-perspective: @dist;
-    -ms-perspective: @dist;
-    perspective: @dist;
+.perspective(@persp) {
+    .prefixed(perspective; @persp);
 }
 
 .perspective-origin(@x; @y) {
-    -webkit-perspective-origin: @x @y;
-    -moz-perspective-origin: @x @y;
-    -ms-perspective-origin: @x @y;
-    perspective-origin: @x @y;
+    .prefixed(perspective-origin; @x @y);
 }
 
 .cull-backface() {
-    -webkit-backface-visibility: hidden;
-    -moz-backface-visibility: hidden;
-    backface-visibility: hidden;
+    .prefixed(backface-visibility; hidden);
 }
 
 .animation-name(@name) {
-    -webkit-animation-name: @name;
-    -moz-animation-name: @name;
-    animation-name: @name;
+    .prefixed(animation-name; @name);
 }
 
 .flex(@flow) {
     display: flex;
     display: -webkit-flex;
     display: -moz-flex;
-    -webkit-flex-flow: @flow;
-    -moz-flex-flow: @flow;
-    flex-flow: @flow;
+    .prefixed(flex-flow; @flow);
 }
 
 .flexbox(@box) {
-    -webkit-flex: @box;
-    -moz-flex: @box;
-    flex: @box;
+    .prefixed(flex; @box);
 }
 
 .flex-justify(@align) {
-    -webkit-justify-content: @align;
-    -moz-justify-content: @align;
-    -ms-justify-content: @align;
-    justify-content: @align;
+    .prefixed(justify-content; @align);
 }
 
 .flex-align(@align) {
-    -webkit-align-items: @align;
-    -moz-align-items: @align;
-    -ms-align-items: @align;
-    align-items: @align;
+    .prefixed(align-items; @align);
+}
+
+.flash-keyframes(@id; @prop; @off-col; @on-col) {
+    @-webkit-keyframes @id {
+        0%    { @{prop}: @off-col; }
+        50%   { @{prop}: @on-col; }
+        100%  { @{prop}: @off-col; }
+    }
+    @-moz-keyframes @id {
+        0%    { @{prop}: @off-col; }
+        50%   { @{prop}: @on-col; }
+        100%  { @{prop}: @off-col; }
+    }
+    @-o-keyframes @id {
+        0%    { @{prop}: @off-col; }
+        50%   { @{prop}: @on-col; }
+        100%  { @{prop}: @off-col; }
+    }
+    @keyframes @id {
+        0%    { @{prop}: @off-col; }
+        50%   { @{prop}: @on-col; }
+        100%  { @{prop}: @off-col; }
+    }
+}
+
+.anim(@anim) {
+    .prefixed(animation; @anim);
+}
+
+.flash-gen(@id) {
+    .anim(e("@{id} 1.0s infinite"));
 }

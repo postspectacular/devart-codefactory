@@ -27,6 +27,14 @@
 (def node-id
   (memoize (fn [path] (apply str (cons "node-" (interpose "-" path))))))
 
+(defn highlight-selected-node
+  [el op]
+  (dom/add-class! el (str "sel-flash-" (name op))))
+
+(defn unhighlight-selected-node
+  [el op]
+  (dom/remove-class! el (str "sel-flash-" (name op))))
+
 (defn remove-node-event-handlers
   [bus nodes]
   (->> nodes
@@ -79,7 +87,7 @@
             :height (->px h)}))
 
     (if (not= :delete op) (dom/add-class! el cls))
-    (if (= path sel) (dom/add-class! el "selected"))
+    (if (= path sel) (highlight-selected-node el op))
 
     (node-event-handler ch bus id)
 
@@ -341,7 +349,7 @@
                             (tree/node-operator)
                             (config/translate-mg-op config))
              :display-meshes (tree/filter-leaves-and-selection meshes tree path))
-            (dom/add-class! el "selected")
+            (highlight-selected-node el (:sel-type @editor))
             (dom/add-class! toolbar "rollon")
             (async/publish bus :render-scene nil)
             (regenerate-map editor local)
@@ -354,11 +362,11 @@
       (loop []
         (let [[_ [id render?]] (<! ch)
               node (get-in @local [:nodes id])
-              {:keys [tree meshes]} @editor]
+              {:keys [tree meshes sel-type]} @editor]
           (when id
             (swap! local assoc :selected-id nil)
             (swap! editor assoc :selection nil :sel-type nil)
-            (dom/remove-class! (:el node) "selected")
+            (unhighlight-selected-node (:el node) sel-type)
             (dom/remove-class! toolbar "rollon")
             (when render?
               (swap!

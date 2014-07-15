@@ -54,12 +54,9 @@
 
     .rollbody {
         position: relative;
-        //pointer-events: none;
-
         .transform-style(preserve-3d);
         .transform-origin(50%; 6px);
         .transition("all 400ms ease");
-        //.cull-backface();
 
         .off {
             position: absolute;
@@ -69,7 +66,6 @@
 
             .transform-origin(50%,0);
             .transform("translate3d(0,110%,0) rotateX(-90deg)");
-            //.cull-backface();
         }
     }
 }
@@ -81,147 +77,136 @@
 
 
 @-webkit-keyframes slideDown {
-  0% {
-    -webkit-transform: translateY(-100%);
-  }
+    0% {
+        -webkit-transform: translateY(-100%);
+    }
 
-  100% {
-    -webkit-transform: translateY(0);
-  }
+    100% {
+        -webkit-transform: translateY(0);
+    }
 }
 
 @-moz-keyframes slideDown {
-  0% {
-    -moz-transform: translateY(-100%);
-  }
+    0% {
+        -moz-transform: translateY(-100%);
+    }
 
-  100% {
-    -moz-transform: translateY(0);
-  }
+    100% {
+        -moz-transform: translateY(0);
+    }
 }
 
 @-ms-keyframes slideDown {
-  0% {
-    -ms-transform: translateY(-100%);
-  }
+    0% {
+        -ms-transform: translateY(-100%);
+    }
 
-  100% {
-    -ms-transform: translateY(0);
-  }
+    100% {
+        -ms-transform: translateY(0);
+    }
 }
 
 @keyframes slideDown {
-  0% {
-    transform: translateY(-100%);
-  }
+    0% {
+        transform: translateY(-100%);
+    }
 
-  100% {
-    transform: translateY(0);
-  }
+    100% {
+        transform: translateY(0);
+    }
 }
 
 .slideDown {
-  .animation-name(slideDown);
+    .animation-name(slideDown);
 }
 
 @-webkit-keyframes slideUp {
-  0% {
-    -webkit-transform: translateY(0);
-  }
+    0% {
+        -webkit-transform: translateY(0);
+    }
 
-  100% {
-    -webkit-transform: translateY(-100%);
-  }
+    100% {
+        -webkit-transform: translateY(-100%);
+    }
 }
 
 @-moz-keyframes slideUp {
-  0% {
-    -moz-transform: translateY(0);
-  }
+    0% {
+        -moz-transform: translateY(0);
+    }
 
-  100% {
-    -moz-transform: translateY(-100%);
-  }
+    100% {
+        -moz-transform: translateY(-100%);
+    }
 }
 
 @-ms-keyframes slideUp {
-  0% {
-    -ms-transform: translateY(0);
-  }
+    0% {
+        -ms-transform: translateY(0);
+    }
 
-  100% {
-    -ms-transform: translateY(-100%);
-  }
+    100% {
+        -ms-transform: translateY(-100%);
+    }
 }
 
 @keyframes slideUp {
-  0% {
-    transform: translateY(0);
-  }
+    0% {
+        transform: translateY(0);
+    }
 
-  100% {
-    transform: translateY(-100%);
-  }
+    100% {
+        transform: translateY(-100%);
+    }
 }
 
 .slideUp {
-  .animation-name(slideUp);
+    .animation-name(slideUp);
 }
 
-@-webkit-keyframes border-flash {
-    0%    { border-color: @border-col;  }
-    25%   { border-color: @border-col-flash; }
-    75%   { border-color: @border-col-flash; }
-    100%  { border-color: @border-col;  }
-}
-@-moz-keyframes border-flash {
-    0%    { border-color: @border-col;  }
-    25%   { border-color: @border-col-flash; }
-    75%   { border-color: @border-col-flash; }
-    100%  { border-color: @border-col;  }
-}
-@-o-keyframes border-flash {
-    0%    { border-color: @border-col;  }
-    25%   { border-color: @border-col-flash; }
-    75%   { border-color: @border-col-flash; }
-    100%  { border-color: @border-col;  }
-}
-@keyframes border-flash {
-    0%    { border-color: @border-col;  }
-    25%   { border-color: @border-col-flash; }
-    75%   { border-color: @border-col-flash; }
-    100%  { border-color: @border-col;  }
-}
+.flash-keyframes(border-flash; border-color; @border-col; @border-col-flash);
 
 .flash {
-    -webkit-animation: border-flash 1.0s infinite;
-    -moz-animation:    border-flash 1.0s infinite;
-    -o-animation:      border-flash 1.0s infinite;
-    animation:         border-flash 1.0s infinite;
+    .flash-gen(border-flash);
 }
 
-@err-col: #f00;
-
 @-webkit-keyframes error-flash {
-    0%    { border-color: @err-col; color: @err-col;  }
+    0%    { border-color: @col-error; color: @col-error;  }
     100%  { border-color: @op-col-sd; color: @op-col-sd; }
 }
 @-moz-keyframes error-flash {
-    0%    { border-color: @err-col; color: @err-col; }
+    0%    { border-color: @col-error; color: @col-error; }
     100%  { border-color: @op-col-sd; color: @op-col-sd; }
 }
 @-o-keyframes error-flash {
-    0%    { border-color: @err-col; color: @err-col; }
+    0%    { border-color: @col-error; color: @col-error; }
     100%  { border-color: @op-col-sd; color: @op-col-sd; }
 }
 @keyframes error-flash {
-    0%    { border-color: @err-col; color: @err-col; }
+    0%    { border-color: @col-error; color: @col-error; }
     100%  { border-color: @op-col-sd; color: @op-col-sd;  }
 }
 
 .flash-error {
-    -webkit-animation: error-flash 800ms;
-    -moz-animation:    error-flash 800ms;
-    -o-animation:      error-flash 800ms;
-    animation:         error-flash 800ms;
+    .anim(error-flash 800ms);
 }
+
+.flash-keyframes(sel-flash-anim-sd; background-color; @op-col-sd; @col-sel);
+.flash-keyframes(sel-flash-anim-inset; background-color; @op-col-inset; @col-sel);
+.flash-keyframes(sel-flash-anim-tilt; background-color; @op-col-tilt; @col-sel);
+.flash-keyframes(sel-flash-anim-reflect; background-color; @op-col-reflect; @col-sel);
+.flash-keyframes(sel-flash-anim-shift; background-color; @op-col-shift; @col-sel);
+.flash-keyframes(sel-flash-anim-stretch; background-color; @op-col-stretch; @col-sel);
+.flash-keyframes(sel-flash-anim-scale; background-color; @op-col-scale; @col-sel);
+.flash-keyframes(sel-flash-anim-delete; background-color; @col-bg; @col-sel);
+.flash-keyframes(sel-flash-anim-leaf; background-color; @op-col-leaf; @col-sel);
+
+.sel-flash-sd      { .flash-gen(sel-flash-anim-sd); }
+.sel-flash-inset   { .flash-gen(sel-flash-anim-inset); }
+.sel-flash-tilt    { .flash-gen(sel-flash-anim-tilt); }
+.sel-flash-reflect { .flash-gen(sel-flash-anim-reflect); }
+.sel-flash-shift   { .flash-gen(sel-flash-anim-shift); }
+.sel-flash-stretch { .flash-gen(sel-flash-anim-stretch); }
+.sel-flash-scale   { .flash-gen(sel-flash-anim-scale); }
+.sel-flash-delete  { .flash-gen(sel-flash-anim-delete); }
+.sel-flash-leaf    { .flash-gen(sel-flash-anim-leaf); }
