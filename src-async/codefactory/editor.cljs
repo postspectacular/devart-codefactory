@@ -1,6 +1,6 @@
 (ns codefactory.editor
   (:require-macros
-   [cljs.core.async.macros :as asm :refer [go]]
+   [cljs.core.async.macros :refer [go]]
    [thi.ng.macromath.core :as mm])
   (:require
    [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]
@@ -29,7 +29,10 @@
 
 ;; FIXME pass model/scene to next controller
 (defn submit-model
-  [local] (route/set-route! "objects" "submit"))
+  [bus local]
+  (let [{:keys [tree seed-id]} @local]
+    (async/publish bus :broadcast-tree [tree seed-id])
+    (route/set-route! "objects" "submit")))
 
 (defn load-model
   [bus config id]
@@ -140,22 +143,24 @@
              state)))))))
 
 (defn handle-buttons
-  [continue cancel module-timeout local]
-  (go
-    (loop []
-      (let [delay (- module-timeout (- (utils/now) (:last-action @local)))
-            [_ ch] (alts! [continue cancel (timeout delay)])]
-        (cond
-         (= continue ch)
-         (submit-model local)
+  [bus local module-timeout]
+  (let [[continue] (dom/event-channel "#edit-submit" "click")
+        [cancel]   (dom/event-channel "#edit-cancel" "click")]
+    (go
+      (loop []
+        (let [delay (- module-timeout (- (utils/now) (:last-action @local)))
+              [_ ch] (alts! [continue cancel (timeout delay)])]
+          (cond
+           (= continue ch)
+           (submit-model bus local)
 
-         (= cancel ch)
-         (route/set-route! "select" (:seed-id @local))
+           (= cancel ch)
+           (route/set-route! "select" (:seed-id @local))
 
-         (>= (- (utils/now) (:last-action @local)) module-timeout)
-         (route/set-route! "home")
+           (>= (- (utils/now) (:last-action @local)) module-timeout)
+           (route/set-route! "home")
 
-         :else (recur))))))
+           :else (recur)))))))
 
 (defn handle-reset-timeout
   [ch local]
@@ -166,20 +171,32 @@
         (recur)))))
 
 (defn handle-release
-  [ch bus local]
-  (go
-    (loop []
-      (let [_ (<! ch)
-            {:keys [subs events]} @local]
-        (debug :release-editor)
-        (swap! local assoc :active? false)
-        (async/unsubscribe-and-close-many bus subs)
-        (dorun (map dom/destroy-event-channel events))
-        (recur)))))
+  [bus local]
+  (let [ch (async/subscribe bus :release-editor)]
+    (go
+      (loop []
+        (let [_ (<! ch)
+              {:keys [subs events]} @local]
+          (debug :release-editor)
+          (swap! local assoc :active? false)
+          (async/unsubscribe-and-close-many bus subs)
+          (dorun (map dom/destroy-event-channel events))
+          (recur))))))
+
+(defn handle-tree-broadcast
+  [bus local]
+  (let [ch (async/subscribe bus :broadcast-tree)]
+    (go
+      (loop []
+        (let [[_ [tree seed]] (<! ch)]
+          (debug :editor-tree-received tree seed)
+          (swap! local assoc :tree tree :seed-id seed)
+          (recur))))))
 
 (defn render-loop
-  [ch local]
-  (let [render-fn (fn [& _] (render-scene local))]
+  [bus local]
+  (let [ch (async/subscribe bus :render-scene)
+        render-fn (fn [& _] (render-scene local))]
     (go
       (loop []
         (let [_ (<! ch)]
@@ -192,16 +209,18 @@
         {:keys [view dist]} (get-in config [:seeds id :initial-view])]
     (arcball/make-arcball :init view :dist dist)))
 
+(defn init-tree
+  [state local seed]
+  (-> (if-let [tree (:tree @local)]
+        (tree/recompute-tree-with-seed state tree seed)
+        (tree/init-tree-with-seed state seed))
+      (tree/update-meshes false)))
+
 (defn init
   [bus config]
   (let [canvas     (dom/by-id "edit-canvas")
         init       (async/subscribe bus :init-editor)
-        release    (async/subscribe bus :release-editor)
-        render     (async/subscribe bus :render-scene)
-        [continue] (dom/event-channel "#edit-submit" "click")
-        [cancel]   (dom/event-channel "#edit-cancel" "click")
-        local      (atom {})
-        module-timeout (get-in config [:timeouts :editor])]
+        local      (atom {})]
 
     (go
       (loop []
@@ -233,11 +252,11 @@
                  :last-action now
                  :start-time  now
                  :selection   nil
+                 :sel-type    nil
                  :sel-time    now
                  :time        now
                  :active?     true})
-               (tree/init-tree-with-seed (:seed-id params))
-               (tree/update-meshes false)))
+               (init-tree local (:seed-id params))))
           (tedit/init local bus config)
           (resize-canvas local)
           (render-scene local)
@@ -245,9 +264,10 @@
           (handle-resize        (:window-resize subs) local)
           (handle-reset-timeout (:user-action subs) local)
           (handle-arcball       canvas arcball events bus)
-          (handle-buttons       continue cancel module-timeout local)
+          (handle-buttons       bus local (get-in config [:timeouts :editor]))
           (recur))))
 
-    (render-loop render local)
-    (handle-release release bus local)
+    (render-loop bus local)
+    (handle-release bus local)
+    (handle-tree-broadcast bus local)
     ))

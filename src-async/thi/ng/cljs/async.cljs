@@ -1,6 +1,6 @@
 (ns thi.ng.cljs.async
   (:require-macros
-   [cljs.core.async.macros :as asm :refer [go]])
+   [cljs.core.async.macros :refer [go]])
   (:require
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.dom :as dom]

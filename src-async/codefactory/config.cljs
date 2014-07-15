@@ -62,7 +62,9 @@
 (def ^:export app
   {:modules {:home true
              :selector true
-             :editor true}
+             :editor true
+             :submit true
+             :thanks true}
    :webgl
    {:min-aa-res 480
     :bg-col [0.2 0.2 0.211 1]

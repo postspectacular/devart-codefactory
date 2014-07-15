@@ -1,11 +1,12 @@
 (ns codefactory.app
   (:require-macros
-   [cljs.core.async.macros :as asm :refer [go]])
+   [cljs.core.async.macros :refer [go]])
   (:require
    [codefactory.config :as config]
    [codefactory.home :as home]
    [codefactory.editor :as editor]
    [codefactory.selector :as selector]
+   [codefactory.submit :as submit]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
@@ -72,9 +73,10 @@
   [bus state config]
   (listen-dom bus)
   (let [modules (:modules config)]
-    (when (:home modules) (home/init bus config))
+    (when (:home modules)     (home/init bus config))
     (when (:selector modules) (selector/init bus config))
-    (when (:editor modules) (editor/init bus config)))
+    (when (:editor modules)   (editor/init bus config))
+    (when (:submit modules)   (submit/init bus config)))
   (init-router bus state (:routes config) (:default-route config)))
 
 (defn start

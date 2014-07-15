@@ -1,6 +1,6 @@
 (ns codefactory.selector
   (:require-macros
-   [cljs.core.async.macros :as asm :refer [go]]
+   [cljs.core.async.macros :refer [go]]
    [thi.ng.macromath.core :as mm])
   (:require
    [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]

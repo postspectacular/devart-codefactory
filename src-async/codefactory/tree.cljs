@@ -100,12 +100,9 @@
             [min-w max-p])))
       [min-w max-p])))
 
-(defn init-tree-with-seed
-  [state seed-id]
-  (let [;;tree (mg/subdiv :cols 5 :out {1 (mg/subdiv-inset :dir :z :inset 0.2)})
-        ;;tree (mg/reflect-seq [:e :e :e :e :e])
-        tree {}
-        nodes (mg/compute-tree-map (:seed (config/seeds (keyword seed-id))) tree)]
+(defn recompute-tree-with-seed
+  [state tree seed-id]
+  (let [nodes (mg/compute-tree-map (:seed (config/seeds (keyword seed-id))) tree)]
     (merge
      state
      {:tree tree
@@ -115,6 +112,10 @@
       :selection nil
       :tree-depth (compute-tree-depth nodes)
       :max-nodes-path (peek (compute-densest-branch tree [] 1 1 []))})))
+
+(defn init-tree-with-seed
+  [state seed-id]
+  (recompute-tree-with-seed state {} seed-id))
 
 (defn filter-leaves-and-selection
   [coll tree sel]
