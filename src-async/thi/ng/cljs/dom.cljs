@@ -24,13 +24,14 @@
   [el s] (dom/setTextContent el s))
 
 (defn set-class! [el name]
-  (classes/set el name))
+  (classes/set el name) el)
 
 (defn add-class!
-  [el name] (classes/add el name))
+  [el name]
+  (classes/add el name) el)
 
 (defn remove-class!
-  [el name] (classes/remove el name))
+  [el name] (classes/remove el name) el)
 
 (defn get-attrib
   [el attr] (.getAttribute el attr))
@@ -46,11 +47,13 @@
       (if attribs
         (let [[k v] (first attribs)]
           (.setAttribute el (name k) v)
-          (recur (next attribs)))))))
+          (recur (next attribs))))))
+  el)
 
 (defn set-style!
   [el opts]
-  (style/setStyle el opts))
+  (style/setStyle el opts)
+  el)
 
 (defn show
   [el] (style/setStyle el "display" "block"))

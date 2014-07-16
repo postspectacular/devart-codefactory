@@ -420,7 +420,7 @@
           (async/publish bus :user-action nil)
           (recur))))))
 
-(defn handle-viz-interactions
+(defn handle-map-interactions
   [events bus editor local]
   (let [canvas (:canvas @local)]
     (go
@@ -443,9 +443,6 @@
     (let [_ (<! ch)
           {:keys [viz canvas op-triggers nodes subs ctrls]} @local]
       (debug :tedit-release)
-      (dom/remove! viz)
-      (dom/remove! canvas)
-      (dom/remove-class! (dom/by-id "toolbar") "rollon")
       (remove-node-event-handlers bus nodes)
       (ops/remove-op-triggers bus op-triggers)
       (ops/remove-op-controls local)
@@ -457,15 +454,10 @@
   [editor bus config]
   (let [{:keys [gap margin height map-width map-height]} (:editor config)
         parent  (dom/by-id "edit-treemap")
-        viz     (dom/insert!
-                 (dom/create! "div" nil {:id "viz-container"})
-                 parent)
-        canvas  (dom/insert!
-                 (dom/create! "canvas" nil
-                              {:id "viz-map"
-                               :width map-width
-                               :height map-height})
-                 parent)
+        viz     (dom/by-id "viz-container")
+        canvas  (-> (dom/by-id "viz-map")
+                    (dom/set-attribs!
+                     {:width map-width :height map-height}))
         subs    (async/subscription-channels
                  bus [:node-toggle :node-selected :node-deselected
                       :commit-operator :cancel-operator :op-triggered
@@ -502,4 +494,4 @@
     (handle-commit-op       (:commit-operator subs)  bus local)
     (handle-cancel-op       (:cancel-operator subs)  bus editor local)
     (handle-release         (:release-editor subs)   bus local)
-    (handle-viz-interactions events bus editor local)))
+    (handle-map-interactions events bus editor local)))

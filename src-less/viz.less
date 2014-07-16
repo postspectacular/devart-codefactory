@@ -1,7 +1,30 @@
 @import "config.less";
+@import "mixins.less";
+
+#toolbar {
+    .flexbox(0 1 auto);
+    height: 90px;
+    line-height: 1.8;
+
+    img { height: 32px; }
+
+    .inner {
+        .flex-justify(center);
+        .flex-item { padding: 5px 10px; }
+        margin-top: 5px;
+    }
+
+    .slider {
+        height: 20px;
+        line-height: 6px;
+    }
+}
+
+#slider-label { margin-right: 1em; }
+#slider-value { margin-left: 1em; }
 
 #edit-treemap {
-    height: 300px;
+    height: @viz-container-height;
     -webkit-flex: 1 0 auto;
     -moz-flex: 1 0 auto;
     flex: 1 0 auto;
@@ -11,7 +34,7 @@
 
     width: 100%;
     overflow: hidden;
-    height: 300px;
+    height: @viz-height;
 
     div {
         position: fixed;
@@ -87,6 +110,46 @@
     left: 0;
     bottom: 70;
     width: 10px;
-    height: 300px;
+    height: @viz-height;
     background-color: @col-bg;
 }
+
+#op-container {
+    .flex(column nowrap);
+    height: @viz-height;
+    margin: 0 10px;
+    padding: 0px 40px;
+    border: 2px solid white;
+
+    &.op-sd { border-color: @op-col-sd; color: @op-col-sd;}
+    &.op-inset { border-color: @op-col-inset; color: @op-col-inset; }
+    &.op-stretch { border-color: @op-col-stretch; color: @op-col-stretch; }
+    &.op-reflect { border-color: @op-col-reflect; color: @op-col-reflect; }
+    &.op-shift { border-color: @op-col-shift; color: @op-col-shift; }
+    &.op-tilt { border-color: @op-col-tilt; color: @op-col-tilt; }
+    &.op-scale { border-color: @op-col-scale; color: @op-col-scale; }
+    &.op-delete { border-color: @op-col-delete; color: @op-col-delete; }
+    &.op-leaf { border-color: #ddd; color: #ddd; }
+}
+
+#op-ctrl {
+    .flex(row nowrap);
+
+    p {
+        text-transform: uppercase;
+    }
+}
+
+#op-sliders {
+    .flexbox(6 0 auto);
+}
+
+#op-buttons {
+    .flexbox(1 0 auto);
+    padding-top: 32px;
+    text-align: right;
+
+    div { margin: 10px 0; }
+}
+
+#op-help { margin-top: 2em; }

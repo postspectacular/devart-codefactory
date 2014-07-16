@@ -50,29 +50,6 @@ a:hover { color: lighten(@op-col-sd,10); }
     .inner {
         .flex(row nowrap);
     }
-
-    .toolbar {
-        .flexbox(0 1 auto);
-        height: 70px;
-        line-height: 1.8;
-
-        img {
-            height: 32px;
-        }
-
-        .inner {
-            min-height: 70px;
-
-            .flex-item {
-                padding: 5px 10px;
-            }
-        }
-
-        h1 {
-            font-size: 190%;
-            line-height: 10px;
-        }
-    }
 }
 
 .flex-content {
@@ -150,51 +127,22 @@ a:hover { color: lighten(@op-col-sd,10); }
     top: 45%;
 }
 
-#op-container {
-    .flex(column nowrap);
-    height: 300px;
-    margin: 0 10px;
-    padding: 0px 40px;
-    border: 2px solid white;
-
-    &.op-sd { border-color: @op-col-sd; color: @op-col-sd;}
-    &.op-inset { border-color: @op-col-inset; color: @op-col-inset; }
-    &.op-stretch { border-color: @op-col-stretch; color: @op-col-stretch; }
-    &.op-reflect { border-color: @op-col-reflect; color: @op-col-reflect; }
-    &.op-shift { border-color: @op-col-shift; color: @op-col-shift; }
-    &.op-tilt { border-color: @op-col-tilt; color: @op-col-tilt; }
-    &.op-scale { border-color: @op-col-scale; color: @op-col-scale; }
-    &.op-delete { border-color: @op-col-delete; color: @op-col-delete; }
-    &.op-leaf { border-color: #ddd; color: #ddd; }
-}
-
-#op-ctrl {
-    .flex(row nowrap);
-
-    p {
-        text-transform: uppercase;
-    }
-}
-
-#op-sliders {
-    .flexbox(6 0 auto);
-}
-
-#op-buttons {
-    .flexbox(1 0 auto);
-    padding-top: 32px;
-    text-align: right;
-
-    div { margin: 10px 0; }
-}
-
-#op-help { margin-top: 2em; }
-
 #login {
     h1 { margin-bottom: 14px; }
     .subtitle { margin-bottom: 2em; }
 
     .content div {
         margin: 0 auto 1em auto;
+    }
+}
+
+.section-label {
+    margin: 0 10px;
+    color: @col-section;
+    border-bottom: 1px solid @col-section;
+
+    .overview {
+        float: right;
+        margin-right: 144px;
     }
 }

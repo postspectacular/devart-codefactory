@@ -10,12 +10,6 @@
    [thi.ng.cljs.utils :as utils]
    [thi.ng.validate.core :as v]))
 
-(defn operator-color
-  [config op] (get-in config [:operators op :col]))
-
-(defn translate-mg-op
-  [config op] (get-in config [:mg->op op]))
-
 (def api-prefix "/api/1.0/")
 
 (def op-aliases
@@ -28,6 +22,15 @@
    :scale          :scale-side
    :delete         :delete
    :leaf           :leaf})
+
+(def op-aliases-reverse (zipmap (vals op-aliases) (keys op-aliases)))
+
+(defn operator-color
+  [config op] (get-in config [:operators op :col]))
+
+(defn translate-mg-op
+  [config op] (op-aliases-reverse op))
+
 
 (def seeds
   (->> {:box   {:seed (a/aabb 1)
@@ -88,9 +91,9 @@
     :margin 10
     :margin-bottom 70
     :map-width 200
-    :map-height 300
+    :map-height 245
     :min-label-width 50
-    :height 300
+    :height 245
     :min-size 24
     :map-bg "#222223"
     :map-selection "#a8a800"
@@ -118,8 +121,22 @@
                      :help "This operation splits the selected shape in the middle and tilts the resulting halves to form a chevron."}
     :delete         {:col "#aaaaaa" :label "delete"}}
 
+   :op-presets
+   [{:label "split x" :node (mg/subdiv :cols 2)}
+    {:label "split y" :node (mg/subdiv :rows 2)}
+    {:label "split z" :node (mg/subdiv :slices 2)}
+    {:label "inset x" :node (mg/subdiv-inset :dir :x :inset 0.5)}
+    {:label "inset y" :node (mg/subdiv-inset :dir :y :inset 0.5)}
+    {:label "inset z" :node (mg/subdiv-inset :dir :z :inset 0.5)}
+    {:label "mirror e" :node (mg/reflect :dir :e)}
+    {:label "mirror w" :node (mg/reflect :dir :e)}
+    {:label "mirror n" :node (mg/reflect :dir :e)}
+    {:label "mirror s" :node (mg/reflect :dir :e)}
+    {:label "mirror f" :node (mg/reflect :dir :e)}
+    {:label "mirror b" :node (mg/reflect :dir :e)}
+    ]
+   
    :op->mg op-aliases
-   :mg->op (zipmap (vals op-aliases) (keys op-aliases))
 
    :routes
    [{:match ["home"]
