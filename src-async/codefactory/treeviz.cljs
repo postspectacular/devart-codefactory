@@ -384,11 +384,14 @@
       (let [[_ op] (<! ch)
             {:keys [tree selection]} @editor]
         (when op
-          (debug :new-op op (:ctrl-active? @local))
-          (ops/remove-op-controls local)
-          (ops/handle-operator op editor local bus)
-          (async/publish bus :user-action nil)
-          (recur))))))
+          (let [orig (if (:ctrl-active? @local)
+                       (:orig-edit-node @local)
+                       (tree/node-at tree selection))]
+            (debug :new-op op)
+            (ops/remove-op-controls local)
+            (ops/handle-operator op editor local bus orig)
+            (async/publish bus :user-action nil)
+            (recur)))))))
 
 (defn handle-commit-op
   [ch bus local]

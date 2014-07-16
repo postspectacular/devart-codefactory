@@ -123,13 +123,13 @@
 (defn same-op?
   [op orig] (= (config/op-aliases op) (:op orig)))
 
-(defmulti handle-operator (fn [op editor local bus] op))
+(defmulti handle-operator (fn [op editor local bus orig] op))
 
 (defmethod handle-operator :default
   [op & _] (warn :not-implemented op))
 
 (defmethod handle-operator :delete
-  [_ editor local bus]
+  [_ editor local bus orig]
   (let [{:keys [tree selection]} @editor
         tree (tree/delete-node-at tree selection)]
     (reset! editor
@@ -141,9 +141,8 @@
     (async/publish bus :regenerate-scene nil)))
 
 (defmethod handle-operator :sd
-  [op editor local bus]
+  [op editor local bus orig]
   (let [{:keys [tree selection]} @editor
-        orig (tree/node-at tree selection)
         default (mg/subdiv :cols 2)
         {:keys [cols rows slices] :as args} (tree/op-args-or-default op orig default)
         children (if (same-op? op orig)
@@ -180,9 +179,8 @@
       :orig orig})))
 
 (defmethod handle-operator :inset
-  [op editor local bus]
+  [op editor local bus orig]
   (let [{:keys [tree node-cache selection]} @editor
-        orig      (tree/node-at tree selection)
         min-len   (tree/node-shortest-edge (node-cache selection))
         min-inset (* 0.025 min-len)
         max-inset (* 0.45 min-len)
@@ -211,9 +209,8 @@
       :orig orig})))
 
 (defmethod handle-operator :reflect
-  [op editor local bus]
+  [op editor local bus orig]
   (let [{:keys [tree selection]} @editor
-        orig (tree/node-at tree selection)
         default (mg/reflect :dir :e)
         {:keys [dir] :as args} (tree/op-args-or-default op orig default)
         children (if (same-op? op orig) (:out orig))]
@@ -231,9 +228,8 @@
       :orig orig})))
 
 (defmethod handle-operator :stretch
-  [op editor local bus]
+  [op editor local bus orig]
   (let [{:keys [tree selection]} @editor
-        orig (tree/node-at tree selection)
         default (mg/extrude-prop :dir :e :len 1.0)
         {:keys [dir len] :as args} (tree/op-args-or-default op orig default)
         children (if (same-op? op orig) (:out orig))]
@@ -257,9 +253,8 @@
       :orig orig})))
 
 (defmethod handle-operator :shift
-  [op editor local bus]
+  [op editor local bus orig]
   (let [{:keys [tree selection]} @editor
-        orig (tree/node-at tree selection)
         default (mg/split-displace :x :z :offset 0.1)
         {:keys [dir ref offset] :as args} (tree/op-args-or-default op orig default)
         children (if (same-op? op orig) (:out orig))]
@@ -288,9 +283,8 @@
       :orig orig})))
 
 (defmethod handle-operator :tilt
-  [op editor local bus]
+  [op editor local bus orig]
   (let [{:keys [tree selection]} @editor
-        orig (tree/node-at tree selection)
         default (mg/skew :n :f :offset 0.2)
         {:keys [side ref offset] :as args} (tree/op-args-or-default op orig default)
         children (if (same-op? op orig) (:out orig))]
@@ -317,9 +311,8 @@
       :orig orig})))
 
 (defmethod handle-operator :scale
-  [op editor local bus]
+  [op editor local bus orig]
   (let [{:keys [tree selection]} @editor
-        orig (tree/node-at tree selection)
         ctor (fn [side scale out]
                {:op :scale-side
                 :args {:side side :scale scale}
