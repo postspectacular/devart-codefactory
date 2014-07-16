@@ -50,3 +50,24 @@
 (defn subscription-channels
   [bus ids]
   (reduce (fn [subs id] (assoc subs id (subscribe bus id))) {} ids))
+
+(defn event-channel
+  [el id & [f]]
+  (let [el (if (string? el) (dom/query nil el) el)
+        ch (chan)
+        handler (if f
+                  (f ch)
+                  (fn [e] (.preventDefault e) (put! ch e)))]
+    (.addEventListener el id handler)
+    [ch handler id el]))
+
+(defn destroy-event-channel
+  [[ch handler ev el]]
+  (.removeEventListener el ev handler)
+  (close! ch))
+
+(defn event-publisher
+  [bus el ev id]
+  (let [handler (fn [e] (publish bus id e))]
+    (.addEventListener el ev handler)
+    [el ev handler]))

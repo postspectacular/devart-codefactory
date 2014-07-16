@@ -24,42 +24,32 @@
               (debug :error-response status body)
               (async/publish bus :submit-model-fail body))))
 
-(defn init
-  [bus config]
-  (let [init-chan    (async/subscribe bus :init-submit)
-        release-chan (async/subscribe bus :release-submit)
-        tree-chan    (async/subscribe bus :broadcast-tree)
-        success      (async/subscribe bus :submit-model-success)
-        [submit]     (dom/event-channel (dom/by-id "bt-submit") "click")
-        [cancel]     (dom/event-channel (dom/by-id "submit-cancel") "click")
-        local        (atom {})]
-    ;; TODO enable gallery button
+(defn handle-init
+  [bus]
+  (let [ch (async/subscribe bus :init-submit)]
     (go
       (loop []
-        (let [[_ [state]] (<! init-chan)
+        (let [[_ [state]] (<! ch)
               form (aget (.-forms js/document) "submit-art-form")]
-          (dom/set-attr! (aget form "title") {:value ""})
-          (dom/set-attr! (aget form "author") {:value ""})
-          (debug :init-submit)
+          (dom/set-attribs! (aget form "title") {:value ""})
+          (dom/set-attribs! (aget form "author") {:value ""})
+          (recur))))))
 
-          (recur))))
-
+(defn handle-tree
+  [bus local]
+  (let [ch (async/subscribe bus :broadcast-tree)]
     (go
       (loop []
-        (let [[_ [state]] (<! release-chan)]
-          (debug :release-submit)
-          (recur))))
-
-    (go
-      (loop []
-        (let [[_ [tree seed]] (<! tree-chan)]
-          (debug :tree-received tree)
+        (let [[_ [tree seed]] (<! ch)]
           (swap! local assoc :tree tree :seed seed)
-          (recur))))
+          (recur))))))
 
+(defn handle-submit
+  [bus local config]
+  (let [[ch] (async/event-channel (dom/by-id "bt-submit") "click")]
     (go
       (loop []
-        (<! submit)
+        (<! ch)
         (let [form   (aget (.-forms js/document) "submit-art-form")
               title  (.-value (aget form "title"))
               author (.-value (aget form "author"))
@@ -70,18 +60,33 @@
             :seed seed
             :title title
             :author author})
-          (recur))))
+          (recur))))))
 
+(defn handle-success
+  [bus]
+  (let [ch (async/subscribe bus :submit-model-success)]
     (go
       (loop []
-        (let [[_ data] (<! success)
+        (let [[_ data] (<! ch)
               {:keys [id]} (:body data)]
           (debug :success id)
           (route/set-route! "thanks" id)
-          (recur))))
-    
+          (recur))))))
+
+(defn handle-cancel
+  [bus local]
+  (let [[ch] (async/event-channel (dom/by-id "submit-cancel") "click")]
     (go
       (loop []
-        (<! cancel)
+        (<! ch)
         (route/set-route! "objects" "new" (:seed @local))
         (recur)))))
+
+(defn init
+  [bus config]
+  (let [local (atom {})]
+    (handle-init    bus)
+    (handle-tree    bus local)
+    (handle-submit  bus local config)
+    (handle-success bus)
+    (handle-cancel  bus local)))

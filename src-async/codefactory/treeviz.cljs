@@ -60,7 +60,7 @@
         id (node-id path)
         cls (str "op-" (name op))
         econf (:editor config)
-        [ch handler] (dom/event-channel el "click")]
+        [ch handler] (async/event-channel el "click")]
 
     (cond
      (= :leaf op)
@@ -468,10 +468,10 @@
                       :commit-operator :cancel-operator :op-triggered
                       :window-resize :regenerate-scene
                       :release-editor])
-        e-specs [(dom/event-channel canvas "mousedown" gest/mouse-gesture-start)
-                 (dom/event-channel canvas "mousemove" gest/mouse-gesture-move)
-                 (dom/event-channel canvas "mouseup" gest/gesture-end)
-                 (dom/event-channel canvas "touchmove" gest/touch-gesture-move)]
+        e-specs [(async/event-channel canvas "mousedown" gest/mouse-gesture-start)
+                 (async/event-channel canvas "mousemove" gest/mouse-gesture-move)
+                 (async/event-channel canvas "mouseup" gest/gesture-end)
+                 (async/event-channel canvas "touchmove" gest/touch-gesture-move)]
         events  (mapv first e-specs)
         local   (atom
                  {:config      config

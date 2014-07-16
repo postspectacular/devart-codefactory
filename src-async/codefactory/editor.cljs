@@ -144,8 +144,8 @@
 
 (defn handle-buttons
   [bus local module-timeout]
-  (let [[continue] (dom/event-channel "#edit-submit" "click")
-        [cancel]   (dom/event-channel "#edit-cancel" "click")]
+  (let [[continue] (async/event-channel "#edit-submit" "click")
+        [cancel]   (async/event-channel "#edit-cancel" "click")]
     (go
       (loop []
         (let [delay (- module-timeout (- (utils/now) (:last-action @local)))
@@ -228,14 +228,14 @@
               canvas  (dom/by-id "edit-canvas")
               subs    (async/subscription-channels
                        bus [:window-resize :user-action])
-              e-specs [(dom/event-channel canvas "mousedown" gest/mouse-gesture-start)
-                       (dom/event-channel canvas "mousemove" gest/mouse-gesture-move)
-                       (dom/event-channel js/window "mouseup" gest/gesture-end)
-                       (dom/event-channel js/window (dom/wheel-event-type)
+              e-specs [(async/event-channel canvas "mousedown" gest/mouse-gesture-start)
+                       (async/event-channel canvas "mousemove" gest/mouse-gesture-move)
+                       (async/event-channel js/window "mouseup" gest/gesture-end)
+                       (async/event-channel js/window (dom/wheel-event-type)
                                           gest/mousewheel-proxy)
-                       (dom/event-channel canvas "touchstart" gest/touch-gesture-start)
-                       (dom/event-channel canvas "touchmove" gest/touch-gesture-move)
-                       (dom/event-channel js/window "touchend" gest/gesture-end)]
+                       (async/event-channel canvas "touchstart" gest/touch-gesture-start)
+                       (async/event-channel canvas "touchmove" gest/touch-gesture-move)
+                       (async/event-channel js/window "touchend" gest/gesture-end)]
               events  (mapv first e-specs)
               arcball (init-arcball config params)
               now     (utils/now)]

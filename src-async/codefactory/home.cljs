@@ -13,7 +13,7 @@
   [bus config]
   (let [chan-i (async/subscribe bus :init-home)
         chan-r (async/subscribe bus :release-home)
-        [click] (dom/event-channel (dom/by-id "home-continue") "click")]
+        [click] (async/event-channel (dom/by-id "home-continue") "click")]
 
     (dom/add-listeners
      [["#fs-toggle" "click"

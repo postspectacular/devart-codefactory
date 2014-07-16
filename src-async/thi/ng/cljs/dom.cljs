@@ -1,6 +1,5 @@
 (ns thi.ng.cljs.dom
   (:require
-   [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]
    [goog.style :as style]
    [goog.dom :as dom]
    [goog.dom.classes :as classes]
@@ -119,48 +118,29 @@
   (set-style! el #js {:display "none"})
   (set-style! el #js {:display "block"}))
 
-(defn event-channel
-  [el id & [f]]
-  (let [el (if (string? el) (query nil el) el)
-        ch (chan)
-        handler (if f
-                  (f ch)
-                  (fn [e] (.preventDefault e) (put! ch e)))]
-    (.addEventListener el id handler)
-    [ch handler id el]))
-
-(defn destroy-event-channel
-  [[ch handler ev el]]
-  (.removeEventListener el ev handler)
-  (close! ch))
-
-(defn event-publisher
-  [bus el ev id]
-  (.addEventListener el ev (fn [e] (async/publish bus id e))))
+(defn- update-listeners*
+  [update! specs]
+  (loop [specs specs]
+    (if specs
+      (let [[el eid f cap?] (first specs)
+            el (if (string? el)
+                 (if (= "$window" el)
+                   js/window (query nil el))
+                 el)]
+        (when el (update! el (name eid) f cap?))
+        (recur (next specs)))))
+  specs)
 
 (defn add-listeners
   [specs]
-  (loop [specs specs]
-    (if specs
-      (let [[id eid f cap?] (first specs)
-            el (if (string? id)
-                 (if (= "$window" id)
-                   js/window (query nil id))
-                 id)]
-        (when el (.addEventListener el (name eid) f cap?))
-        (recur (next specs)))))
-  specs)
+  (update-listeners*
+   (fn [el eid f cap?]
+     (.addEventListener el eid f cap?))
+   specs))
 
 (defn remove-listeners
   [specs]
-  (loop [specs specs]
-    (if specs
-      (let [[id eid f] (first specs)
-            el (if (string? id)
-                 (if (= "$window" id)
-                   js/window (query nil id))
-                 id)]
-        (when el
-          (.removeEventListener el (name eid) f))
-        (recur (next specs)))))
-  specs)
+  (update-listeners*
+   (fn [el eid f _]
+     (.removeEventListener el eid f))
+   specs))

@@ -12,7 +12,7 @@
   [bus config]
   (let [init     (async/subscribe bus :init-submit-confirm)
         release  (async/subscribe bus :release-submit-confirm)
-        [cancel] (dom/event-channel (dom/by-id "thanks-cancel") "click")
+        [cancel] (async/event-channel (dom/by-id "thanks-cancel") "click")
         active?  (atom false)]
 
     (go

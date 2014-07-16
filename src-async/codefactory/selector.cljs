@@ -116,10 +116,10 @@
   [bus config]
   (let [init       (async/subscribe bus :init-selector)
         release    (async/subscribe bus :release-selector)
-        [left]     (dom/event-channel "#seed-left" "click")
-        [right]    (dom/event-channel "#seed-right" "click")
-        [continue] (dom/event-channel "#seed-continue" "click")
-        [cancel]   (dom/event-channel "#seed-cancel" "click")
+        [left]     (async/event-channel "#seed-left" "click")
+        [right]    (async/event-channel "#seed-right" "click")
+        [continue] (async/event-channel "#seed-continue" "click")
+        [cancel]   (async/event-channel "#seed-cancel" "click")
         local      (-> (webgl/init-webgl (dom/by-id "seed-canvas") (:webgl config))
                        (init-meshes (:seeds config))
                        (assoc :config config
