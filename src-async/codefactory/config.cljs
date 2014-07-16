@@ -112,7 +112,7 @@
     :stretch        {:col "#3fa6f2" :label "stretch"
                      :help "This operation stretches the selected shape into the direction of one of its six sides."}
     :reflect        {:col "#89c33f" :label "mirror"
-                     :help "This operation mirrors the selected shape on one of its six sides. Depending on the shape, repeated use with the same direction will result in rings."}
+                     :help "This operation mirrors the selected shape on one of its six sides.<br/>Depending on the shape, repeated use with the same direction will result in rings."}
     :leaf           {:col "#ffffff" :label "leaf"}
     :shift          {:col "#b9c500" :label "shift"
                      :help "This operation splits the selected shape in the middle and tilts the resulting halves to form a chevron."}

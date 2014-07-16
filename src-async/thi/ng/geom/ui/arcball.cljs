@@ -16,7 +16,9 @@
   (zoom-delta [_ delta])
   (zoom-abs [_ x])
   (update-view [_])
-  (get-view [_]))
+  (get-view [_])
+  (get-rotation [_])
+  (set-rotation [_ q]))
 
 (defn pos->sphere
   [p r x y]
@@ -50,7 +52,8 @@
             drag-rot (q/quat axis theta)]
         (set! curr-rot (g/* drag-rot click-rot))
         (update-view _))))
-  (up [_] (set! click-pos nil))
+  (up
+    [_] (set! click-pos nil))
   (resize
     [_ w h]
     (let [ww (/ w 2)
@@ -74,9 +77,16 @@
           target (vec3)
           up (g/transform V3Y q)]
       (set! view (mat/look-at eye target up))
-      ;;(prn :arcball (pr-str curr-rot) dist)
+      (prn :arcball (pr-str curr-rot) dist)
       view))
-  (get-view [_] (or view (update-view _))))
+  (get-view
+    [_] (or view (update-view _)))
+  (get-rotation
+    [_] curr-rot)
+  (set-rotation
+    [_ q]
+    (set! curr-rot q)
+    (update-view _)))
 
 (defn make-arcball
   [& {:keys [init dist min-dist max-dist radius center] :or {dist 2.75}}]

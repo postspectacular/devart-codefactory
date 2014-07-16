@@ -6,8 +6,10 @@
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.utils :as utils]
-   [thi.ng.common.math.core :as m]
-   [thi.ng.morphogen.core :as mg]))
+   [thi.ng.common.math.core :as m :refer [HALF_PI]]
+   [thi.ng.morphogen.core :as mg]
+   [thi.ng.geom.core.vector :refer [V3X V3Y V3Z]]
+   [thi.ng.geom.core.quaternion :as q]))
 
 (defn init-op-triggers
   [bus config]
@@ -197,9 +199,14 @@
       :sliders (slider-specs
                 ["direction" 0 2 (tree/direction-idx dir) 1
                  (fn [n {:keys [inset]}]
-                   (let [dir (tree/direction-ids (int n))]
-                     (mg/subdiv-inset
-                      :dir dir :inset inset :out children)))
+                   (async/publish
+                    bus :camera-update
+                    (q/quat
+                     ([[0.7071067811865475 0 0 0.7071067811865475]
+                       [0 0.7071067811865475 0 0.7071067811865475]
+                       [0 0 0.7071067811865475 0.7071067811865475]] (int n))))
+                   (mg/subdiv-inset
+                    :dir (tree/direction-ids (int n)) :inset inset :out children))
                  direction-label]
                 ["inset" min-inset max-inset inset step
                  (fn [n {:keys [dir]}]

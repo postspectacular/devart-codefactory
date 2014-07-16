@@ -449,7 +449,7 @@
       (remove-node-event-handlers bus nodes)
       (ops/remove-op-triggers bus op-triggers)
       (ops/remove-op-controls local)
-      (dorun (map dom/destroy-event-channel (:events @local)))
+      (dorun (map async/destroy-event-channel (:events @local)))
       (async/unsubscribe-and-close-many bus subs)
       (reset! local nil))))
 

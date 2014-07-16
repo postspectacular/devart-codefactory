@@ -107,7 +107,7 @@
           (recur))))))
 
 (defn handle-arcball
-  [canvas ball events bus]
+  [canvas ball events bus local]
   (go
     (loop [state nil]
       (let [[[e data] ch] (alts! events)]
@@ -117,7 +117,8 @@
              :drag-start (let [[x y] (:p data)
                                h (.-clientHeight canvas)]
                            (when (m/in-range? 0 h y)
-                             (arcball/down ball x (- h y)))
+                             (arcball/down ball x (- h y))
+                             (swap! local assoc :view-tween-cancel? true))
                            state)
              :drag-move  (let [[x y] (:p data)
                                h (.-clientHeight canvas)]
@@ -139,7 +140,10 @@
                             (async/publish bus :render-scene nil)
                             state)
 
-             :gesture-end (do (arcball/up ball) state)
+             :gesture-end (do
+                            (arcball/up ball)
+                            (swap! local assoc :view-tween-cancel? false)
+                            state)
              state)))))))
 
 (defn handle-buttons
@@ -180,7 +184,7 @@
           (debug :release-editor)
           (swap! local assoc :active? false)
           (async/unsubscribe-and-close-many bus subs)
-          (dorun (map dom/destroy-event-channel events))
+          (dorun (map async/destroy-event-channel events))
           (recur))))))
 
 (defn handle-tree-broadcast
@@ -191,6 +195,42 @@
         (let [[_ [tree seed]] (<! ch)]
           (debug :editor-tree-received tree seed)
           (swap! local assoc :tree tree :seed-id seed)
+          (recur))))))
+
+(defn init-view-tween
+  [local ball target]
+  (swap! local assoc
+         :view {:start (arcball/get-rotation ball)
+                :target target
+                :phase 0}))
+
+(defn end-view-tween
+  [local]
+  (swap! local assoc
+         :view-tween-cancel? false
+         :view-tween? false))
+
+(defn handle-view-update
+  [ch ball bus local]
+  (go
+    (loop []
+      (let [[_ target] (<! ch)]
+        (when target
+          (init-view-tween local ball target)
+          (when-not (:view-tween? @local)
+            (swap! local assoc :view-tween? true)
+            (go
+              (loop []
+                (<! (timeout 16))
+                (let [{{:keys [start target phase]} :view
+                       cancel? :view-tween-cancel?} @local]
+                  (if-not cancel?
+                    (do
+                      (arcball/set-rotation ball (g/mix start target (min phase 1.0)))
+                      (swap! local assoc-in [:view :phase] (m/mix phase 1.0 0.1))
+                      (render-scene local)
+                      (if (< phase 0.9995) (recur) (end-view-tween local)))
+                    (end-view-tween local))))))
           (recur))))))
 
 (defn render-loop
@@ -227,12 +267,14 @@
         (let [[_ [_ params]] (<! init)
               canvas  (dom/by-id "edit-canvas")
               subs    (async/subscription-channels
-                       bus [:window-resize :user-action])
+                       bus [:window-resize
+                            :user-action
+                            :camera-update])
               e-specs [(async/event-channel canvas "mousedown" gest/mouse-gesture-start)
                        (async/event-channel canvas "mousemove" gest/mouse-gesture-move)
                        (async/event-channel js/window "mouseup" gest/gesture-end)
                        (async/event-channel js/window (dom/wheel-event-type)
-                                          gest/mousewheel-proxy)
+                                            gest/mousewheel-proxy)
                        (async/event-channel canvas "touchstart" gest/touch-gesture-start)
                        (async/event-channel canvas "touchmove" gest/touch-gesture-move)
                        (async/event-channel js/window "touchend" gest/gesture-end)]
@@ -263,7 +305,8 @@
 
           (handle-resize        (:window-resize subs) local)
           (handle-reset-timeout (:user-action subs) local)
-          (handle-arcball       canvas arcball events bus)
+          (handle-arcball       canvas arcball events bus local)
+          (handle-view-update    (:camera-update subs) arcball bus local)
           (handle-buttons       bus local (get-in config [:timeouts :editor]))
           (recur))))
 
