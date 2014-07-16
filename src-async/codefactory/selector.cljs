@@ -119,7 +119,7 @@
         [left]     (async/event-channel "#seed-left" "click")
         [right]    (async/event-channel "#seed-right" "click")
         [continue] (async/event-channel "#seed-continue" "click")
-        [cancel]   (async/event-channel "#seed-cancel" "click")
+        ;;[cancel]   (async/event-channel "#seed-cancel" "click")
         local      (-> (webgl/init-webgl (dom/by-id "seed-canvas") (:webgl config))
                        (init-meshes (:seeds config))
                        (assoc :config config
@@ -159,11 +159,12 @@
           (go
             (loop []
               (let [delay (- module-timeout (- (utils/now) (:last-click @local)))
-                    [_ ch] (alts! [continue cancel (timeout delay)])]
+                    [_ ch] (alts! [continue (timeout delay)])]
+                (debug :timeout)
                 (cond
                  (= continue ch)
                  (start-editor local)
-                 (or (= cancel ch)
+                 (or #_(= cancel ch)
                      (>= (- (utils/now) (:last-click @local)) module-timeout))
                  (route/set-route! "home")
                  :else (recur)))))

@@ -176,7 +176,7 @@
     }
 
    :timeouts
-   {:selector 10000
+   {:selector 20000
     :editor (* 2 60 1000)
     :controller-release-delay 900}
 
