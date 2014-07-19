@@ -10,7 +10,7 @@
    [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
 
 (defn init
-  [bus config]
+  [bus]
   (let [chan-i (async/subscribe bus :init-home)
         chan-r (async/subscribe bus :release-home)
         [click] (async/event-channel (dom/by-id "home-continue") "click")]

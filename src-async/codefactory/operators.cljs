@@ -11,6 +11,18 @@
    [thi.ng.geom.core.vector :refer [V3X V3Y V3Z]]
    [thi.ng.geom.core.quaternion :as q]))
 
+(defn enable-slider
+  [op label val]
+  (let [el  (dom/query nil "#toolbar .slider")
+        cls (str "op-" (name op))]
+    (dom/remove-class! el "disabled")
+    (dom/add-class! el cls)
+    (dom/set-attribs!
+     (dom/by-id "slider-val")
+     {:class cls :disabled false})
+    (dom/set-text! (dom/by-id "slider-label") label)
+    (dom/set-text! (dom/by-id "slider-val-label") val)))
+
 (defn init-op-separator
   [el [w h]]
   (let [svg (dom/create-ns!
@@ -22,8 +34,8 @@
     [w]))
 
 (defn init-op-button
-  [el id node label [iconw iconh] width config bus]
-  (let [op  (config/translate-mg-op config (:op node))
+  [el id node label [iconw iconh] width bus]
+  (let [op  (config/translate-mg-op (:op node))
         svg (dom/create-ns!
              dom/svg-ns "svg" el
              {:width iconw
@@ -32,9 +44,9 @@
               :preserveAspectRatio "none"})
         espec (dom/add-listeners
                [[el "click" (fn [] (async/publish bus :op-triggered id))]])]
-    (dom/set-attribs! el {:id (name id) :class (str "op-" (name op) " tool")})
+    (dom/set-attribs! el {:id (name id) :class (str "op-" (name op) " tool disabled")})
     (-> (dom/create! "div" el) (dom/set-text! label))
-    (loop [paths (get-in config [:operators op :paths])]
+    (loop [paths (get-in config/app [:operators op :paths])]
       (when-let [p (first paths)]
         (-> (dom/create-ns! dom/svg-ns "path" svg {:d (:d p)})
             (dom/set-style! (clj->js (:style p))))
@@ -42,22 +54,22 @@
     [width espec]))
 
 (defn init-op-triggers
-  [bus config]
+  [bus]
   (let [tools (dom/query nil "#toolbar .tools")
         {icon-size :toolbar-icon-size
          op-width :toolbar-icon-width
-         sep-size :toolbar-sep-size} (:editor config)]
+         sep-size :toolbar-sep-size} (:editor config/app)]
     (reduce
      (fn [[total specs] [id {:keys [label node]}]]
        (let [el (dom/create! "div" tools)
              [w spec] (if (= :sep id)
                         (init-op-separator el sep-size)
-                        (init-op-button el id node label icon-size op-width config bus))
+                        (init-op-button el id node label icon-size op-width bus))
              total (+ total w)]
          (if spec
            [total (assoc specs id spec)]
            [total specs])))
-     [0 {}] (:op-presets config))))
+     [0 {}] (:op-presets config/app))))
 
 (defn remove-op-triggers
   [bus coll]
@@ -91,8 +103,8 @@
          (async/publish bus :render-scene nil)))]))
 
 (defn init-op-controls
-  [editor bus path op specs config]
-  (let [op-col (config/operator-color config op)]
+  [editor bus path op specs]
+  (let [op-col (config/operator-color op)]
     (dom/set-style! (dom/by-id "ctrl-ok-path") #js {:fill op-col})
     (dom/set-style! (dom/by-id "ctrl-cancel-path") #js {:stroke op-col})
     (->> specs
@@ -103,12 +115,12 @@
 (defn show-op-controls
   [{:keys [editor local bus default sliders op orig]}]
   (let [{:keys [tree selection]} @editor
-        {:keys [viz canvas config]} @local
+        {:keys [viz canvas]} @local
         path (mg/child-path selection)
         mg-op (config/op-aliases op)
         node (if (= mg-op (:op orig)) orig default)
         parent (dom/by-id "op-container")
-        listeners (init-op-controls editor bus path op sliders config)
+        listeners (init-op-controls editor bus path op sliders)
         listeners (conj listeners
                         ["#ctrl-ok" "click"
                          (fn [e]
@@ -122,7 +134,7 @@
     (dom/add-class! viz "hidden")
     (dom/add-class! canvas "hidden")
     (dom/set-attribs! parent {:class (str "op-" (name op))})
-    (dom/set-html! (dom/by-id "op-help") (get-in config [:operators op :help] ""))
+    (dom/set-html! (dom/by-id "op-help") (get-in config/app [:operators op :help] ""))
     (swap!
      editor assoc
      :sel-type op
@@ -136,13 +148,13 @@
     (swap! editor tree/update-meshes true)
     (async/publish bus :render-scene nil)))
 
-(defn remove-op-controls
+(defn release-op-controls
   [local]
   (let [{:keys [viz canvas ctrl-active? ctrl-listeners]} @local]
     (when ctrl-active?
       (swap! local assoc :ctrl-active? false :ctrl-listeners nil)
       (dom/remove-listeners ctrl-listeners)
-      (dom/add-class! (dom/by-id "op-container") "hidden")
+      (dom/add-class! (dom/by-id "slider-val") "hidden")
       (dom/set-html! (dom/by-id "op-sliders") "")
       (dom/remove-class! viz "hidden")
       (dom/remove-class! canvas "hidden"))))

@@ -2,6 +2,7 @@
   (:require-macros
    [cljs.core.async.macros :refer [go]])
   (:require
+   [codefactory.config :as config]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.io :as io]
@@ -11,12 +12,12 @@
    [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
 
 (defn submit-model
-  [bus config data]
+  [bus data]
   (io/request
-   :uri     (get-in config [:api :routes :submit-object])
+   :uri     (config/api-route :submit-object)
    :method  :post
    :edn?    true
-   :data    (merge (get-in config [:api :inject]) data)
+   :data    (config/inject-api-request-data data)
    :success (fn [status body]
               (debug :success-response status body)
               (async/publish bus :submit-model-success body))
@@ -45,7 +46,7 @@
           (recur))))))
 
 (defn handle-submit
-  [bus local config]
+  [bus local]
   (let [[ch] (async/event-channel (dom/by-id "bt-submit") "click")]
     (go
       (loop []
@@ -55,11 +56,10 @@
               author (.-value (aget form "author"))
               {:keys [tree seed]} @local]
           (submit-model
-           bus config
-           {:tree (pr-str tree)
-            :seed seed
-            :title title
-            :author author})
+           bus {:tree (pr-str tree)
+                :seed seed
+                :title title
+                :author author})
           (recur))))))
 
 (defn handle-success
@@ -83,10 +83,10 @@
         (recur)))))
 
 (defn init
-  [bus config]
+  [bus]
   (let [local (atom {})]
     (handle-init    bus)
     (handle-tree    bus local)
-    (handle-submit  bus local config)
+    (handle-submit  bus local)
     (handle-success bus)
     (handle-cancel  bus local)))

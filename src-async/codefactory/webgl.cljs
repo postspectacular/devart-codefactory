@@ -6,7 +6,6 @@
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.geom.webgl.core :as gl]
-   [thi.ng.geom.webgl.animator :as anim]
    [thi.ng.geom.webgl.buffers :as buf]
    [thi.ng.geom.webgl.shaders :as sh]
    [thi.ng.geom.webgl.utils :refer [loop-kv]]
@@ -99,8 +98,6 @@ void main() {
     :uniforms {:lightCol [0.75 0.75 0.75] :alpha 0.25}}
    })
 
-;; normal: gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
 (defn init-shader
   [gl preset-id]
   (let [preset (shader-presets preset-id)
@@ -129,9 +126,9 @@ void main() {
     (gl/enable gl gl/depth-test)
     (gl/disable gl gl/depth-test))
   (if (:blend state)
-    (do
-      (gl/enable gl gl/blend)
-      (.blendFunc gl gl/src-alpha gl/one))
+    (doto gl
+      (gl/enable gl/blend)
+      (.blendFunc gl/src-alpha gl/one))
     (gl/disable gl gl/blend)))
 
 (defn draw-meshes

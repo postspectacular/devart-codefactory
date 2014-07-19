@@ -4,6 +4,7 @@
    [thi.ng.macromath.core :as mm])
   (:require
    [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]
+   [codefactory.config :as config]
    [codefactory.color :as col]
    [codefactory.webgl :as webgl]
    [codefactory.shared :as shared]
@@ -108,31 +109,40 @@
   (let [{:keys [meshes selection]} @state
         spec (mesh-spec-for-id meshes selection)]
     (swap! state assoc :active? false)
-    #_(when detect/safari? ;; FIXME
-      (dom/add-class! (dom/by-id "seed-canvas") "hidden"))
     (route/set-route! "objects" "new" (name (:id spec)))))
 
+(defn center-click?
+  [e]
+  (let [canvas (dom/by-id "seed-canvas")
+        p (vec2 (.-clientX e) (.-clientY e))
+        c (g/* (vec2 (dom/size canvas)) 0.5)
+        d (g/dist c p)]
+    (<= d 120)))
+
 (defn init
-  [bus config]
+  [bus]
   (let [init       (async/subscribe bus :init-selector)
         release    (async/subscribe bus :release-selector)
         [left]     (async/event-channel "#seed-left" "click")
         [right]    (async/event-channel "#seed-right" "click")
         [continue] (async/event-channel "#seed-continue" "click")
+        [select]   (async/event-channel "#seed-canvas" "click")
         ;;[cancel]   (async/event-channel "#seed-cancel" "click")
-        local      (-> (webgl/init-webgl (dom/by-id "seed-canvas") (:webgl config))
-                       (init-meshes (:seeds config))
-                       (assoc :config config
-                              :module-config (:seed-select config)
-                              :bg-col (get-in config [:webgl :bg-col]))
+        glconf     (:webgl config/app)
+        mconf      (:seed-select config/app)
+        seeds      (:seeds config/app)
+        local      (-> (webgl/init-webgl (dom/by-id "seed-canvas") glconf)
+                       (init-meshes seeds)
+                       (assoc :module-config mconf
+                              :bg-col (:bg-col glconf))
                        atom)
-        module-timeout (get-in config [:timeouts :selector])]
+        module-timeout (config/timeout :selector)]
 
     ;; init
     (go
       (loop []
         (let [[_ [state params]] (<! init)
-              sel (or (seed->index (:seeds config) (:seed-id params)) 0)
+              sel (or (seed->index seeds (:seed-id params)) 0)
               resize (async/subscribe bus :window-resize)
               now (utils/now)]
           (debug :init-selector)
@@ -142,7 +152,7 @@
             :last-click now
             :start-time now
             :selection sel
-            :camx (* sel (get-in config [:seed-select :space]))
+            :camx (* sel (:space mconf))
             :active? true})
           (resize-canvas local)
           (render-scene local)
@@ -159,10 +169,10 @@
           (go
             (loop []
               (let [delay (- module-timeout (- (utils/now) (:last-click @local)))
-                    [_ ch] (alts! [continue (timeout delay)])]
+                    [e ch] (alts! [continue select (timeout delay)])]
                 (debug :timeout)
                 (cond
-                 (= continue ch)
+                 (or (= continue ch) (and (= select ch) (center-click? e)))
                  (start-editor local)
                  (or #_(= cancel ch)
                      (>= (- (utils/now) (:last-click @local)) module-timeout))

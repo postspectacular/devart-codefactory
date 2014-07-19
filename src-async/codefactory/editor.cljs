@@ -28,7 +28,6 @@
    [thi.ng.geom.ui.arcball :as arcball]
    [thi.ng.common.math.core :as m]))
 
-;; FIXME pass model/scene to next controller
 (defn submit-model
   [bus local]
   (let [{:keys [tree seed-id]} @local]
@@ -36,9 +35,9 @@
     (route/set-route! "objects" "submit")))
 
 (defn load-model
-  [bus config id]
+  [bus id]
   (io/request
-   :uri     (str (get-in config [:api-routes :get-object]) id)
+   :uri     (str (config/api-route :get-object) id)
    :method  :get
    :edn?    true
    :success (fn [_ data]
@@ -51,16 +50,16 @@
               (async/publish bus :editor-get-model-fail [status body]))))
 
 (defn init-model
-  [bus config {:keys [id seed-id]}]
+  [bus {:keys [id seed-id]}]
   (if id
-    (load-model bus config id)
+    (load-model bus id)
     (async/publish bus :editor-select-seed seed-id)))
 
 (defn render-scene
   [local]
   (when (:active? @local)
     (let [{:keys [gl arcball shaders proj display-meshes bounds
-                  selection sel-type start-time sel-time bg-col config]} @local
+                  selection sel-type start-time sel-time bg-col]} @local
                   now         (utils/now)
                   time        (mm/subm now start-time 0.001)
                   view        (arcball/get-view arcball)
@@ -77,7 +76,7 @@
          shared-unis
          (vals (dissoc display-meshes selection))
          [(display-meshes selection)]
-         (col/hex->rgb (config/operator-color config sel-type))
+         (col/hex->rgb (config/operator-color sel-type))
          time
          sel-time)
         (webgl/render-meshes
@@ -249,9 +248,9 @@
           (recur))))))
 
 (defn init-arcball
-  [config params]
+  [params]
   (let [id (keyword (:seed-id params))
-        {:keys [view dist]} (get-in config [:seeds id :initial-view])]
+        {:keys [view dist]} (get-in config/seeds [id :initial-view])]
     (arcball/make-arcball :init view :dist dist)))
 
 (defn init-tree
@@ -262,7 +261,7 @@
       (tree/update-meshes false)))
 
 (defn init
-  [bus config]
+  [bus]
   (let [canvas     (dom/by-id "edit-canvas")
         init       (async/subscribe bus :init-editor)
         local      (atom {})]
@@ -284,15 +283,15 @@
                        (async/event-channel canvas "touchmove" gest/touch-gesture-move)
                        (async/event-channel js/window "touchend" gest/gesture-end)]
               events  (mapv first e-specs)
-              arcball (init-arcball config params)
-              now     (utils/now)]
+              arcball (init-arcball params)
+              now     (utils/now)
+              glconf  (:webgl config/app)]
           (debug :init-editor params)
           (reset!
            local
-           (-> (webgl/init-webgl canvas (:webgl config))
+           (-> (webgl/init-webgl canvas glconf)
                (merge
-                {:config      config
-                 :bg-col      (get-in config [:webgl :bg-col])
+                {:bg-col      (:bg-col glconf)
                  :subs        subs
                  :events      e-specs
                  :arcball     arcball
@@ -304,7 +303,7 @@
                  :time        now
                  :active?     true})
                (init-tree local (:seed-id params))))
-          (viz/init local bus config)
+          (viz/init local bus)
           (resize-canvas local)
           (render-scene local)
 
@@ -312,10 +311,10 @@
           (handle-reset-timeout (:user-action subs) local)
           (handle-arcball       canvas arcball events bus local)
           (handle-view-update    (:camera-update subs) arcball bus local)
-          (handle-buttons       bus local (get-in config [:timeouts :editor]))
+          (handle-buttons       bus local (config/timeout :editor))
           (recur))))
 
-    (ops/init-op-triggers bus config)
+    (ops/init-op-triggers bus)
     (render-loop bus local)
     (handle-release bus local)
     (handle-tree-broadcast bus local)

@@ -2,6 +2,7 @@
   (:require-macros
    [cljs.core.async.macros :refer [go]])
   (:require
+   [codefactory.config :as config]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
@@ -9,10 +10,10 @@
    [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
 
 (defn init
-  [bus config]
+  [bus]
   (let [init     (async/subscribe bus :init-submit-confirm)
         release  (async/subscribe bus :release-submit-confirm)
-        [cancel] (async/event-channel (dom/by-id "thanks-cancel") "click")
+        [cancel] (async/event-channel (config/dom-component :thanks-cancel) "click")
         active?  (atom false)]
 
     (go
@@ -20,7 +21,7 @@
         (let [[_ [state params]] (<! init)]
           (reset! active? true)
           (go
-            (alts! [cancel (timeout 5000)])
+            (alts! [cancel (timeout (config/timeout :thanks))])
             (when @active?
               (route/set-route! "home"))))
         (recur)))

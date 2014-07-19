@@ -1,5 +1,6 @@
 (ns codefactory.config
   (:require
+   [thi.ng.cljs.dom :as dom]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.types.utils :as tu]
    [thi.ng.geom.core.vector :refer [vec3 V3Y V3Z]]
@@ -10,69 +11,69 @@
    [thi.ng.cljs.utils :as utils]
    [thi.ng.validate.core :as v]))
 
-(def api-prefix "/api/1.0/")
-
-(def op-aliases
-  {:sd             :sd
-   :inset          :sd-inset
-   :reflect        :reflect
-   :tilt           :skew
-   :shift          :split-displace2
-   :stretch        :ext-prop
-   :scale          :scale-side
-   :delete         :delete
-   :leaf           :leaf})
-
-(def op-aliases-reverse (zipmap (vals op-aliases) (keys op-aliases)))
-
-(defn operator-color
-  [config op] (get-in config [:operators op :col]))
-
-(defn translate-mg-op
-  [config op] (op-aliases-reverse op))
-
 (defn scale-op
   [side scale & [out]]
   {:op :scale-side
    :args {:side side :scale scale}
    :out (mg/operator-output 1 out false)})
 
-(def seeds
-  (->> {:box   {:seed (a/aabb 1)
-                :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2.5}}
-        :pent3 {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 5 5 0.25)) (- HALF_PI))
-                :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
-        :hex3  {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 6 12 0.25)) (- HALF_PI))
-                :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
-        :oct3  {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 8 8 0.25)) (- HALF_PI))
-                :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
-        :pent2 {:seed (cub/cuboid (mg/circle-lattice-seg 5 1 0.5))
-                :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2}}
-        :hex2  {:seed (cub/cuboid (mg/circle-lattice-seg 6 1 0.5))
-                :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2}}
-        :oct2  {:seed (cub/cuboid (mg/circle-lattice-seg 8 1 0.5))
-                :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.75}}
-        :tri2  {:seed (cub/cuboid (mg/circle-lattice-seg 3 1 0.4))
-                :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.5}}}
-       (reduce-kv
-        (fn [acc k v]
-          (assoc
-              acc k
-              (update-in
-               v [:seed]
-               #(->> [%]
-                     (tu/fit-all-into-bounds (a/aabb 1))
-                     first
-                     g/center
-                     mg/seed-box))))
-        {})))
+(declare app scale-op)
 
-(def ^:export app
-  {:modules {:home true
-             :selector true
-             :editor true
-             :submit true
-             :thanks true}
+(def api-prefix "/api/1.0/")
+
+(def op-aliases
+  {:sd      :sd
+   :inset   :sd-inset
+   :reflect :reflect
+   :tilt    :skew
+   :shift   :split-displace2
+   :stretch :ext-prop
+   :scale   :scale-side
+   :delete  :delete
+   :leaf    :leaf})
+
+(def op-aliases-reverse
+  (zipmap (vals op-aliases) (keys op-aliases)))
+
+(def seeds
+  (->>
+   {:box   {:seed (a/aabb 1)
+            :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2.5}}
+    :pent3 {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 5 5 0.25)) (- HALF_PI))
+            :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+    :hex3  {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 6 12 0.25)) (- HALF_PI))
+            :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+    :oct3  {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 8 8 0.25)) (- HALF_PI))
+            :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+    :pent2 {:seed (cub/cuboid (mg/circle-lattice-seg 5 1 0.5))
+            :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2}}
+    :hex2  {:seed (cub/cuboid (mg/circle-lattice-seg 6 1 0.5))
+            :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2}}
+    :oct2  {:seed (cub/cuboid (mg/circle-lattice-seg 8 1 0.5))
+            :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.75}}
+    :tri2  {:seed (cub/cuboid (mg/circle-lattice-seg 3 1 0.4))
+            :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.5}}}
+   (reduce-kv
+    (fn [acc k v]
+      (assoc
+          acc k
+          (update-in
+           v [:seed]
+           #(->> [%]
+                 (tu/fit-all-into-bounds (a/aabb 1))
+                 first
+                 g/center
+                 mg/seed-box))))
+    {})))
+
+(def ^:export default-config
+  {:modules
+   {:home true
+    :selector true
+    :editor true
+    :submit true
+    :thanks true}
+   
    :webgl
    {:min-aa-res 480
     :bg-col [0.2 0.2 0.211 1]
@@ -112,31 +113,34 @@
     :map-labels ["CODE OVERVIEW" "This area always shows" "the entire code structure." "Use this widget" "to navigate your code."]}
 
    :operators
-   {:sd             {:col "#56ffee" :label "split"
-                     :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z"}
-                             {:d "M0.5,0 L0.5,1"
-                              :style {:stroke-dasharray "3.75,7.5"
-                                      :stroke-dashoffset "0"}}]}
-    :tilt           {:col "#ffd641" :label "tilt"
-                     :paths [{:d "M0,1 L0.15,0 L1,0 L0.85,1 Z"}]}
-    :inset          {:col "#ed732a" :label "inset"
-                     :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0,0 L0.25,0.25 M1,0 L0.75,0.25 M1,1 L0.75,0.75 M0,1 L0.25,0.75"
-                              :style {:opacity "0.3"}}
-                             {:d "M0.25,0.25 L0.75,0.25 L0.75,0.75 L0.25,0.75 Z"}]}
-    :scale          {:col "#bd10d5" :label "scale"
-                     :paths [{:d "M0,0 L1,0 L1,1 L0,1 z" :style {:opacity "0.3"}}
-                             {:d "M0,1 L0,0.5 L0.5,0.5 L0.5,1 Z"}]}
-    :stretch        {:col "#3fa6f2" :label "stretch"
-                     :paths [{:d "M0,0.5 L1,0.5 L1,1 L0,1 Z"}
-                             {:d "M0,0.5 L0,0 L1,0 L1,0.5" :style {:opacity "0.3"}}]}
-    :reflect        {:col "#89c33f" :label "mirror"
-                     :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0.5,0 L0.5,1"}]}
-    :shift          {:col "#b9c500" :label "shift"
-                     :paths [{:d "M0.2,0.5 L0.8,0.5 L1,1 L0,1 Z"}
-                             {:d "M0.2,0.5 L0,0 L1,0 L0.8,0.5" :style {:opacity "0.3"}}]}
-    :delete         {:col "#aaaaaa" :label "delete"
-                     :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0,0 L1,1 M0,1 L1,0"}]}
-    :leaf           {:col "#ffffff" :label "leaf"}}
+   {:sd      {:col "#56ffee" :label "split"
+              :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z"}
+                      {:d "M0.5,0 L0.5,1"
+                       :style {:stroke-dasharray "3.75,7.5"
+                               :stroke-dashoffset "0"}}]}
+    :tilt    {:col "#ffd641" :label "tilt"
+              :paths [{:d "M0,1 L0.15,0 L1,0 L0.85,1 Z"}]}
+    :inset   {:col "#ed732a" :label "inset"
+              :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0,0 L0.25,0.25 M1,0 L0.75,0.25 M1,1 L0.75,0.75 M0,1 L0.25,0.75"
+                       :style {:opacity "0.3"}}
+                      {:d "M0.25,0.25 L0.75,0.25 L0.75,0.75 L0.25,0.75 Z"}]}
+    :scale   {:col "#bd10d5" :label "scale"
+              :paths [{:d "M0,0 L1,0 L1,1 L0,1 z"
+                       :style {:opacity "0.3"}}
+                      {:d "M0,1 L0,0.5 L0.5,0.5 L0.5,1 Z"}]}
+    :stretch {:col "#3fa6f2" :label "stretch"
+              :paths [{:d "M0,0.5 L1,0.5 L1,1 L0,1 Z"}
+                      {:d "M0,0.5 L0,0 L1,0 L1,0.5"
+                       :style {:opacity "0.3"}}]}
+    :reflect {:col "#89c33f" :label "mirror"
+              :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0.5,0 L0.5,1"}]}
+    :shift   {:col "#b9c500" :label "shift"
+              :paths [{:d "M0.2,0.5 L0.8,0.5 L1,1 L0,1 Z"}
+                      {:d "M0.2,0.5 L0,0 L1,0 L0.8,0.5"
+                       :style {:opacity "0.3"}}]}
+    :delete  {:col "#aaaaaa" :label "delete"
+              :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0,0 L1,1 M0,1 L1,0"}]}
+    :leaf    {:col "#ffffff" :label "leaf"}}
 
    :op-presets
    [[:splitx {:label "split x" :node (mg/subdiv :cols 2)}]
@@ -216,9 +220,14 @@
     [:login :home] -1
     }
 
+   :dom-components
+   {:slider-val "slider-val"
+    :thanks-cancel "thanks-cancel"}
+
    :timeouts
    {:selector 20000
     :editor (* 2 60 1000)
+    :thanks 5000
     :controller-release-delay 900}
 
    :api
@@ -231,12 +240,42 @@
           {}))}
    })
 
+(def ^:export app default-config)
+
 (def ^:export maintenance
-  (-> app
+  (-> default-config
       (assoc :modules nil
              :routes [(get-in app [:routes 0])]
              :routes-unsupported [(get-in app [:routes 0])])))
 
 (def ^:export barbican
-  (-> app
+  (-> default-config
       (assoc-in [:api :inject] {:location "barbican"})))
+
+(defn set-config!
+  [sym] (set! app (js/eval (aget js/window sym))))
+
+(defn operator
+  [op] (-> app :operators op))
+
+(defn operator-color
+  [op] (-> app :operators op :col))
+
+(defn translate-mg-op
+  [op] (op-aliases-reverse op))
+
+(def dom-component
+  (memoize (fn [id] (-> app :dom-components id dom/by-id))))
+
+(defn api-route
+  [id] (-> app :api :routes id))
+
+(defn inject-api-request-data
+  [data]
+  (merge (-> app :api :inject) data))
+
+(defn timeout
+  [id] (-> app :timeouts id))
+
+(defn transition
+  [a b] ((:dom-transitions app) [a b]))

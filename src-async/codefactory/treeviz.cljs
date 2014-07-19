@@ -51,28 +51,34 @@
         (recur)))))
 
 (defn make-node
-  [parent path op x y w h bus sel min-label-width config]
+  [parent path op x y w h bus sel min-label-width]
   (let [el (dom/create! "div" parent)
         id (node-id path)
         cls (str "op-" (name op))
-        econf (:editor config)
         [ch handler] (async/event-channel el "click")]
 
     (cond
      (= :leaf op)
-     (dom/set-html! el (if (empty? path) (:root-label econf) "+"))
+     (dom/set-html!
+      el (if (empty? path)
+           (get-in config/app [:editor :root-label])
+           "+"))
 
      (= :delete op)
-     (let [svg (dom/create-ns! dom/svg-ns "svg" el
-                               {:width "100%" :height "100%"
-                                :viewBox "0 0 1 1"
-                                :preserveAspectRatio "none"
-                                :class "op-delete"})]
-       (dom/create-ns! dom/svg-ns "path" svg {:d "M0,0 L1,1 M0,1 L1,0"})
-       (dom/create-ns! dom/svg-ns "rect" svg {:x 0 :y 0 :width 1 :height 1}))
+     (let [svg (dom/create-ns!
+                dom/svg-ns "svg" el
+                {:width "100%" :height "100%"
+                 :viewBox "0 0 1 1"
+                 :preserveAspectRatio "none"
+                 :class "op-delete"})]
+       (dom/create-ns!
+        dom/svg-ns "path" svg {:d "M0,0 L1,1 M0,1 L1,0"})
+       (dom/create-ns!
+        dom/svg-ns "rect" svg {:x 0 :y 0 :width 1 :height 1}))
+
      :else
      (when (>= w min-label-width)
-       (dom/set-text! el (get-in config [:operators op :label]))))
+       (dom/set-text! el (get-in config/app [:operators op :label]))))
 
     (doto el
       (dom/set-attribs! {:id id})
@@ -107,8 +113,8 @@
 
 (defn compute-viewport
   [local]
-  (let [{:keys [scroll config]} @local
-        {:keys [margin map-width map-height height]} (:editor config)]
+  (let [{:keys [scroll]} @local
+        {:keys [margin map-width map-height height]} (:editor config/app)]
     [(- (:x scroll))
      (:y scroll)
      (mm/madd margin -3 (- (.-innerWidth js/window) map-width))
@@ -124,8 +130,8 @@
 
 (defn compute-required-width
   [editor]
-  (let [{:keys [max-nodes-path tree config]} @editor
-        {:keys [gap margin min-size map-width]} (:editor config)
+  (let [{:keys [max-nodes-path tree]} @editor
+        {:keys [gap margin min-size map-width]} (:editor config/app)
         width (mm/madd margin -3 (- (.-innerWidth js/window) map-width))
         cw (cell-size-at tree max-nodes-path width gap)]
     (if (< cw min-size)
@@ -140,8 +146,8 @@
       width)))
 
 (defn generate-branch
-  [bus viz tree scroll sel config]
-  (let [{:keys [gap height margin-bottom min-label-width]} (:editor config)
+  [bus viz tree scroll sel]
+  (let [{:keys [gap height margin-bottom min-label-width]} (:editor config/app)
         [offx offy] (g/+ scroll
                          (.-offsetLeft viz)
                          (mm/sub (.-innerHeight js/window) height margin-bottom))]
@@ -151,11 +157,11 @@
             nc (count (:out node))
             wc (cell-size w gap nc)
             cy (mm/sub y h gap)
-            op (config/translate-mg-op config (tree/node-operator node))
+            op (config/translate-mg-op (tree/node-operator node))
             acc (conj acc
                       (make-node viz path op
                                  (+ x offx) (+ (- y h) offy) w h
-                                 bus sel min-label-width config))]
+                                 bus sel min-label-width))]
         (if (pos? nc)
           (loop [acc acc, i 0]
             (if (< i nc)
@@ -167,13 +173,13 @@
 (defn regenerate-viz
   [editor local bus]
   (tree/update-stats editor)
-  (let [{:keys [viz nodes width scroll config]} @local
+  (let [{:keys [viz nodes width scroll]} @local
         {:keys [tree tree-depth selection]} @editor
-        {:keys [gap margin height]} (:editor config)
+        {:keys [gap margin height]} (:editor config/app)
         width' (compute-required-width editor)
         node-height (cell-size height gap tree-depth)
         scroll (if (== width width') scroll (vec2))
-        layout (generate-branch bus viz tree scroll selection config)]
+        layout (generate-branch bus viz tree scroll selection)]
     (dom/set-html! viz "")
     (remove-node-event-handlers bus nodes)
     (swap!
@@ -191,9 +197,10 @@
           nc (tree/num-children-at tree path)
           cy (mm/sub y h gap)
           wc (cell-size w gap nc)]
-      (dom/set-style! el #js {:left (->px (+ x offx))
-                              :top (->px (+ (- y h) offy))
-                              :width (->px w)})
+      (dom/set-style!
+       el #js {:left  (->px (+ x offx))
+               :top   (->px (+ (- y h) offy))
+               :width (->px w)})
       (if (pos? nc)
         (loop [i 0]
           (when (< i nc)
@@ -202,9 +209,9 @@
 
 (defn resize-viz
   [editor local]
-  (let [{:keys [viz nodes scroll config]} @local
+  (let [{:keys [viz nodes scroll]} @local
         {:keys [node-cache tree tree-depth]} @editor
-        {:keys [gap margin margin-bottom height]} (:editor config)
+        {:keys [gap margin margin-bottom height]} (:editor config/app)
         width  (compute-required-width editor)
         node-height (cell-size height gap tree-depth)
         offset (g/+ scroll
@@ -215,26 +222,26 @@
 
 (def map-op-color
   (memoize
-   (fn [config op]
+   (fn [op]
      (debug :col-op op)
      (col/gray-offset-hex
-      (config/operator-color config op)
-      (get-in config [:editor :map-color-offset])))))
+      (config/operator-color op)
+      (get-in config/app [:editor :map-color-offset])))))
 
 (defn map-branch
-  [ctx tree path x y w h sel config]
+  [ctx tree path x y w h sel]
   (let [{:keys [op out] :as node} (tree/node-at tree path)
         nc (count out)
         wc (cell-size w 1 nc)
         col (if (= path sel)
-              (get-in config [:editor :map-selection])
-              (map-op-color config (config/translate-mg-op config (tree/node-operator node))))]
+              (get-in config/app [:editor :map-selection])
+              (map-op-color (config/translate-mg-op (tree/node-operator node))))]
     (set! (.-fillStyle ctx) col)
     (.fillRect ctx x (inc (- y h)) w h)
     (if (pos? nc)
       (loop [i 0]
         (when (< i nc)
-          (map-branch ctx tree (conj path i) (mm/madd i wc i 1 x) (- y h) wc h sel config)
+          (map-branch ctx tree (conj path i) (mm/madd i wc i 1 x) (- y h) wc h sel)
           (recur (inc i)))))))
 
 (defn draw-map-labels
@@ -251,9 +258,9 @@
 
 (defn regenerate-map
   [editor local]
-  (let [{:keys [ctx width height config]} @local
+  (let [{:keys [ctx width height]} @local
         {:keys [tree tree-depth selection]} @editor
-        {:keys [map-bg map-width map-height] :as econf} (:editor config)
+        {:keys [map-bg map-width map-height] :as econf} (:editor config/app)
         [vx vy vw vh :as vp] (map-focus-rect
                               (compute-viewport local)
                               width height map-width map-height)]
@@ -263,7 +270,7 @@
     (.fillRect ctx 0 0 map-width map-height)
     (map-branch ctx tree [] 0 map-height
                 map-width (/ map-height tree-depth)
-                selection config)
+                selection)
     (when (== 1 tree-depth)
       (let [{:keys [map-labels map-label-font map-label-size]} econf]
         (draw-map-labels ctx map-labels
@@ -275,8 +282,8 @@
 
 (defn scroll-viewport
   [editor local x]
-  (let [{:keys [width viewport config]} @local
-        {:keys [map-width map-height]} (:editor config)
+  (let [{:keys [width viewport]} @local
+        {:keys [map-width map-height]} (:editor config/app)
         [_ _ viz-width] (compute-viewport local)
         [_ _ vw] viewport
         sx (m/map-interval-clamped (mm/madd vw -0.5 x)
@@ -329,7 +336,7 @@
           (recur))))))
 
 (defn handle-node-selected
-  [ch bus editor local config]
+  [ch bus editor local]
   (let [toolbar (dom/by-id "toolbar")]
     (go
       (loop []
@@ -344,7 +351,7 @@
              :sel-type (->> path
                             (tree/node-at tree)
                             (tree/node-operator)
-                            (config/translate-mg-op config))
+                            (config/translate-mg-op))
              :display-meshes (tree/filter-leaves-and-selection meshes tree path))
             (highlight-selected-node el (:sel-type @editor))
             (dom/add-class! toolbar "rollon")
@@ -384,7 +391,7 @@
                        (:orig-edit-node @local)
                        (tree/node-at tree selection))]
             (debug :new-op op)
-            (ops/remove-op-controls local)
+            (ops/release-op-controls local)
             (ops/handle-operator op editor local bus orig)
             (async/publish bus :user-action nil)
             (recur)))))))
@@ -394,7 +401,7 @@
   (go
     (loop []
       (when (<! ch)
-        (ops/remove-op-controls local)
+        (ops/release-op-controls local)
         (async/publish bus :regenerate-scene nil)
         (async/publish bus :user-action nil)
         (recur)))))
@@ -405,13 +412,13 @@
     (loop []
       (when (<! ch)
         (let [{:keys [orig-edit-node]} @local
-              {:keys [tree selection config]} @editor]
+              {:keys [tree selection]} @editor]
           (swap!
            editor assoc
            :tree (tree/set-node-at tree selection orig-edit-node)
-           :sel-type (config/translate-mg-op config (tree/node-operator orig-edit-node)))
+           :sel-type (config/translate-mg-op (tree/node-operator orig-edit-node)))
           (swap! editor tree/update-meshes true)
-          (ops/remove-op-controls local)
+          (ops/release-op-controls local)
           (async/publish bus :regenerate-scene nil)
           (async/publish bus :user-action nil)
           (recur))))))
@@ -441,14 +448,14 @@
       (debug :tedit-release)
       (remove-node-event-handlers bus nodes)
       ;;(ops/remove-op-triggers bus op-triggers)
-      (ops/remove-op-controls local)
+      (ops/release-op-controls local)
       (dorun (map async/destroy-event-channel (:events @local)))
       (async/unsubscribe-and-close-many bus subs)
       (reset! local nil))))
 
 (defn init
-  [editor bus config]
-  (let [{:keys [gap margin height map-width map-height]} (:editor config)
+  [editor bus]
+  (let [{:keys [gap margin height map-width map-height]} (:editor config/app)
         parent  (dom/by-id "edit-treemap")
         viz     (dom/by-id "viz-container")
         canvas  (-> (dom/by-id "viz-map")
@@ -465,8 +472,7 @@
                  (async/event-channel canvas "touchmove" gest/touch-gesture-move)]
         events  (mapv first e-specs)
         local   (atom
-                 {:config      config
-                  :subs        subs
+                 {:subs        subs
                   :events      e-specs
                   :canvas      canvas
                   :ctx         (.getContext canvas "2d")
@@ -475,7 +481,6 @@
                   :nodes       {}
                   :selected-id nil
                   :height      height
-                  ;;:op-triggers (ops/init-op-triggers bus config)
                   })]
     (debug :init-tedit)
     (update-submit-button (:tree @editor))
@@ -485,7 +490,7 @@
     (handle-resize          (:window-resize subs)    bus editor local)
     (handle-regen           (:regenerate-scene subs) bus editor local)
     (handle-node-toggle     (:node-toggle subs)      bus local)
-    (handle-node-selected   (:node-selected subs)    bus editor local config)
+    (handle-node-selected   (:node-selected subs)    bus editor local)
     (handle-node-deselected (:node-deselected subs)  bus editor local)
     (handle-op-triggered    (:op-triggered subs)     bus editor local)
     (handle-commit-op       (:commit-operator subs)  bus local)
