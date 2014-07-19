@@ -13,15 +13,14 @@
 
 (defn enable-slider
   [op label val]
-  (let [el  (dom/query nil "#toolbar .slider")
+  (let [slider (config/dom-component :slider-range)
         cls (str "op-" (name op))]
-    (dom/remove-class! el "disabled")
-    (dom/add-class! el cls)
-    (dom/set-attribs!
-     (dom/by-id "slider-val")
-     {:class cls :disabled false})
-    (dom/set-text! (dom/by-id "slider-label") label)
-    (dom/set-text! (dom/by-id "slider-val-label") val)))
+    (doto (dom/parent slider)
+      (dom/remove-class! "disabled")
+      (dom/add-class! cls))
+    (dom/set-attribs! slider {:class cls :disabled false})
+    (dom/set-text! (config/dom-component :slider-label) label)
+    (dom/set-text! (config/dom-component :slider-val) val)))
 
 (defn init-op-separator
   [el [w h]]
@@ -35,41 +34,54 @@
 
 (defn init-op-button
   [el id node label [iconw iconh] width bus]
-  (let [op  (config/translate-mg-op (:op node))
-        svg (dom/create-ns!
-             dom/svg-ns "svg" el
-             {:width iconw
-              :height iconh
-              :viewBox "-0.05 -0.05 1.1 1.1"
-              :preserveAspectRatio "none"})
-        espec (dom/add-listeners
-               [[el "click" (fn [] (async/publish bus :op-triggered id))]])]
-    (dom/set-attribs! el {:id (name id) :class (str "op-" (name op) " tool disabled")})
+  (let [op     (config/translate-mg-op (:op node))
+        svg    (dom/create-ns!
+                dom/svg-ns "svg" el
+                {:width iconw
+                 :height iconh
+                 :viewBox "-0.05 -0.05 1.1 1.1"
+                 :preserveAspectRatio "none"})
+        [spec] (dom/add-listeners
+                [[el "click" (fn [] (async/publish bus :op-triggered id))]])]
+    (dom/set-attribs!
+     el {:id (name id) :class (str "op-" (name op) " tool disabled")})
     (-> (dom/create! "div" el) (dom/set-text! label))
     (loop [paths (get-in config/app [:operators op :paths])]
       (when-let [p (first paths)]
         (-> (dom/create-ns! dom/svg-ns "path" svg {:d (:d p)})
             (dom/set-style! (clj->js (:style p))))
         (recur (next paths))))
-    [width espec]))
+    [width spec]))
 
 (defn init-op-triggers
   [bus]
   (let [tools (dom/query nil "#toolbar .tools")
         {icon-size :toolbar-icon-size
-         op-width :toolbar-icon-width
-         sep-size :toolbar-sep-size} (:editor config/app)]
-    (reduce
-     (fn [[total specs] [id {:keys [label node]}]]
-       (let [el (dom/create! "div" tools)
-             [w spec] (if (= :sep id)
-                        (init-op-separator el sep-size)
-                        (init-op-button el id node label icon-size op-width bus))
-             total (+ total w)]
-         (if spec
-           [total (assoc specs id spec)]
-           [total specs])))
-     [0 {}] (:op-presets config/app))))
+         op-width :toolbar-op-width
+         sep-size :toolbar-sep-size} (:editor config/app)
+        [width specs] (reduce
+                       (fn [[total specs] [id {:keys [label node]}]]
+                         (let [el (dom/create! "div" tools)
+                               [w spec] (if (= :sep id)
+                                          (init-op-separator el sep-size)
+                                          (init-op-button
+                                           el id node label
+                                           icon-size op-width bus))
+                               total (+ total w)]
+                           (if spec
+                             [total (assoc specs id spec)]
+                             [total specs])))
+                       [0 {}] (:op-presets config/app))]
+    (dom/set-style! tools #js {:width width})
+    {:width width :specs specs}))
+
+(defn highlight-selected-preset
+  [id specs]
+  (loop [specs specs]
+    (if specs
+      (let [[k [el]] (first specs)]
+        ((if (= id k) dom/add-class! dom/remove-class!) el "selected")
+        (recur (next specs))))))
 
 (defn remove-op-triggers
   [bus coll]
@@ -131,10 +143,10 @@
                            (.preventDefault e)
                            (async/publish bus :cancel-operator nil))])]
     (dom/add-listeners listeners)
-    (dom/add-class! viz "hidden")
-    (dom/add-class! canvas "hidden")
-    (dom/set-attribs! parent {:class (str "op-" (name op))})
-    (dom/set-html! (dom/by-id "op-help") (get-in config/app [:operators op :help] ""))
+    ;;(dom/add-class! viz "hidden")
+    ;;(dom/add-class! canvas "hidden")
+    ;;(dom/set-attribs! parent {:class (str "op-" (name op))})
+    ;;(dom/set-html! (dom/by-id "op-help") (get-in config/app [:operators op :help] ""))
     (swap!
      editor assoc
      :sel-type op
@@ -175,13 +187,14 @@
 (defn same-op?
   [op orig] (= (config/op-aliases op) (:op orig)))
 
-(defmulti handle-operator (fn [op editor local bus orig] op))
+(defmulti handle-operator
+  (fn [op preset orig editor local bus] op))
 
 (defmethod handle-operator :default
   [op & _] (warn :not-implemented op))
 
 (defmethod handle-operator :delete
-  [_ editor local bus orig]
+  [_ preset orig editor local bus]
   (let [{:keys [tree selection]} @editor
         tree (tree/delete-node-at tree selection)]
     (reset! editor
@@ -193,41 +206,21 @@
     (async/publish bus :regenerate-scene nil)))
 
 (defmethod handle-operator :sd
-  [op editor local bus orig]
+  [op preset orig editor local bus]
   (let [{:keys [tree selection]} @editor
-        default (mg/subdiv :cols 2)
-        {:keys [cols rows slices] :as args} (tree/op-args-or-default op orig default)
+        {:keys [cols rows slices] :as args} (tree/op-args-or-default op orig preset)
         children (if (same-op? op orig)
                    (fn [c r s]
                      (if (and (== c cols) (== r rows) (== s slices))
                        (:out orig)))
                    (constantly nil))]
-    (debug :path selection :args args :default default)
+    (debug :path selection :args args :default preset)
     (show-op-controls
      {:editor editor
       :local local
       :bus bus
       :op op
-      :sliders (slider-specs
-                ["columns" 1 5 cols 1
-                 (fn [n {:keys [rows slices]}]
-                   (mg/subdiv
-                    :cols (int n) :rows rows :slices slices
-                    :out (children (int n) rows slices)))
-                 int-label]
-                ["rows" 1 5 rows 1
-                 (fn [n {:keys [cols slices]}]
-                   (mg/subdiv
-                    :cols cols :rows (int n) :slices slices
-                    :out (children (int n) rows slices)))
-                 int-label]
-                ["slices" 1 5 slices 1
-                 (fn [n {:keys [rows cols]}]
-                   (mg/subdiv
-                    :cols cols :rows rows :slices (int n)
-                    :out (children (int n) rows slices)))
-                 int-label])
-      :default default
+      :default preset
       :orig orig})))
 
 (defmethod handle-operator :inset

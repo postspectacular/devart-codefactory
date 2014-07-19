@@ -73,7 +73,7 @@
     :editor true
     :submit true
     :thanks true}
-   
+
    :webgl
    {:min-aa-res 480
     :bg-col [0.2 0.2 0.211 1]
@@ -221,8 +221,22 @@
     }
 
    :dom-components
-   {:slider-val "slider-val"
-    :thanks-cancel "thanks-cancel"}
+   {:home-continue "home-continue"
+    :fullscreen    "fs-toggle"
+    :seed-canvas   "seed-canvas"
+    :edit-canvas   "edit-canvas"
+    :edit-continue "edit-continue"
+    :toolbar       "toolbar"
+    :slider-range  "slider-val"
+    :slider-label  "slider-label"
+    :slider-val    "slider-val-label"
+    :viz-container "viz-container"
+    :viz-map       "viz-map"
+    :thanks-cancel "thanks-cancel"
+    :preview-label "preview-label"
+    :toolbar-label "toolbar-label"
+    :submit-button "bt-submit"
+    :submit-cancel "submit-cancel"}
 
    :timeouts
    {:selector 20000
@@ -260,6 +274,12 @@
 
 (defn operator-color
   [op] (-> app :operators op :col))
+
+(defn preset-node
+  [op]
+  (some
+   #(if (= op (first %)) (-> % second :node))
+   (:op-presets app)))
 
 (defn translate-mg-op
   [op] (op-aliases-reverse op))

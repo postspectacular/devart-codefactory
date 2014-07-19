@@ -296,7 +296,7 @@
 (defn update-submit-button
   [tree]
   ((if (seq tree) dom/remove-class! dom/add-class!)
-   (dom/by-id "edit-submit") "hidden"))
+   (config/dom-component :edit-continue) "hidden"))
 
 (defn handle-resize
   [ch bus editor local]
@@ -337,7 +337,7 @@
 
 (defn handle-node-selected
   [ch bus editor local]
-  (let [toolbar (dom/by-id "toolbar")]
+  (let [toolbar (config/dom-component :toolbar)]
     (go
       (loop []
         (let [[_ id] (<! ch)
@@ -361,7 +361,7 @@
 
 (defn handle-node-deselected
   [ch bus editor local]
-  (let [toolbar (dom/by-id "toolbar")]
+  (let [toolbar (config/dom-component :toolbar)]
     (go
       (loop []
         (let [[_ [id render?]] (<! ch)
@@ -380,21 +380,30 @@
               (regenerate-map editor local))
             (recur)))))))
 
+(defn orig-tree-node
+  [tree selection local]
+  (if (:ctrl-active? local)
+    (:orig-edit-node local)
+    (tree/node-at tree selection)))
+
 (defn handle-op-triggered
   [ch bus editor local]
   (go
     (loop []
-      (let [[_ op] (<! ch)
-            {:keys [tree selection]} @editor]
-        (when op
-          (let [orig (if (:ctrl-active? @local)
-                       (:orig-edit-node @local)
-                       (tree/node-at tree selection))]
-            (debug :new-op op)
-            (ops/release-op-controls local)
-            (ops/handle-operator op editor local bus orig)
-            (async/publish bus :user-action nil)
-            (recur)))))))
+      (let [[_ id] (<! ch)
+            {:keys [tree selection tools]} @editor]
+        (when id
+          (when selection
+            (let [preset (config/preset-node id)]
+              (debug :new-op id preset)
+              (ops/release-op-controls local)
+              (ops/highlight-selected-preset id (:specs tools))
+              (ops/handle-operator
+               (:op preset) preset
+               (orig-tree-node tree selection @local)
+               editor local bus)))
+          (async/publish bus :user-action nil)
+          (recur))))))
 
 (defn handle-commit-op
   [ch bus local]
@@ -456,11 +465,9 @@
 (defn init
   [editor bus]
   (let [{:keys [gap margin height map-width map-height]} (:editor config/app)
-        parent  (dom/by-id "edit-treemap")
-        viz     (dom/by-id "viz-container")
-        canvas  (-> (dom/by-id "viz-map")
-                    (dom/set-attribs!
-                     {:width map-width :height map-height}))
+        viz     (config/dom-component :viz-container)
+        canvas  (-> (config/dom-component :viz-map)
+                    (dom/set-attribs! {:width map-width :height map-height}))
         subs    (async/subscription-channels
                  bus [:node-toggle :node-selected :node-deselected
                       :commit-operator :cancel-operator :op-triggered

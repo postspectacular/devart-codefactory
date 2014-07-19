@@ -47,7 +47,7 @@
 
 (defn handle-submit
   [bus local]
-  (let [[ch] (async/event-channel (dom/by-id "bt-submit") "click")]
+  (let [[ch] (async/event-channel (config/dom-component :submit-button) "click")]
     (go
       (loop []
         (<! ch)
@@ -75,7 +75,7 @@
 
 (defn handle-cancel
   [bus local]
-  (let [[ch] (async/event-channel (dom/by-id "submit-cancel") "click")]
+  (let [[ch] (async/event-channel (config/dom-component :submit-cancel) "click")]
     (go
       (loop []
         (<! ch)

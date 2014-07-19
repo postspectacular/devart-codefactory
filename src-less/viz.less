@@ -1,10 +1,15 @@
 @import "config.less";
 @import "mixins.less";
 
-.op-tool(@class; @col) {
+.op-tool(@class; @col; @anim) {
     &.@{class} {
         svg { stroke: @col; }
         color: @col;
+
+        &.selected {
+            svg { .flash-gen(@anim); }
+            color: @col-sel;
+        }
 
         &:hover {
             svg { stroke: lighten(@col,20); }
@@ -12,6 +17,16 @@
         }
     }
 }
+
+.flash-keyframes(tool-flash-anim-sd; stroke; @op-col-sd; @col-sel);
+.flash-keyframes(tool-flash-anim-inset; stroke; @op-col-inset; @col-sel);
+.flash-keyframes(tool-flash-anim-tilt; stroke; @op-col-tilt; @col-sel);
+.flash-keyframes(tool-flash-anim-reflect; stroke; @op-col-reflect; @col-sel);
+.flash-keyframes(tool-flash-anim-shift; stroke; @op-col-shift; @col-sel);
+.flash-keyframes(tool-flash-anim-stretch; stroke; @op-col-stretch; @col-sel);
+.flash-keyframes(tool-flash-anim-scale; stroke; @op-col-scale; @col-sel);
+.flash-keyframes(tool-flash-anim-delete; stroke; @col-bg; @col-sel);
+.flash-keyframes(tool-flash-anim-leaf; stroke; @op-col-leaf; @col-sel);
 
 #toolbar {
     .flexbox(0 1 auto);
@@ -39,13 +54,13 @@
                 color: @op-col-disabled !important;
             }
 
-            .op-tool(op-sd; @op-col-sd);
-            .op-tool(op-inset; @op-col-inset);
-            .op-tool(op-stretch; @op-col-stretch);
-            .op-tool(op-reflect; @op-col-reflect);
-            .op-tool(op-shift; @op-col-shift);
-            .op-tool(op-tilt; @op-col-tilt);
-            .op-tool(op-scale; @op-col-scale);
+            .op-tool(op-sd; @op-col-sd; tool-flash-anim-sd);
+            .op-tool(op-inset; @op-col-inset; tool-flash-anim-inset);
+            .op-tool(op-stretch; @op-col-stretch; tool-flash-anim-stretch);
+            .op-tool(op-reflect; @op-col-reflect; tool-flash-anim-reflect);
+            .op-tool(op-shift; @op-col-shift; tool-flash-anim-shift);
+            .op-tool(op-tilt; @op-col-tilt; tool-flash-anim-tilt);
+            .op-tool(op-scale; @op-col-scale; tool-flash-anim-scale);
         }
 
         div.sep {

@@ -98,7 +98,7 @@
 
 (defn handle-resize
   [ch local]
-  (let [[preview toolbar] (map dom/by-id ["preview-label" "toolbar-label"])]
+  (let [[preview toolbar] (map config/dom-component [:preview-label :toolbar-label])]
     (go
       (loop []
         (let [[_ size] (<! ch)]
@@ -152,7 +152,7 @@
 
 (defn handle-buttons
   [bus local module-timeout]
-  (let [[continue] (async/event-channel "#edit-submit" "click")
+  (let [[continue] (async/event-channel "#edit-continue" "click")
         [cancel]   (async/event-channel "#edit-cancel" "click")]
     (go
       (loop []
@@ -262,14 +262,13 @@
 
 (defn init
   [bus]
-  (let [canvas     (dom/by-id "edit-canvas")
+  (let [canvas     (config/dom-component :edit-canvas)
         init       (async/subscribe bus :init-editor)
-        local      (atom {})]
-
+        local      (atom {:tools (ops/init-op-triggers bus)})]
+    
     (go
       (loop []
         (let [[_ [_ params]] (<! init)
-              canvas  (dom/by-id "edit-canvas")
               subs    (async/subscription-channels
                        bus [:window-resize
                             :user-action
@@ -301,7 +300,8 @@
                  :sel-type    nil
                  :sel-time    now
                  :time        now
-                 :active?     true})
+                 :active?     true
+                 :tools       (:tools @local)})
                (init-tree local (:seed-id params))))
           (viz/init local bus)
           (resize-canvas local)
@@ -314,7 +314,6 @@
           (handle-buttons       bus local (config/timeout :editor))
           (recur))))
 
-    (ops/init-op-triggers bus)
     (render-loop bus local)
     (handle-release bus local)
     (handle-tree-broadcast bus local)

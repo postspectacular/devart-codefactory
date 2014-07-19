@@ -112,12 +112,11 @@
     (route/set-route! "objects" "new" (name (:id spec)))))
 
 (defn center-click?
-  [e]
-  (let [canvas (dom/by-id "seed-canvas")
-        p (vec2 (.-clientX e) (.-clientY e))
-        c (g/* (vec2 (dom/size canvas)) 0.5)
+  [el e radius]
+  (let [p (vec2 (.-clientX e) (.-clientY e))
+        c (g/* (vec2 (dom/size el)) 0.5)
         d (g/dist c p)]
-    (<= d 120)))
+    (<= d radius)))
 
 (defn init
   [bus]
@@ -128,10 +127,11 @@
         [continue] (async/event-channel "#seed-continue" "click")
         [select]   (async/event-channel "#seed-canvas" "click")
         ;;[cancel]   (async/event-channel "#seed-cancel" "click")
+        canvas     (config/dom-component :seed-canvas)
         glconf     (:webgl config/app)
         mconf      (:seed-select config/app)
         seeds      (:seeds config/app)
-        local      (-> (webgl/init-webgl (dom/by-id "seed-canvas") glconf)
+        local      (-> (webgl/init-webgl canvas glconf)
                        (init-meshes seeds)
                        (assoc :module-config mconf
                               :bg-col (:bg-col glconf))
@@ -172,7 +172,7 @@
                     [e ch] (alts! [continue select (timeout delay)])]
                 (debug :timeout)
                 (cond
-                 (or (= continue ch) (and (= select ch) (center-click? e)))
+                 (or (= continue ch) (and (= select ch) (center-click? canvas e 120)))
                  (start-editor local)
                  (or #_(= cancel ch)
                      (>= (- (utils/now) (:last-click @local)) module-timeout))

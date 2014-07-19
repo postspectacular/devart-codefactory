@@ -2,6 +2,7 @@
   (:require-macros
    [cljs.core.async.macros :as asm :refer [go]])
   (:require
+   [codefactory.config :as config]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
@@ -11,15 +12,16 @@
 
 (defn init
   [bus]
-  (let [chan-i (async/subscribe bus :init-home)
-        chan-r (async/subscribe bus :release-home)
-        [click] (async/event-channel (dom/by-id "home-continue") "click")]
+  (let [chan-i  (async/subscribe bus :init-home)
+        chan-r  (async/subscribe bus :release-home)
+        [click] (async/event-channel (config/dom-component :home-continue) "click")
+        fs      (config/dom-component :fullscreen)]
 
     (dom/add-listeners
-     [["#fs-toggle" "click"
+     [[fs "click"
        (fn []
          (dom/request-fullscreen)
-         (dom/add-class! (dom/by-id "fs-toggle") "hidden"))]])
+         (dom/add-class! fs "hidden"))]])
     
     ;; TODO enable gallery button
     (go
