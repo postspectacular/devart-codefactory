@@ -36,7 +36,7 @@
 
             &.disabled {
                 svg { stroke: @op-col-disabled !important; }
-                color: @op-col-disabled;
+                color: @op-col-disabled !important;
             }
 
             .op-tool(op-sd; @op-col-sd);
@@ -88,10 +88,13 @@
     }
 
     .slider {
+        .flex(row nowrap);
         .flex-justify(center);
         height: 20px;
         line-height: 6px;
         margin-top: 5px;
+
+        div { .flexbox(1 0 auto); }
 
         &.disabled {
             color: @op-col-disabled;
@@ -107,11 +110,20 @@
                 }
             }
         }
+
+        .op-colors(color);
     }
 }
 
-#slider-label { margin-right: 1em; }
-#slider-value { margin-left: 1em; }
+#slider-label {
+    margin-right: 1em;
+    text-align: right;
+    text-transform: uppercase;
+}
+
+#slider-val-label {
+    margin-left: 1em;
+}
 
 #edit-treemap {
     height: @viz-container-height;

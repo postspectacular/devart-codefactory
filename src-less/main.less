@@ -67,8 +67,11 @@ a:hover { color: lighten(@op-col-sd,10); }
 }
 
 .preview-wrapper {
-    cursor: -webkit-grab;
     .flexbox(12 1 auto);
+}
+
+#editor .preview-wrapper {
+    cursor: -webkit-grab;
 }
 
 .buttonbar {
@@ -101,13 +104,6 @@ a:hover { color: lighten(@op-col-sd,10); }
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
-}
-
-#home-fs-toggle {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 100;
 }
 
 #seed-overlay {
