@@ -399,9 +399,11 @@
               (ops/release-op-controls local)
               (ops/highlight-selected-preset id (:specs tools))
               (ops/handle-operator
-               (:op preset) preset
+               (config/translate-mg-op (:op preset))
+               preset
                (orig-tree-node tree selection @local)
-               editor local bus)))
+               editor local bus)
+              (async/publish bus :regenerate-scene nil)))
           (async/publish bus :user-action nil)
           (recur))))))
 

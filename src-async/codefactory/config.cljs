@@ -227,9 +227,11 @@
     :edit-canvas   "edit-canvas"
     :edit-continue "edit-continue"
     :toolbar       "toolbar"
+    :slider        "slider"
+    :slider-wrapper "slider-wrapper"
     :slider-range  "slider-val"
     :slider-label  "slider-label"
-    :slider-val    "slider-val-label"
+    :slider-val-label    "slider-val-label"
     :viz-container "viz-container"
     :viz-map       "viz-map"
     :thanks-cancel "thanks-cancel"
@@ -286,6 +288,9 @@
 
 (def dom-component
   (memoize (fn [id] (-> app :dom-components id dom/by-id))))
+
+(defn dom-component*
+  [id] (-> app :dom-components id dom/by-id))
 
 (defn api-route
   [id] (-> app :api :routes id))

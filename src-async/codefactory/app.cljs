@@ -84,14 +84,9 @@
 
 (defn start
   []
-  (let [bus    (async/pub-sub
-                (fn [e]
-                  ;;(debug :topic (first e))
-                  (first e)))
+  (let [bus    (async/pub-sub first)
         config (config/set-config! "__APP_CONFIG__")
-        state  (atom
-                {:bus bus
-                 :ctrl-id :loader})
+        state  (atom {:bus bus :ctrl-id :loader})
         satisfied? true]
     ;; TODO add feature check and redirect if not-supported
     (if satisfied?

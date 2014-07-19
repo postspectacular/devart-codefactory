@@ -11,17 +11,6 @@
    [thi.ng.geom.core.vector :refer [V3X V3Y V3Z]]
    [thi.ng.geom.core.quaternion :as q]))
 
-(defn enable-slider
-  [op label val]
-  (let [slider (config/dom-component :slider-range)
-        cls (str "op-" (name op))]
-    (doto (dom/parent slider)
-      (dom/remove-class! "disabled")
-      (dom/add-class! cls))
-    (dom/set-attribs! slider {:class cls :disabled false})
-    (dom/set-text! (config/dom-component :slider-label) label)
-    (dom/set-text! (config/dom-component :slider-val) val)))
-
 (defn init-op-separator
   [el [w h]]
   (let [svg (dom/create-ns!
@@ -44,7 +33,7 @@
         [spec] (dom/add-listeners
                 [[el "click" (fn [] (async/publish bus :op-triggered id))]])]
     (dom/set-attribs!
-     el {:id (name id) :class (str "op-" (name op) " tool disabled")})
+     el {:id (name id) :class (str "op-" (name op) " tool")})
     (-> (dom/create! "div" el) (dom/set-text! label))
     (loop [paths (get-in config/app [:operators op :paths])]
       (when-let [p (first paths)]
@@ -52,6 +41,30 @@
             (dom/set-style! (clj->js (:style p))))
         (recur (next paths))))
     [width spec]))
+
+(defn highlight-selected-preset
+  [id specs]
+  (loop [specs specs]
+    (if specs
+      (let [[k [el]] (first specs)]
+        ((if (= id k) dom/add-class! dom/remove-class!) el "selected")
+        (recur (next specs))))))
+
+(defn disable-presets
+  [specs]
+  (loop [specs specs]
+    (if specs
+      (let [[k [el]] (first specs)]
+        (dom/add-class! el "disabled")
+        (recur (next specs))))))
+
+(defn enable-presets
+  [specs]
+  (loop [specs specs]
+    (if specs
+      (let [[k [el]] (first specs)]
+        (dom/remove-class! el "disabled")
+        (recur (next specs))))))
 
 (defn init-op-triggers
   [bus]
@@ -73,15 +86,8 @@
                              [total specs])))
                        [0 {}] (:op-presets config/app))]
     (dom/set-style! tools #js {:width width})
+    (disable-presets specs)
     {:width width :specs specs}))
-
-(defn highlight-selected-preset
-  [id specs]
-  (loop [specs specs]
-    (if specs
-      (let [[k [el]] (first specs)]
-        ((if (= id k) dom/add-class! dom/remove-class!) el "selected")
-        (recur (next specs))))))
 
 (defn remove-op-triggers
   [bus coll]
@@ -92,61 +98,42 @@
         (recur (next coll))))))
 
 (defn init-op-slider
-  [editor bus path i op {:keys [label min max value step listener format]}]
-  (let [el-id      (str "ctrl" i)
-        cls        (str "op-" (name op))
-        parent     (dom/by-id "op-sliders")
-        el-label   (dom/create! "p" parent {:id (str el-id "-label")})
-        el         (dom/create!
-                    "input" parent
-                    {:id el-id :type "range" :class cls
+  [editor bus path op
+   {:keys [label min max value step listener format] :as spec}]
+  (when spec
+    (let [cls      (str "op-" (name op))
+          parent   (config/dom-component :slider)
+          wrapper  (-> (config/dom-component :slider-wrapper) (dom/set-html! ""))
+          slider   (dom/create!
+                    "input" wrapper
+                    {:id "slider-val" :type "range" :class cls
                      :min min :max max :value value :step step})
-        set-label! (fn [x]
-                     (dom/set-text! el-label (str label " (" (format x) ")")))]
-    (set-label! value)
-    [el "change"
-     (fn [e]
-       (let [n (utils/parse-float (.-value el))]
-         (swap! editor assoc-in (cons :tree path)
-                (listener n (get-in (:tree @editor) (conj path :args))))
-         (set-label! n)
-         (debug :tree (:tree @editor))
-         (swap! editor tree/update-meshes false)
-         (async/publish bus :render-scene nil)))]))
-
-(defn init-op-controls
-  [editor bus path op specs]
-  (let [op-col (config/operator-color op)]
-    (dom/set-style! (dom/by-id "ctrl-ok-path") #js {:fill op-col})
-    (dom/set-style! (dom/by-id "ctrl-cancel-path") #js {:stroke op-col})
-    (->> specs
-         (map-indexed
-          (fn [i spec] (init-op-slider editor bus path i op spec)))
-         vec)))
+          val      (config/dom-component :slider-val-label)
+          set-val! (fn [x] (dom/set-text! val (format x)))]
+      (dom/remove-class! parent "disabled")
+      (dom/add-class! parent cls)
+      (dom/set-text! (config/dom-component :slider-label) label)
+      (set-val! value)
+      (dom/add-listeners
+       [[slider "change"
+         (fn []
+           (let [n (utils/parse-float (.-value slider))]
+             (swap! editor assoc-in (cons :tree path)
+                    (listener n (get-in (:tree @editor) (conj path :args))))
+             (set-val! n)
+             (debug :tree (:tree @editor))
+             (swap! editor tree/update-meshes false)
+             (async/publish bus :render-scene nil)))]]))))
 
 (defn show-op-controls
-  [{:keys [editor local bus default sliders op orig]}]
+  [{:keys [editor local bus default slider op orig]}]
   (let [{:keys [tree selection]} @editor
         {:keys [viz canvas]} @local
         path (mg/child-path selection)
         mg-op (config/op-aliases op)
         node (if (= mg-op (:op orig)) orig default)
         parent (dom/by-id "op-container")
-        listeners (init-op-controls editor bus path op sliders)
-        listeners (conj listeners
-                        ["#ctrl-ok" "click"
-                         (fn [e]
-                           (.preventDefault e)
-                           (async/publish bus :commit-operator nil))]
-                        ["#ctrl-cancel" "click"
-                         (fn [e]
-                           (.preventDefault e)
-                           (async/publish bus :cancel-operator nil))])]
-    (dom/add-listeners listeners)
-    ;;(dom/add-class! viz "hidden")
-    ;;(dom/add-class! canvas "hidden")
-    ;;(dom/set-attribs! parent {:class (str "op-" (name op))})
-    ;;(dom/set-html! (dom/by-id "op-help") (get-in config/app [:operators op :help] ""))
+        listeners (init-op-slider editor bus path op slider)]
     (swap!
      editor assoc
      :sel-type op
@@ -163,18 +150,18 @@
 (defn release-op-controls
   [local]
   (let [{:keys [viz canvas ctrl-active? ctrl-listeners]} @local]
+    (debug :release-op ctrl-active?)
     (when ctrl-active?
       (swap! local assoc :ctrl-active? false :ctrl-listeners nil)
       (dom/remove-listeners ctrl-listeners)
-      (dom/add-class! (dom/by-id "slider-val") "hidden")
-      (dom/set-html! (dom/by-id "op-sliders") "")
-      (dom/remove-class! viz "hidden")
-      (dom/remove-class! canvas "hidden"))))
+      (dom/set-attribs! (config/dom-component :slider) {:class "disabled"})
+      (dom/set-attribs!
+       (config/dom-component* :slider-range)
+       {:class "" :disabled true})
+      (dom/set-text! (config/dom-component :slider-label) "")
+      (dom/set-text! (config/dom-component :slider-val-label) ""))))
 
 (defrecord SliderSpec [label min max value step listener format])
-
-(defn slider-specs
-  [& specs] (mapv #(apply ->SliderSpec %) specs))
 
 (def float-label (utils/float-formatter 3))
 
@@ -224,13 +211,13 @@
       :orig orig})))
 
 (defmethod handle-operator :inset
-  [op editor local bus orig]
+  [op preset orig editor local bus]
   (let [{:keys [tree node-cache selection]} @editor
         min-len   (tree/node-shortest-edge (node-cache selection))
         min-inset (* 0.025 min-len)
         max-inset (* 0.45 min-len)
         step      (* 0.025 min-len)
-        default   (mg/subdiv-inset :dir :x :inset (m/mix min-inset max-inset 0.5))
+        default   (assoc-in preset [:args :inset] (m/mix min-inset max-inset 0.5))
         {:keys [dir inset] :as args} (tree/op-args-or-default op orig default)
         children (if (same-op? op orig) (:out orig))]
     (debug :path selection :minlen min-len :args args :default default)
@@ -239,29 +226,18 @@
       :local local
       :bus bus
       :op op
-      :sliders (slider-specs
-                ["direction" 0 2 (tree/direction-idx dir) 1
-                 (fn [n {:keys [inset]}]
-                   (async/publish
-                    bus :camera-update
-                    (q/quat
-                     ([[0.7071067811865475 0 0 0.7071067811865475]
-                       [0 0.7071067811865475 0 0.7071067811865475]
-                       [0 0 0.7071067811865475 0.7071067811865475]] (int n))))
-                   (mg/subdiv-inset
-                    :dir (tree/direction-ids (int n)) :inset inset :out children))
-                 direction-label]
-                ["inset" min-inset max-inset inset step
-                 (fn [n {:keys [dir]}]
-                   (mg/subdiv-inset :dir dir :inset n :out children))
-                 float-label])
+      :slider (->SliderSpec
+               "inset" min-inset max-inset inset step
+               (fn [n {:keys [dir]}]
+                 (mg/subdiv-inset :dir dir :inset n :out children))
+               float-label)
       :default default
       :orig orig})))
 
 (defmethod handle-operator :reflect
-  [op editor local bus orig]
+  [op preset orig editor local bus]
   (let [{:keys [tree selection]} @editor
-        default (mg/reflect :dir :e)
+        default preset
         {:keys [dir] :as args} (tree/op-args-or-default op orig default)
         children (if (same-op? op orig) (:out orig))]
     (debug :path selection :args args :default default)
@@ -270,15 +246,11 @@
       :local local
       :bus bus
       :op op
-      :sliders (slider-specs
-                ["direction" 0 5 (tree/face-idx dir) 1
-                 (fn [n _] (mg/reflect :dir (tree/face-ids (int n)) :out children))
-                 face-label])
       :default default
       :orig orig})))
 
 (defmethod handle-operator :stretch
-  [op editor local bus orig]
+  [op preset orig editor local bus]
   (let [{:keys [tree selection]} @editor
         default (mg/extrude-prop :dir :e :len 1.0)
         {:keys [dir len] :as args} (tree/op-args-or-default op orig default)
@@ -289,21 +261,16 @@
       :local local
       :bus bus
       :op op
-      :sliders (slider-specs
-                ["direction" 0 5 (tree/face-idx dir) 1
-                 (fn [n {:keys [len]}]
-                   (mg/extrude-prop
-                    :dir (tree/face-ids (int n)) :len len :out children))
-                 face-label]
-                ["length" 0.02 2.0 len 0.001
-                 (fn [n {:keys [dir]}]
-                   (mg/extrude-prop :dir dir :len n :out children))
-                 float-label])
+      :slider (->SliderSpec
+                "length" 0.02 2.0 len 0.001
+                (fn [n {:keys [dir]}]
+                  (mg/extrude-prop :dir dir :len n :out children))
+                float-label)
       :default default
       :orig orig})))
 
 (defmethod handle-operator :shift
-  [op editor local bus orig]
+  [op preset orig editor local bus]
   (let [{:keys [tree selection]} @editor
         default (mg/split-displace :x :z :offset 0.1)
         {:keys [dir ref offset] :as args} (tree/op-args-or-default op orig default)
@@ -314,28 +281,18 @@
       :local local
       :bus bus
       :op op
-      :sliders (slider-specs
-                ["split direction" 0 2 (tree/direction-idx dir) 1
-                 (fn [n {:keys [ref offset]}]
-                   (mg/split-displace
-                    (tree/direction-ids (int n)) ref :offset offset :out children))
-                 direction-label]
-                ["shift direction" 0 2 (tree/direction-idx dir) 1
-                 (fn [n {:keys [dir offset]}]
-                   (mg/split-displace
-                    dir (tree/direction-ids (int n)) :offset offset :out children))
-                 direction-label]
-                ["shift length" 0.0 1.0 offset 0.001
-                 (fn [n {:keys [dir ref]}]
-                   (mg/split-displace dir ref :offset n :out children))
-                 float-label])
+      :slider (->SliderSpec
+                "shift length" 0.0 1.0 offset 0.001
+                (fn [n {:keys [dir ref]}]
+                  (mg/split-displace dir ref :offset n :out children))
+                float-label)
       :default default
       :orig orig})))
 
 (defmethod handle-operator :tilt
-  [op editor local bus orig]
+  [op preset orig editor local bus]
   (let [{:keys [tree selection]} @editor
-        default (mg/skew :n :f :offset 0.2)
+        default preset
         {:keys [side ref offset] :as args} (tree/op-args-or-default op orig default)
         children (if (same-op? op orig) (:out orig))]
     (debug :path selection :args args :default default)
@@ -344,30 +301,22 @@
       :local local
       :bus bus
       :op op
-      :sliders (slider-specs
-                ["side" 0 5 (tree/face-idx side) 1
-                 (fn [n {:keys [ref offset]}]
-                   (mg/skew (tree/face-ids (int n)) ref :offset offset :out children))
-                 face-label]
-                ["direction" 0 5 (tree/face-idx ref) 1
-                 (fn [n {:keys [side offset]}]
-                   (mg/skew side (tree/face-ids (int n)) :offset offset :out children))
-                 face-label]
-                ["offset" 0.0 2.0 offset 0.001
-                 (fn [n {:keys [side ref]}]
-                   (mg/skew side ref :offset n :out children))
-                 float-label])
+      :slider (->SliderSpec
+                "offset" 0.0 2.0 offset 0.001
+                (fn [n {:keys [side ref]}]
+                  (mg/skew side ref :offset n :out children))
+                float-label)
       :default default
       :orig orig})))
 
 (defmethod handle-operator :scale
-  [op editor local bus orig]
+  [op preset orig editor local bus]
   (let [{:keys [tree selection]} @editor
         ctor (fn [side scale out]
                {:op :scale-side
                 :args {:side side :scale scale}
                 :out (mg/operator-output 1 out false)})
-        default (ctor :n 0.5 nil)
+        default preset
         {:keys [side scale] :as args} (tree/op-args-or-default op orig default)
         children (if (same-op? op orig) (:out orig))]
     (debug :path selection :args args :default default)
@@ -376,12 +325,9 @@
       :local local
       :bus bus
       :op op
-      :sliders (slider-specs
-                ["side" 0 5 (tree/face-idx side) 1
-                 (fn [n {:keys [scale]}] (ctor (tree/face-ids (int n)) scale children))
-                 face-label]
-                ["scale" 0.1 2.0 scale 0.001
-                 (fn [n {:keys [side]}] (ctor side n children))
-                 float-label])
+      :sliders (->SliderSpec
+                "scale" 0.1 2.0 scale 0.001
+                (fn [n {:keys [side]}] (ctor side n children))
+                float-label)
       :default default
       :orig orig})))

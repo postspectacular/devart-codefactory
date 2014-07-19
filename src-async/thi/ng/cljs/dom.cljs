@@ -20,10 +20,10 @@
   [e q] (.querySelectorAll (or e js/document) q))
 
 (defn set-html!
-  [el s] (set! (.-innerHTML el) s))
+  [el s] (set! (.-innerHTML el) s) el)
 
 (defn set-text!
-  [el s] (dom/setTextContent el s))
+  [el s] (dom/setTextContent el s) el)
 
 (defn set-class! [el name]
   (classes/set el name) el)
