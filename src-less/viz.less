@@ -1,6 +1,18 @@
 @import "config.less";
 @import "mixins.less";
 
+.op-tool(@class; @col) {
+    &.@{class} {
+        svg { stroke: @col; }
+        color: @col;
+
+        &:hover {
+            svg { stroke: lighten(@col,20); }
+            color: lighten(@col,20);
+        }
+    }
+}
+
 #toolbar {
     .flexbox(0 1 auto);
     height: 90px;
@@ -8,15 +20,93 @@
 
     img { height: 32px; }
 
-    .inner {
-        .flex-justify(center);
-        .flex-item { padding: 5px 10px; }
+    .tools {
         margin-top: 5px;
+        width: 200%;
+
+        div {
+            width: 65px;
+            display: inline-block;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        div.tool {
+            cursor: pointer;
+
+            &.disabled {
+                svg { stroke: @op-col-disabled !important; }
+                color: @op-col-disabled;
+            }
+
+            .op-tool(op-sd; @op-col-sd);
+            .op-tool(op-inset; @op-col-inset);
+            .op-tool(op-stretch; @op-col-stretch);
+            .op-tool(op-reflect; @op-col-reflect);
+            .op-tool(op-shift; @op-col-shift);
+            .op-tool(op-tilt; @op-col-tilt);
+            .op-tool(op-scale; @op-col-scale);
+        }
+
+        div.sep {
+            width: 15px !important;
+            height: 50px;
+            svg { stroke: #666; }
+        }
+
+        div#tools-left {
+            position: fixed;
+            left: 0px;
+            z-index: 200;
+            width: 110px;
+            height: 50px;
+            background: -moz-linear-gradient(left, rgba(51,51,54,1) 0%, rgba(51,51,54,1) 50%, rgba(51,51,54,0) 100%);
+            background: -webkit-linear-gradient(left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
+            background: -o-linear-gradient(left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
+            background: -ms-linear-gradient(left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
+            background: linear-gradient(to right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
+        }
+
+        div#tools-right {
+            position: fixed;
+            right: 0px;
+            z-index: 200;
+            width: 110px;
+            height: 50px;
+            background: -moz-linear-gradient(right, rgba(51,51,54,1) 0%, rgba(51,51,54,1) 50%, rgba(51,51,54,0) 100%);
+            background: -webkit-linear-gradient(right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
+            background: -o-linear-gradient(right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
+            background: -ms-linear-gradient(right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
+            background: linear-gradient(to left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
+        }
+
+        svg {
+            fill: none;
+            stroke-width: 0.05;
+            vector-effect: non-scaling-stroke;
+        }
     }
 
     .slider {
+        .flex-justify(center);
         height: 20px;
         line-height: 6px;
+        margin-top: 5px;
+
+        &.disabled {
+            color: @op-col-disabled;
+
+            input[type="range"] {
+                background-color: @op-col-disabled;
+
+                &::-webkit-slider-thumb, &::-moz-range-thumb {
+                    border-color: @op-col-disabled;
+                }
+                &::-moz-range-track {
+                    background-color: @op-col-disabled;
+                }
+            }
+        }
     }
 }
 
@@ -75,15 +165,17 @@
         h1, p { margin: 0; padding: 0 10px; }
 
         svg {
-            &.op-sd { stroke: @op-col-sd; }
-            &.op-inset { stroke: @op-col-inset; }
-            &.op-stretch { stroke: @op-col-stretch; }
-            &.op-reflect { stroke: @op-col-reflect; }
-            &.op-shift { stroke: @op-col-shift; }
-            &.op-tilt { stroke: @op-col-tilt; }
-            &.op-scale { stroke: @op-col-scale; }
+            /*
+              &.op-sd { stroke: @op-col-sd; }
+              &.op-inset { stroke: @op-col-inset; }
+              &.op-stretch { stroke: @op-col-stretch; }
+              &.op-reflect { stroke: @op-col-reflect; }
+              &.op-shift { stroke: @op-col-shift; }
+              &.op-tilt { stroke: @op-col-tilt; }
+              &.op-scale { stroke: @op-col-scale; }
+              &.op-leaf { stroke: white; }
+              */
             &.op-delete { stroke: @op-col-delete; }
-            &.op-leaf { stroke: white; }
 
             path, rect {
                 fill: none;

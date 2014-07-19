@@ -137,24 +137,19 @@
       <section id="editor" class="future" data-transition="concave">
         <div class="flex-container">
           <div class="flex-item preview-wrapper">
-            <div class="section-label preview-label">preview</div>
+            <div id="preview-label" class="section-label">preview</div>
+            <div id="toolbar-label" class="section-label">toolbar</div>
             <canvas id="edit-canvas"></canvas>
           </div>
           <div id="toolbar" class="flex-item">
-            <div class="inner">
-              <div class="flex-item center first"><a id="op-sd" href="#"><img src="/img/ops/split.svg"/></a><br/>SPLIT</div>
-              <div class="flex-item center"><a id="op-inset" href="#"><img src="/img/ops/inset.svg"/></a><br/>INSET</div>
-              <div class="flex-item center"><a id="op-reflect" href="#"><img src="/img/ops/mirror.svg"/></a><br/>MIRROR</div>
-              <div class="flex-item center"><a id="op-tilt" href="#"><img src="/img/ops/tilt.svg"/></a><br/>TILT</div>
-              <div class="flex-item center"><a id="op-stretch" href="#"><img src="/img/ops/ext.svg"/></a><br/>STRETCH</div>
-              <div class="flex-item center"><a id="op-scale" href="#"><img src="/img/ops/scale.svg"/></a><br/>SCALE</div>
-              <div class="flex-item center"><a id="op-shift" href="#"><img src="/img/ops/shift.svg"/></a><br/>SHIFT</div>
-              <div class="flex-item center last"><a id="op-delete" href="#"><img src="/img/ops/delete.svg"/></a><br/>DELETE</div>
+            <div class="tools">
+              <div id="tools-left"></div>
+              <div id="tools-right"></div>
             </div>
-            <div class="inner slider"><span id="slider-label">LABEL</span><input type="range" min="0" max="100" value="50"/><span id="slider-value">0.500</span></div>
+            <div class="slider center disabled"><span id="slider-label">LABEL</span><input type="range" min="0" max="100" value="50"/><span id="slider-value">0.500</span></div>
           </div>
           <div id="edit-treemap" class="flex-item">
-            <div class="section-label">code hierarchy<span class="overview">overview</span></div>
+            <div class="section-label">code hierarchy<span id="map-label">overview</span></div>
             <canvas id="viz-map"></canvas>
             <div id="viz-container"></div>
             <div id="viz-margin-left"></div>

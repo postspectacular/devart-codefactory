@@ -11,15 +11,53 @@
    [thi.ng.geom.core.vector :refer [V3X V3Y V3Z]]
    [thi.ng.geom.core.quaternion :as q]))
 
+(defn init-op-separator
+  [el [w h]]
+  (let [svg (dom/create-ns!
+             dom/svg-ns "svg" el
+             {:width w :height h :viewBox "0 0 1 1"
+              :preserveAspectRatio "none"})]
+    (dom/create-ns! dom/svg-ns "path" svg {:d "M0.5,0 L0.5,1"})
+    (dom/add-class! el "sep")
+    [w]))
+
+(defn init-op-button
+  [el id node label [iconw iconh] width config bus]
+  (let [op  (config/translate-mg-op config (:op node))
+        svg (dom/create-ns!
+             dom/svg-ns "svg" el
+             {:width iconw
+              :height iconh
+              :viewBox "-0.05 -0.05 1.1 1.1"
+              :preserveAspectRatio "none"})
+        espec (dom/add-listeners
+               [[el "click" (fn [] (async/publish bus :op-triggered id))]])]
+    (dom/set-attribs! el {:id (name id) :class (str "op-" (name op) " tool")})
+    (-> (dom/create! "div" el) (dom/set-text! label))
+    (loop [paths (get-in config [:operators op :paths])]
+      (when-let [p (first paths)]
+        (-> (dom/create-ns! dom/svg-ns "path" svg {:d (:d p)})
+            (dom/set-style! (clj->js (:style p))))
+        (recur (next paths))))
+    [width espec]))
+
 (defn init-op-triggers
   [bus config]
-  (mapv
-   (fn [op]
-     (let [el (dom/by-id (str "op-" (name op)))
-           f (fn [e] (.preventDefault e) (async/publish bus :op-triggered op))]
-       (.addEventListener el "click" f)
-       [el f]))
-   (keys (dissoc (:operators config) :leaf))))
+  (let [tools (dom/query nil "#toolbar .tools")
+        {icon-size :toolbar-icon-size
+         op-width :toolbar-icon-width
+         sep-size :toolbar-sep-size} (:editor config)]
+    (reduce
+     (fn [[total specs] [id {:keys [label node]}]]
+       (let [el (dom/create! "div" tools)
+             [w spec] (if (= :sep id)
+                        (init-op-separator el sep-size)
+                        (init-op-button el id node label icon-size op-width config bus))
+             total (+ total w)]
+         (if spec
+           [total (assoc specs id spec)]
+           [total specs])))
+     [0 {}] (:op-presets config))))
 
 (defn remove-op-triggers
   [bus coll]

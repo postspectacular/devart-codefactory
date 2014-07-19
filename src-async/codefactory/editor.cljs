@@ -9,11 +9,12 @@
    [codefactory.webgl :as webgl]
    [codefactory.shared :as shared]
    [codefactory.tree :as tree]
+   [codefactory.operators :as ops]
    [codefactory.treeviz :as viz]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
-   [thi.ng.cljs.utils :as utils]
+   [thi.ng.cljs.utils :as utils :refer [->px]]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.io :as io]
    [thi.ng.cljs.gestures :as gest]
@@ -89,22 +90,26 @@
         view-rect (r/rect 0 0 w h)]
     (dom/set-attribs! canvas {:width w :height h})
     (swap!
-     local merge
-     {:canvas-width w :canvas-height h
-      :view-rect view-rect
-      :proj (gl/perspective 45 view-rect 0.1 10)})
+     local assoc
+     :canvas-width w :canvas-height h
+     :view-rect view-rect
+     :proj (gl/perspective 45 view-rect 0.1 10))
     (gl/set-viewport gl view-rect)
     (arcball/resize arcball w h)))
 
 (defn handle-resize
   [ch local]
-  (go
-    (loop []
-      (let [[_ size] (<! ch)]
-        (when size
-          (resize-canvas local)
-          (render-scene local)
-          (recur))))))
+  (let [[preview toolbar] (map dom/by-id ["preview-label" "toolbar-label"])]
+    (go
+      (loop []
+        (let [[_ size] (<! ch)]
+          (when size
+            (resize-canvas local)
+            (render-scene local)
+            (dom/set-style! preview #js {:width (->px (- (:canvas-width @local) 20))})
+            (dom/set-style! toolbar #js {:width (->px (- (:canvas-width @local) 20))
+                                         :top   (->px (- (:canvas-height @local) 19))})
+            (recur)))))))
 
 (defn handle-arcball
   [canvas ball events bus local]
@@ -310,6 +315,7 @@
           (handle-buttons       bus local (get-in config [:timeouts :editor]))
           (recur))))
 
+    (ops/init-op-triggers bus config)
     (render-loop bus local)
     (handle-release bus local)
     (handle-tree-broadcast bus local)

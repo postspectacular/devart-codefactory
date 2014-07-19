@@ -11,7 +11,7 @@
    [codefactory.shared :as shared]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
-   [thi.ng.cljs.utils :as utils]
+   [thi.ng.cljs.utils :as utils :refer [->px]]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.gestures :as gest]
    [thi.ng.geom.core :as g]
@@ -19,10 +19,6 @@
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
    [thi.ng.geom.rect :as r]
    [thi.ng.common.math.core :as m]))
-
-(def svg-ns "http://www.w3.org/2000/svg")
-
-(defn ->px [x] (str x "px"))
 
 (def node-id
   (memoize (fn [path] (apply str (cons "node-" (interpose "-" path))))))
@@ -67,13 +63,13 @@
      (dom/set-html! el (if (empty? path) (:root-label econf) "+"))
 
      (= :delete op)
-     (let [svg (dom/create-ns! svg-ns "svg" el
+     (let [svg (dom/create-ns! dom/svg-ns "svg" el
                                {:width "100%" :height "100%"
                                 :viewBox "0 0 1 1"
                                 :preserveAspectRatio "none"
                                 :class "op-delete"})]
-       (dom/create-ns! svg-ns "path" svg {:d "M0,0 L1,1 M0,1 L1,0"})
-       (dom/create-ns! svg-ns "rect" svg {:x 0 :y 0 :width 1 :height 1}))
+       (dom/create-ns! dom/svg-ns "path" svg {:d "M0,0 L1,1 M0,1 L1,0"})
+       (dom/create-ns! dom/svg-ns "rect" svg {:x 0 :y 0 :width 1 :height 1}))
      :else
      (when (>= w min-label-width)
        (dom/set-text! el (get-in config [:operators op :label]))))
@@ -444,7 +440,7 @@
           {:keys [viz canvas op-triggers nodes subs ctrls]} @local]
       (debug :tedit-release)
       (remove-node-event-handlers bus nodes)
-      (ops/remove-op-triggers bus op-triggers)
+      ;;(ops/remove-op-triggers bus op-triggers)
       (ops/remove-op-controls local)
       (dorun (map async/destroy-event-channel (:events @local)))
       (async/unsubscribe-and-close-many bus subs)
@@ -479,7 +475,8 @@
                   :nodes       {}
                   :selected-id nil
                   :height      height
-                  :op-triggers (ops/init-op-triggers bus config)})]
+                  ;;:op-triggers (ops/init-op-triggers bus config)
+                  })]
     (debug :init-tedit)
     (update-submit-button (:tree @editor))
     (regenerate-viz editor local bus)

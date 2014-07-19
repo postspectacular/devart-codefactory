@@ -31,6 +31,11 @@
 (defn translate-mg-op
   [config op] (op-aliases-reverse op))
 
+(defn scale-op
+  [side scale & [out]]
+  {:op :scale-side
+   :args {:side side :scale scale}
+   :out (mg/operator-output 1 out false)})
 
 (def seeds
   (->> {:box   {:seed (a/aabb 1)
@@ -100,43 +105,62 @@
     :map-color-offset -0.33
     :map-label-font "14px \"Abel\",sans-serif"
     :map-label-size 18
+    :toolbar-icon-size [32 32]
+    :toolbar-op-width 65
+    :toolbar-sep-size [15 50]
     :root-label "<h1>TAP HERE TO BEGIN</h1><p>This is your workspace area.</p><p>Here, each shape is visualized as box.</p><p>Assign operations to these elements to create your artwork.</p><p>Each operation creates more shapes, forming a hierarchy.</p><p>You can also delete elements to create more complex forms.</p>"
     :map-labels ["CODE OVERVIEW" "This area always shows" "the entire code structure." "Use this widget" "to navigate your code."]}
 
    :operators
    {:sd             {:col "#56ffee" :label "split"
-                     :help "This operation splits the selected shape into smaller pieces using a regular grid. The shape can be split in all 3 directions."}
+                     :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z"}
+                             {:d "M0.5,0 L0.5,1"
+                              :style {:stroke-dasharray "3.75,7.5"
+                                      :stroke-dashoffset "0"}}]}
     :tilt           {:col "#ffd641" :label "tilt"
-                     :help "This operation moves one of the shape's sides in a given direction to create a possibly more diamond-like shape."}
+                     :paths [{:d "M0,1 L0.15,0 L1,0 L0.85,1 Z"}]}
     :inset          {:col "#ed732a" :label "inset"
-                     :help "This operation splits the selected shape into five smaller pieces by moving its corners towards the center. The resulting shapes are four walls and the core enclosed by them."}
+                     :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0,0 L0.25,0.25 M1,0 L0.75,0.25 M1,1 L0.75,0.75 M0,1 L0.25,0.75"
+                              :style {:opacity "0.3"}}
+                             {:d "M0.25,0.25 L0.75,0.25 L0.75,0.75 L0.25,0.75 Z"}]}
     :scale          {:col "#bd10d5" :label "scale"
-                     :help "This operation deforms the selected shape by scaling one of its sides. This is useful to create cones or rings (if combined with the MIRROR operation)."}
+                     :paths [{:d "M0,0 L1,0 L1,1 L0,1 z" :style {:opacity "0.3"}}
+                             {:d "M0,1 L0,0.5 L0.5,0.5 L0.5,1 Z"}]}
     :stretch        {:col "#3fa6f2" :label "stretch"
-                     :help "This operation stretches the selected shape into the direction of one of its six sides."}
+                     :paths [{:d "M0,0.5 L1,0.5 L1,1 L0,1 Z"}
+                             {:d "M0,0.5 L0,0 L1,0 L1,0.5" :style {:opacity "0.3"}}]}
     :reflect        {:col "#89c33f" :label "mirror"
-                     :help "This operation mirrors the selected shape on one of its six sides.<br/>Depending on the shape, repeated use with the same direction will result in rings."}
-    :leaf           {:col "#ffffff" :label "leaf"}
+                     :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0.5,0 L0.5,1"}]}
     :shift          {:col "#b9c500" :label "shift"
-                     :help "This operation splits the selected shape in the middle and tilts the resulting halves to form a chevron."}
-    :delete         {:col "#aaaaaa" :label "delete"}}
+                     :paths [{:d "M0.2,0.5 L0.8,0.5 L1,1 L0,1 Z"}
+                             {:d "M0.2,0.5 L0,0 L1,0 L0.8,0.5" :style {:opacity "0.3"}}]}
+    :delete         {:col "#aaaaaa" :label "delete"
+                     :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0,0 L1,1 M0,1 L1,0"}]}
+    :leaf           {:col "#ffffff" :label "leaf"}}
 
    :op-presets
-   [{:label "split x" :node (mg/subdiv :cols 2)}
-    {:label "split y" :node (mg/subdiv :rows 2)}
-    {:label "split z" :node (mg/subdiv :slices 2)}
-    {:label "inset x" :node (mg/subdiv-inset :dir :x :inset 0.5)}
-    {:label "inset y" :node (mg/subdiv-inset :dir :y :inset 0.5)}
-    {:label "inset z" :node (mg/subdiv-inset :dir :z :inset 0.5)}
-    {:label "mirror e" :node (mg/reflect :dir :e)}
-    {:label "mirror w" :node (mg/reflect :dir :e)}
-    {:label "mirror n" :node (mg/reflect :dir :e)}
-    {:label "mirror s" :node (mg/reflect :dir :e)}
-    {:label "mirror f" :node (mg/reflect :dir :e)}
-    {:label "mirror b" :node (mg/reflect :dir :e)}
+   [[:splitx {:label "split x" :node (mg/subdiv :cols 2)}]
+    [:splity {:label "split y" :node (mg/subdiv :rows 2)}]
+    [:splitz {:label "split z" :node (mg/subdiv :slices 2)}]
+    [:sep]
+    [:insetx {:label "inset x" :node (mg/subdiv-inset :dir :x :inset 0.5)}]
+    [:insety {:label "inset y" :node (mg/subdiv-inset :dir :y :inset 0.5)}]
+    [:insetz {:label "inset z" :node (mg/subdiv-inset :dir :z :inset 0.5)}]
+    [:sep]
+    [:mirrore {:label "mirror e" :node (mg/reflect :dir :e)}]
+    [:mirrorw {:label "mirror w" :node (mg/reflect :dir :w)}]
+    [:mirrorn {:label "mirror n" :node (mg/reflect :dir :n)}]
+    [:mirrors {:label "mirror s" :node (mg/reflect :dir :s)}]
+    [:mirrorf {:label "mirror f" :node (mg/reflect :dir :f)}]
+    [:mirrorb {:label "mirror b" :node (mg/reflect :dir :b)}]
+    [:sep]
+    [:scalee {:label "scale e" :node (scale-op :e 0.5)}]
+    [:scalew {:label "scale w" :node (scale-op :w 0.5)}]
+    [:scalen {:label "scale n" :node (scale-op :n 0.5)}]
+    [:scales {:label "scale s" :node (scale-op :s 0.5)}]
+    [:scalef {:label "scale f" :node (scale-op :f 0.5)}]
+    [:scaleb {:label "scale b" :node (scale-op :b 0.5)}]
     ]
-   
-   :op->mg op-aliases
 
    :routes
    [{:match ["home"]

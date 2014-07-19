@@ -1,5 +1,17 @@
 @import "config.less";
 
+.op-slider(@class; @col) {
+    input[type="range"].@{class}::-webkit-slider-thumb {
+        border-color: @col;
+    }
+    input[type="range"].@{class}::-moz-range-track {
+        background-color: @col;
+    }
+    input[type="range"].@{class}::-moz-range-thumb {
+        border-color: @col;
+    }
+}
+
 input[type="range"] {
     -webkit-appearance: none;
     width: 50%;
@@ -10,16 +22,7 @@ input[type="range"] {
         outline: 0;
     }
 
-    &.op-sd { background-color: @op-col-sd; }
-    &.op-inset { background-color: @op-col-inset; }
-    &.op-stretch { background-color: @op-col-stretch; }
-    &.op-reflect { background-color: @op-col-reflect; }
-    &.op-shift { background-color: @op-col-shift; }
-    &.op-tilt { background-color: @op-col-tilt; }
-    &.op-scale { background-color: @op-col-scale; }
-    &.op-delete { background-color: @op-col-delete; }
-    &.op-leaf { background-color: white; }
-
+    .op-colors(background-color);
 }
 
 input[type="range"]::-moz-range-track {
@@ -27,99 +30,34 @@ input[type="range"]::-moz-range-track {
     border: 1px solid white;
     height: 2px;
 }
-input[type="range"].op-sd::-moz-range-track {
-    background-color: @op-col-sd;
-}
-input[type="range"].op-inset::-moz-range-track {
-    background-color: @op-col-inset;
-}
-input[type="range"].op-ext::-moz-range-track {
-    background-color: @op-col-stretch;
-}
-input[type="range"].op-reflect::-moz-range-track {
-    background-color: @op-col-reflect;
-}
-input[type="range"].op-shift::-moz-range-track {
-    background-color: @op-col-shift;
-}
-input[type="range"].op-tilt::-moz-range-track {
-    background-color: @op-col-tilt;
-}
-input[type="range"].op-scale::-moz-range-track {
-    background-color: @op-col-scale;
-}
-input[type="range"].op-delete::-moz-range-track {
-    background-color: @op-col-delete;
-}
 
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none !important;
-    border-radius: 10px;
+    border-radius: 8px;
     background-color: @col-bg;
     border-width: 2px;
     border-style: solid;
-    height: 20px;
-    width: 20px;
-}
-
-input[type="range"].op-sd::-webkit-slider-thumb {
-    border-color: @op-col-sd;
-}
-input[type="range"].op-inset::-webkit-slider-thumb {
-    border-color: @op-col-inset;
-}
-input[type="range"].op-ext::-webkit-slider-thumb {
-    border-color: @op-col-stretch;
-}
-input[type="range"].op-reflect::-webkit-slider-thumb {
-    border-color: @op-col-reflect;
-}
-input[type="range"].op-shift::-webkit-slider-thumb {
-    border-color: @op-col-shift;
-}
-input[type="range"].op-tilt::-webkit-slider-thumb {
-    border-color: @op-col-tilt;
-}
-input[type="range"].op-scale::-webkit-slider-thumb {
-    border-color: @op-col-scale;
-}
-input[type="range"].op-delete::-webkit-slider-thumb {
-    border-color: @op-col-delete;
+    height: 16px;
+    width: 16px;
 }
 
 input[type="range"]::-moz-range-thumb {
     -moz-appearance: none;
-    border-radius: 14px;
+    border-radius: 7px;
     background-color: @col-bg !important;
     border-width: 2px;
     border-style: solid;
-    height: 24px;
-    width: 24px;
+    height: 12px;
+    width: 12px;
 }
-input[type="range"].op-sd::-moz-range-thumb {
-    border-color: @op-col-sd;
-}
-input[type="range"].op-inset::-moz-range-thumb {
-    border-color: @op-col-inset;
-}
-input[type="range"].op-ext::-moz-range-thumb {
-    border-color: @op-col-stretch;
-}
-input[type="range"].op-reflect::-moz-range-thumb {
-    border-color: @op-col-reflect;
-}
-input[type="range"].op-shift::-moz-range-thumb {
-    border-color: @op-col-shift;
-}
-input[type="range"].op-tilt::-moz-range-thumb {
-    border-color: @op-col-tilt;
-}
-input[type="range"].op-scale::-moz-range-thumb {
-    border-color: @op-col-scale;
-}
-input[type="range"].op-delete::-moz-range-thumb {
-    border-color: @op-col-delete;
-}
+
+.op-slider(op-sd; @op-col-sd);
+.op-slider(op-inset; @op-col-inset);
+.op-slider(op-stretch; @op-col-stretch);
+.op-slider(op-reflect; @op-col-reflect);
+.op-slider(op-tilt; @op-col-tilt);
+.op-slider(op-scale; @op-col-scale);
+.op-slider(op-shift; @op-col-shift);
 
 input[type="text"], input[type="password"], input[type="submit"] {
     width: 300px;
@@ -130,8 +68,8 @@ input[type="text"], input[type="password"], input[type="submit"] {
     text-align: center;
     text-transform: uppercase;
     background: transparent;
-    color: @op-col-sd;
-    border: 2px solid @op-col-sd;
+    color: @col-form;
+    border: 2px solid @col-form;
 }
 
 input[type="submit"] { cursor: pointer; }

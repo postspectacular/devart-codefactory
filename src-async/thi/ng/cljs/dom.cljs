@@ -5,6 +5,8 @@
    [goog.dom.classes :as classes]
    [cljs.core.async :refer [chan put! close!]]))
 
+(def svg-ns "http://www.w3.org/2000/svg")
+
 (defn wheel-event-type
   [] (if (.isDef js/goog (.-onwheel js/window)) "wheel" "mousewheel"))
 

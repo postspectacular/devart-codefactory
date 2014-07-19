@@ -1,9 +1,9 @@
 .prefixed(@prop; @val) {
-  -webkit-@{prop}: @val;
-  -moz-@{prop}: @val;
-  -o-@{prop}: @val;
-  -ms-@{prop}: @val;
-  @{prop}: @val;
+    -webkit-@{prop}: @val;
+    -moz-@{prop}: @val;
+    -o-@{prop}: @val;
+    -ms-@{prop}: @val;
+    @{prop}: @val;
 }
 
 .fullsize() {
@@ -97,4 +97,16 @@
 
 .flash-gen(@id) {
     .anim(e("@{id} 1.0s infinite"));
+}
+
+.op-colors(@prop) {
+    &.op-sd { @{prop}: @op-col-sd; }
+    &.op-inset { @{prop}: @op-col-inset; }
+    &.op-stretch { @{prop}: @op-col-stretch; }
+    &.op-reflect { @{prop}: @op-col-reflect; }
+    &.op-shift { @{prop}: @op-col-shift; }
+    &.op-tilt { @{prop}: @op-col-tilt; }
+    &.op-scale { @{prop}: @op-col-scale; }
+    &.op-delete { @{prop}: @op-col-delete; }
+    &.op-leaf { @{prop}: white; }
 }
