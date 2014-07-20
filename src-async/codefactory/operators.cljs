@@ -71,8 +71,9 @@
   [bus]
   (let [tools (dom/query nil "#toolbar .tools")
         {icon-size :toolbar-icon-size
-         op-width :toolbar-op-width
-         sep-size :toolbar-sep-size} (:editor config/app)
+         op-width  :toolbar-op-width
+         sep-size  :toolbar-sep-size
+         offset    :toolbar-margin-left} (:editor config/app)
         [width specs] (reduce
                        (fn [[total specs] [id {:keys [label node]}]]
                          (let [el (dom/create! "div" tools)
@@ -88,7 +89,7 @@
                        [0 {}] (:op-presets config/app))]
     (dom/set-style! tools #js {:width width})
     (disable-presets specs)
-    {:width width :specs specs}))
+    {:width width :offset offset :specs specs}))
 
 (defn remove-op-triggers
   [bus coll]
@@ -207,6 +208,7 @@
       :node node
       :orig orig})))
 
+;; TODO add cam alignment
 (defmethod handle-operator :inset
   [op preset orig editor local bus]
   (let [{:keys [node-cache selection]} @editor

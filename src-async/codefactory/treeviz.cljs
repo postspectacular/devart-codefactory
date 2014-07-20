@@ -373,6 +373,7 @@
             (swap! editor assoc :selection nil :sel-type nil)
             (unhighlight-selected-node (:el node) sel-type)
             (ops/disable-presets (:specs tools))
+            (ops/release-op-controls local)
             ;;(dom/remove-class! toolbar "rollon")
             (when render?
               (swap!
@@ -395,7 +396,7 @@
       (let [[_ id] (<! ch)
             {:keys [tree selection tools]} @editor]
         (when id
-          (when selection
+          (when (and selection (not (:active? tools)))
             (let [preset (config/preset-node id)]
               (debug :new-op id preset)
               (ops/release-op-controls local)

@@ -88,6 +88,10 @@
         [w h] (dom/size (dom/parent canvas))
         view-rect (r/rect 0 0 w h)]
     (dom/set-attribs! canvas {:width w :height h})
+    (dom/set-style! (config/dom-component :preview-label)
+                    #js {:width (->px (- w 20))})
+    (dom/set-style! (config/dom-component :toolbar-label)
+                    #js {:width (->px (- w 20)) :top (->px (- h 19))})
     (swap!
      local assoc
      :canvas-width w :canvas-height h
@@ -97,18 +101,15 @@
     (arcball/resize arcball w h)))
 
 (defn handle-resize
-  [ch local]
-  (let [[preview toolbar] (map config/dom-component [:preview-label :toolbar-label])]
-    (go
-      (loop []
-        (let [[_ size] (<! ch)]
-          (when size
-            (resize-canvas local)
-            (render-scene local)
-            (dom/set-style! preview #js {:width (->px (- (:canvas-width @local) 20))})
-            (dom/set-style! toolbar #js {:width (->px (- (:canvas-width @local) 20))
-                                         :top   (->px (- (:canvas-height @local) 19))})
-            (recur)))))))
+  [ch bus local]
+  (go
+    (loop []
+      (let [[_ size] (<! ch)]
+        (when size
+          (resize-canvas local)
+          (render-scene local)
+          (async/publish bus :update-toolbar (get-in @local [:tools :offset]))
+          (recur))))))
 
 (defn handle-arcball
   [canvas ball events bus local]
@@ -120,14 +121,12 @@
            (case e
              :drag-start (let [[x y] (:p data)
                                h (.-clientHeight canvas)]
-                           (when (m/in-range? 0 h y)
-                             (arcball/down ball x (- h y))
-                             (swap! local assoc :view-tween-cancel? true))
+                           (arcball/down ball x (- h y))
+                           (swap! local assoc :view-tween-cancel? true)
                            state)
              :drag-move  (let [[x y] (:p data)
                                h (.-clientHeight canvas)]
-                           (when (and (m/in-range? 0 h y)
-                                      (arcball/drag ball x (- h y)))
+                           (when (arcball/drag ball x (- h y))
                              (async/publish bus :render-scene nil))
                            state)
 
@@ -149,6 +148,43 @@
                             (swap! local assoc :view-tween-cancel? false)
                             state)
              state)))))))
+
+(defn handle-toolbar-scroll
+  [toolbar events bus local]
+  (go
+    (loop [state nil]
+      (let [[[e data] ch] (alts! events)]
+        (when e
+          (recur
+           (case e
+             :drag-start (let [offset (get-in @local [:tools :offset] 0)]
+                           (swap! local assoc-in [:tools :active?] true)
+                           [offset (:x (:p data))])
+             :drag-move  (if state
+                           (let [x' (:x (:p data))
+                                 [offset x] state
+                                 dx (- x' x)
+                                 offset (mm/madd dx 2 offset)]
+                             (async/publish bus :update-toolbar offset)
+                             state)
+                           state)
+             (do
+               (swap! local assoc-in [:tools :active?] false)
+               nil))))))))
+
+(defn handle-toolbar-update
+  [bus local toolbar]
+  (let [ch (async/subscribe bus :update-toolbar)]
+    (go
+      (loop []
+        (let [[_ offset] (<! ch)
+              {max :toolbar-margin-left
+               right :toolbar-margin-right} (:editor config/app)
+              min (- (.-innerWidth js/window) (get-in @local [:tools :width]) right)
+              offset (m/clamp offset min max)]
+          (swap! local assoc-in [:tools :offset] offset)
+          (dom/set-style! toolbar (clj->js {:marginLeft (->px offset)})))
+        (recur)))))
 
 (defn handle-buttons
   [bus local module-timeout]
@@ -263,28 +299,36 @@
 (defn init
   [bus]
   (let [canvas     (config/dom-component :edit-canvas)
+        toolbar    (dom/query nil "#toolbar .tools")
         init       (async/subscribe bus :init-editor)
         local      (atom {:tools (ops/init-op-triggers bus)})]
-    
+
     (go
       (loop []
         (let [[_ [_ params]] (<! init)
-              subs    (async/subscription-channels
-                       bus [:window-resize
-                            :user-action
-                            :camera-update])
-              e-specs [(async/event-channel canvas "mousedown" gest/mouse-gesture-start)
-                       (async/event-channel canvas "mousemove" gest/mouse-gesture-move)
-                       (async/event-channel js/window "mouseup" gest/gesture-end)
-                       (async/event-channel js/window (dom/wheel-event-type)
-                                            gest/mousewheel-proxy)
-                       (async/event-channel canvas "touchstart" gest/touch-gesture-start)
-                       (async/event-channel canvas "touchmove" gest/touch-gesture-move)
-                       (async/event-channel js/window "touchend" gest/gesture-end)]
-              events  (mapv first e-specs)
-              arcball (init-arcball params)
-              now     (utils/now)
-              glconf  (:webgl config/app)]
+              subs     (async/subscription-channels
+                        bus [:window-resize
+                             :user-action
+                             :camera-update])
+              c-specs  [(async/event-channel canvas "mousedown" gest/mouse-gesture-start)
+                        (async/event-channel canvas "mousemove" gest/mouse-gesture-move)
+                        (async/event-channel js/window "mouseup" gest/gesture-end)
+                        (async/event-channel js/window (dom/wheel-event-type)
+                                             gest/mousewheel-proxy)
+                        (async/event-channel canvas "touchstart" gest/touch-gesture-start)
+                        (async/event-channel canvas "touchmove" gest/touch-gesture-move)
+                        (async/event-channel js/window "touchend" gest/gesture-end)]
+              t-specs  [(async/event-channel toolbar "mousedown" gest/mouse-gesture-start)
+                        (async/event-channel toolbar "mousemove" gest/mouse-gesture-move)
+                        (async/event-channel js/window "mouseup" gest/gesture-end)
+                        (async/event-channel toolbar "touchstart" gest/touch-gesture-start)
+                        (async/event-channel toolbar "touchmove" gest/touch-gesture-move)
+                        (async/event-channel js/window "touchend" gest/gesture-end)]
+              c-events (mapv first c-specs)
+              t-events (mapv first t-specs)
+              arcball  (init-arcball params)
+              now      (utils/now)
+              glconf   (:webgl config/app)]
           (debug :init-editor params)
           (reset!
            local
@@ -292,7 +336,7 @@
                (merge
                 {:bg-col      (:bg-col glconf)
                  :subs        subs
-                 :events      e-specs
+                 :events      (concat c-specs t-specs)
                  :arcball     arcball
                  :last-action now
                  :start-time  now
@@ -307,14 +351,20 @@
           (resize-canvas local)
           (render-scene local)
 
-          (handle-resize        (:window-resize subs) local)
-          (handle-reset-timeout (:user-action subs) local)
-          (handle-arcball       canvas arcball events bus local)
+          (handle-resize         (:window-resize subs) bus local)
+          (handle-reset-timeout  (:user-action subs) local)
+          (handle-arcball        canvas arcball c-events bus local)
+          (handle-toolbar-scroll toolbar t-events bus local)
           (handle-view-update    (:camera-update subs) arcball bus local)
-          (handle-buttons       bus local (config/timeout :editor))
+          (handle-buttons        bus local (config/timeout :editor))
+
+          (async/publish bus :update-toolbar (get-in config/app [:editor :toolbar-margin-left]))
+          (go (<! (timeout 900)) (resize-canvas local))
+
           (recur))))
 
     (render-loop bus local)
     (handle-release bus local)
     (handle-tree-broadcast bus local)
+    (handle-toolbar-update bus local toolbar)
     ))

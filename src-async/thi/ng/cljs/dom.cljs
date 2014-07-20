@@ -57,6 +57,10 @@
   (style/setStyle el opts)
   el)
 
+(defn get-style
+  [el prop]
+  (style/getStyle el (name prop)))
+
 (defn show
   [el] (style/setStyle el "display" "block"))
 

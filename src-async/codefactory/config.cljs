@@ -109,6 +109,8 @@
     :toolbar-icon-size [32 32]
     :toolbar-op-width 65
     :toolbar-sep-size [15 50]
+    :toolbar-margin-left 110
+    :toolbar-margin-right 110
     :root-label "<h1>TAP HERE TO BEGIN</h1><p>This is your workspace area.</p><p>Here, each shape is visualized as box.</p><p>Assign operations to these elements to create your artwork.</p><p>Each operation creates more shapes, forming a hierarchy.</p><p>You can also delete elements to create more complex forms.</p>"
     :map-labels ["CODE OVERVIEW" "This area always shows" "the entire code structure." "Use this widget" "to navigate your code."]}
 
@@ -227,6 +229,7 @@
     :edit-canvas   "edit-canvas"
     :edit-continue "edit-continue"
     :toolbar       "toolbar"
+    :tools         ""
     :slider        "slider"
     :slider-wrapper "slider-wrapper"
     :slider-range  "slider-val"
