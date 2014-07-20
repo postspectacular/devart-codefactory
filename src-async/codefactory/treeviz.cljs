@@ -342,7 +342,7 @@
       (loop []
         (let [[_ id] (<! ch)
               {:keys [el path]} (get-in @local [:nodes id])
-              {:keys [tree meshes]} @editor]
+              {:keys [tree meshes tools]} @editor]
           (when id
             (swap! local assoc :selected-id id)
             (swap!
@@ -354,6 +354,7 @@
                             (config/translate-mg-op))
              :display-meshes (tree/filter-leaves-and-selection meshes tree path))
             (highlight-selected-node el (:sel-type @editor))
+            (ops/enable-presets (:specs tools))
             (dom/add-class! toolbar "rollon")
             (async/publish bus :render-scene nil)
             (regenerate-map editor local)
@@ -366,12 +367,13 @@
       (loop []
         (let [[_ [id render?]] (<! ch)
               node (get-in @local [:nodes id])
-              {:keys [tree meshes sel-type]} @editor]
+              {:keys [tree meshes sel-type tools]} @editor]
           (when id
             (swap! local assoc :selected-id nil)
             (swap! editor assoc :selection nil :sel-type nil)
             (unhighlight-selected-node (:el node) sel-type)
-            (dom/remove-class! toolbar "rollon")
+            (ops/disable-presets (:specs tools))
+            ;;(dom/remove-class! toolbar "rollon")
             (when render?
               (swap!
                editor assoc
