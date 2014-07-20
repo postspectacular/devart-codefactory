@@ -325,9 +325,9 @@
       :local local
       :bus bus
       :op op
+      :node node
+      :orig orig
       :sliders (->SliderSpec
                 "scale" 0.1 2.0 scale 0.001
                 (fn [n {:keys [side]}] (ctor side n children))
-                float-label)
-      :node node
-      :orig orig})))
+                float-label)})))
