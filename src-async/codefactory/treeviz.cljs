@@ -58,11 +58,11 @@
         [ch handler] (async/event-channel el "click")]
 
     (cond
-     (= :leaf op)
-     (dom/set-html!
-      el (if (empty? path)
-           (-> config/app :editor :root-label)
-           "+"))
+     ;;(= :leaf op)
+     #_(dom/set-html!
+        el (if (empty? path)
+             (-> config/app :editor :root-label)
+             "+"))
 
      (= :delete op)
      (let [svg (dom/create-ns!
@@ -220,6 +220,33 @@
     ((resize-branch nodes tree gap offset) [] margin height width node-height)
     (swap! local assoc :width width :node-height node-height)))
 
+(defn reposition-branch
+  [nodes tree gap [offx offy]]
+  (fn repos-branch*
+    [path x w]
+    (let [el (:el (nodes (node-id path)))
+          nc (tree/num-children-at tree path)
+          wc (cell-size w gap nc)]
+      (dom/set-style! el #js {:left (->px (+ x offx))})
+      (if (pos? nc)
+        (loop [i 0]
+          (when (< i nc)
+            (repos-branch* (conj path i) (mm/madd i wc i gap x) wc)
+            (recur (inc i))))))))
+
+(defn reposition-viz
+  [editor local]
+  (let [{:keys [viz nodes scroll width]} @local
+        {:keys [node-cache tree]} @editor
+        {:keys [gap margin margin-bottom height map-width]} (:editor config/app)
+        min (- (mm/madd margin -3 (- (.-innerWidth js/window) map-width)) width)
+        scroll (assoc scroll :x (m/clamp (:x scroll) min 0))
+        offset (g/+ scroll
+                    (.-offsetLeft viz)
+                    (mm/sub (.-innerHeight js/window) height margin-bottom))]
+    (swap! local assoc :scroll scroll)
+    ((reposition-branch nodes tree gap offset) [] margin width)))
+
 (def map-op-color
   (memoize
    (fn [op]
@@ -286,9 +313,10 @@
         {:keys [map-width map-height]} (:editor config/app)
         [_ _ viz-width] (compute-viewport local)
         [_ _ vw] viewport
-        sx (m/map-interval-clamped (mm/madd vw -0.5 x)
-                                   0 (- map-width vw)
-                                   0 (- (- width viz-width)))]
+        sx (m/map-interval-clamped
+            (mm/madd vw -0.5 x)
+            0 (- map-width vw)
+            0 (- (- width viz-width)))]
     (swap! local assoc-in [:scroll :x] sx)
     (resize-viz editor local)
     (regenerate-map editor local)))
@@ -455,6 +483,36 @@
                 (recur true))
               (recur false))))))))
 
+(defn handle-viz-scroll
+  [viz events bus editor local]
+  (go
+    (loop [state nil]
+      (let [[[e data] ch] (alts! events)]
+        (when e
+          (recur
+           (case e
+             :drag-start (let [scroll (:scroll @local)]
+                           (swap! local assoc :scroll-active? true)
+                           (dom/set-text! (dom/by-id "toolbar-label") (pr-str (dom/get-attribs (:target data) ["id"])))
+                           [scroll (:p data) (vec2) (:target data)])
+             :drag-move  (when state
+                           (let [[scroll p _ target] state
+                                 delta  (g/- (:p data) p)
+                                 scroll' (g/madd (assoc delta :y 0) 2 scroll)]
+                             (swap! local assoc :scroll scroll')
+                             (reposition-viz editor local)
+                             (regenerate-map editor local)
+                             [scroll p delta target] state))
+             :gesture-end (when state
+                            (let [[_ p delta target] state
+                                  dist (g/mag delta)]
+                              (when (and (:touch? data) (< dist 20))
+                                (async/publish
+                                 bus :node-toggle (first (dom/get-attribs target ["id"]))))
+                              (swap! local assoc :scroll-active? false)
+                              nil))
+             nil)))))))
+
 (defn handle-release
   [ch bus local]
   (go
@@ -471,30 +529,36 @@
 (defn init
   [editor bus]
   (let [{:keys [gap margin height map-width map-height]} (:editor config/app)
-        viz     (config/dom-component :viz-container)
-        canvas  (-> (config/dom-component :viz-map)
-                    (dom/set-attribs! {:width map-width :height map-height}))
-        subs    (async/subscription-channels
-                 bus [:node-toggle :node-selected :node-deselected
-                      :commit-operator :cancel-operator :op-triggered
-                      :window-resize :regenerate-scene
-                      :release-editor])
-        e-specs [(async/event-channel canvas "mousedown" gest/mouse-gesture-start)
-                 (async/event-channel canvas "mousemove" gest/mouse-gesture-move)
-                 (async/event-channel canvas "mouseup" gest/gesture-end)
-                 (async/event-channel canvas "touchmove" gest/touch-gesture-move)]
-        events  (mapv first e-specs)
+        viz       (config/dom-component :viz-container)
+        canvas    (-> (config/dom-component :viz-map)
+                      (dom/set-attribs! {:width map-width :height map-height}))
+        subs      (async/subscription-channels
+                   bus [:node-toggle :node-selected :node-deselected
+                        :commit-operator :cancel-operator :op-triggered
+                        :window-resize :regenerate-scene
+                        :release-editor])
+        m-specs   [(async/event-channel canvas "mousedown" gest/mouse-gesture-start)
+                   (async/event-channel canvas "mousemove" gest/mouse-gesture-move)
+                   (async/event-channel canvas "mouseup" gest/gesture-end)
+                   (async/event-channel canvas "touchmove" gest/touch-gesture-move)]
+        v-specs   [(async/event-channel viz "mousedown" gest/mouse-gesture-start)
+                   (async/event-channel viz "mousemove" gest/mouse-gesture-move)
+                   (async/event-channel js/window "mouseup" gest/gesture-end)
+                   (async/event-channel viz "touchstart" gest/touch-gesture-start)
+                   (async/event-channel viz "touchmove" gest/touch-gesture-move)
+                   (async/event-channel js/window "touchend" gest/gesture-end)]
+        m-events  (mapv first m-specs)
+        v-events  (mapv first v-specs)
         local   (atom
                  {:subs        subs
-                  :events      e-specs
+                  :events      (concat m-specs v-specs)
                   :canvas      canvas
                   :ctx         (.getContext canvas "2d")
                   :viz         viz
                   :scroll      (vec2)
                   :nodes       {}
                   :selected-id nil
-                  :height      height
-                  })]
+                  :height      height})]
     (debug :init-tedit)
     (update-submit-button (:tree @editor))
     (regenerate-viz editor local bus)
@@ -509,4 +573,5 @@
     (handle-commit-op       (:commit-operator subs)  bus local)
     (handle-cancel-op       (:cancel-operator subs)  bus editor local)
     (handle-release         (:release-editor subs)   bus local)
-    (handle-map-interactions events bus editor local)))
+    (handle-map-interactions m-events bus editor local)
+    (handle-viz-scroll viz v-events bus editor local)))

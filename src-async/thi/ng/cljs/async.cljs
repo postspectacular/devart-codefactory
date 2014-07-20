@@ -52,13 +52,13 @@
   (reduce (fn [subs id] (assoc subs id (subscribe bus id))) {} ids))
 
 (defn event-channel
-  [el id & [f]]
+  [el id & [f cap?]]
   (let [el (if (string? el) (dom/query nil el) el)
         ch (chan)
         handler (if f
                   (f ch)
                   (fn [e] (.preventDefault e) (put! ch e)))]
-    (.addEventListener el id handler)
+    (.addEventListener el id handler (or cap? false))
     [ch handler id el]))
 
 (defn destroy-event-channel

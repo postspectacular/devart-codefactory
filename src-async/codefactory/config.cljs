@@ -77,7 +77,7 @@
    :webgl
    {:min-aa-res 480
     :bg-col [0.2 0.2 0.211 1]
-    :shader-preset-ids [:xray-strong :lambert-default]}
+    :shader-preset-ids [:xray-soft :lambert-default]}
 
    :seeds seeds
 
@@ -170,8 +170,8 @@
     [:scalef {:label "scale f" :node (scale-op :f 0.5)}]
     [:scaleb {:label "scale b" :node (scale-op :b 0.5)}]
     [:sep]
-    [:tiltnf {:label "tilt ef" :node (mg/skew :e :f :offset 0.5)}]
-    [:tiltnf {:label "tilt wf" :node (mg/skew :w :f :offset 0.5)}]
+    [:tiltef {:label "tilt ef" :node (mg/skew :e :f :offset 0.5)}]
+    [:tiltwf {:label "tilt wf" :node (mg/skew :w :f :offset 0.5)}]
     [:tiltnf {:label "tilt nf" :node (mg/skew :n :f :offset 0.5)}]
     [:tiltsf {:label "tilt sf" :node (mg/skew :s :f :offset 0.5)}]
     ]

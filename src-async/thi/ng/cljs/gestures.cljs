@@ -14,7 +14,9 @@
           (.preventDefault e)
           (case (.-length touches)
             1 (let [t (aget touches 0)]
-                (put! ch [drag {:p (vec2 (.-clientX t) (.-clientY t)) :touch? true}]))
+                (put! ch [drag {:p (vec2 (.-clientX t) (.-clientY t))
+                                :touch? true
+                                :target (.-target e)}]))
             2 (let [t1 (aget touches 0)
                     t2 (aget touches 1)
                     tp1 (vec2 (.-clientX t1) (.-clientY t1))
@@ -29,15 +31,16 @@
 (defn gesture-end
   [ch]
   (fn [e]
-    ;;(.preventDefault e)
-    (put! ch [:gesture-end])))
+    (put! ch [:gesture-end {:touch? (not (nil? (.-touches e)))
+                            :target (.-target e)}])))
 
 (defn mouse-gesture*
   [suffix]
   (let [id (keyword (str "drag-" suffix))]
     (fn [ch]
       (fn [e]
-        (put! ch [id {:p (vec2 (.-clientX e) (.-clientY e))}])))))
+        (put! ch [id {:p (vec2 (.-clientX e) (.-clientY e))
+                      :target (.-target e)}])))))
 
 (def mouse-gesture-start (mouse-gesture* "start"))
 (def mouse-gesture-move (mouse-gesture* "move"))

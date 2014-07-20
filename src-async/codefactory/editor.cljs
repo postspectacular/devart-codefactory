@@ -157,20 +157,28 @@
         (when e
           (recur
            (case e
-             :drag-start (let [offset (get-in @local [:tools :offset] 0)]
+             :drag-start (let [offset (get-in @local [:tools :offset] 0)
+                               target (loop [el (:target data)]
+                                        (if-let [id (first (dom/get-attribs el ["id"]))]
+                                          id (recur (dom/parent el))))]
                            (swap! local assoc-in [:tools :active?] true)
-                           [offset (:x (:p data))])
+                           [offset (:p data) (vec2) (keyword target)])
              :drag-move  (if state
-                           (let [x' (:x (:p data))
-                                 [offset x] state
-                                 dx (- x' x)
-                                 offset (mm/madd dx 2 offset)]
-                             (async/publish bus :update-toolbar offset)
-                             state)
+                           (let [[offset p _ target] state
+                                 delta (g/- (:p data) p)
+                                 offset' (mm/madd (:x delta) 2 offset)]
+                             (async/publish bus :update-toolbar offset')
+                             [offset p delta target])
                            state)
-             (do
-               (swap! local assoc-in [:tools :active?] false)
-               nil))))))))
+             :gesture-end (when state
+                            (let [[_ p delta target] state
+                                  dist (g/mag delta)]
+                              (when (and (:touch? data) (< dist 20))
+                                (debug :end-touch target dist)
+                                (async/publish bus :op-triggered target))
+                              (swap! local assoc-in [:tools :active?] false)
+                              nil))
+             nil)))))))
 
 (defn handle-toolbar-update
   [bus local toolbar]
@@ -378,5 +386,4 @@
     (render-loop bus local)
     (handle-release bus local)
     (handle-tree-broadcast bus local)
-    (handle-toolbar-update bus local toolbar)
-    ))
+    (handle-toolbar-update bus local toolbar)))
