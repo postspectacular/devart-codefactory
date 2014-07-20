@@ -5,22 +5,6 @@ module.exports = function(grunt) {
   grunt.initConfig({
     // Metadata.
     pkg: grunt.file.readJSON('package.json'),
-    banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
-      '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
-      '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
-      '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-      ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */\n',
-    // Task configuration.
-    concat: {
-      options: {
-        banner: '<%= banner %>',
-        stripBanners: true
-      },
-      dist: {
-        src: ['lib/<%= pkg.name %>.js'],
-        dest: 'dist/<%= pkg.name %>.js'
-      }
-    },
     less: {
       dev: {
         options: {
@@ -41,16 +25,6 @@ module.exports = function(grunt) {
         }
       }
     },
-    watch: {
-      dev: {
-        files: ['src-less/*.less','src-html/*.html'],
-        tasks: ['less:dev','htmlmin:prod']
-      },
-      prod: {
-        files: ['src-less/*.less','src-html/*.html'],
-        tasks: ['less:prod','htmlmin:prod']
-      }
-    },
     htmlmin: {
       prod: {
         options: {
@@ -65,6 +39,16 @@ module.exports = function(grunt) {
           'war/barbican.html': 'src-html/barbican.html'
         }
       }
+    },
+    watch: {
+      dev: {
+        files: ['src-less/*.less','src-html/*.html'],
+        tasks: ['less:dev','htmlmin:prod']
+      },
+      prod: {
+        files: ['src-less/*.less','src-html/*.html'],
+        tasks: ['less:prod','htmlmin:prod']
+      }
     }
   });
 
@@ -75,5 +59,5 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-htmlmin');
 
   // Default task.
-  grunt.registerTask('default', ['less','watch']);
+  grunt.registerTask('default', ['less:prod','htmlmin:prod','watch:prod']);
 };
