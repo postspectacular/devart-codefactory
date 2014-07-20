@@ -35,7 +35,7 @@
     (dom/set-attribs!
      el {:id (name id) :class (str "op-" (name op) " tool")})
     (-> (dom/create! "div" el) (dom/set-text! label))
-    (loop [paths (get-in config/app [:operators op :paths])]
+    (loop [paths (-> config/app :operators op :paths)]
       (when-let [p (first paths)]
         (-> (dom/create-ns! dom/svg-ns "path" svg {:d (:d p)})
             (dom/set-style! (clj->js (:style p))))

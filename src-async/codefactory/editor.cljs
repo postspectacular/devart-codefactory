@@ -108,7 +108,7 @@
         (when size
           (resize-canvas local)
           (render-scene local)
-          (async/publish bus :update-toolbar (get-in @local [:tools :offset]))
+          (async/publish bus :update-toolbar (-> @local :tools :offset))
           (recur))))))
 
 (defn handle-arcball
@@ -180,7 +180,7 @@
         (let [[_ offset] (<! ch)
               {max :toolbar-margin-left
                right :toolbar-margin-right} (:editor config/app)
-              min (- (.-innerWidth js/window) (get-in @local [:tools :width]) right)
+              min (- (.-innerWidth js/window) (-> @local :tools :width) right)
               offset (m/clamp offset min max)]
           (swap! local assoc-in [:tools :offset] offset)
           (dom/set-style! toolbar (clj->js {:marginLeft (->px offset)})))
@@ -286,7 +286,7 @@
 (defn init-arcball
   [params]
   (let [id (keyword (:seed-id params))
-        {:keys [view dist]} (get-in config/seeds [id :initial-view])]
+        {:keys [view dist]} (-> config/seeds id :initial-view)]
     (arcball/make-arcball :init view :dist dist)))
 
 (defn init-tree
@@ -358,7 +358,7 @@
           (handle-view-update    (:camera-update subs) arcball bus local)
           (handle-buttons        bus local (config/timeout :editor))
 
-          (async/publish bus :update-toolbar (get-in config/app [:editor :toolbar-margin-left]))
+          (async/publish bus :update-toolbar (-> config/app :editor :toolbar-margin-left))
           (go (<! (timeout 900)) (resize-canvas local))
 
           (recur))))

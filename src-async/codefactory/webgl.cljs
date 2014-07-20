@@ -154,7 +154,7 @@ void main() {
   (let [[xray solid] shaders
         color sel-color
         ;; color (col/pulsate 0.5 sel-color time 0.5)
-        alpha (get-in xray [:preset :uniforms :alpha])
+        alpha (-> xray :preset :uniforms :alpha)
         ;; alpha (m/mix 1.0 alpha (min (mm/subm time sel-time 0.2) 1.0))
         ]
     (render-meshes

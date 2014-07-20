@@ -61,7 +61,7 @@
      (= :leaf op)
      (dom/set-html!
       el (if (empty? path)
-           (get-in config/app [:editor :root-label])
+           (-> config/app :editor :root-label)
            "+"))
 
      (= :delete op)
@@ -78,7 +78,7 @@
 
      :else
      (when (>= w min-label-width)
-       (dom/set-text! el (get-in config/app [:operators op :label]))))
+       (dom/set-text! el (-> config/app :operators op :label))))
 
     (doto el
       (dom/set-attribs! {:id id})
@@ -226,7 +226,7 @@
      (debug :col-op op)
      (col/gray-offset-hex
       (config/operator-color op)
-      (get-in config/app [:editor :map-color-offset])))))
+      (-> config/app :editor :map-color-offset)))))
 
 (defn map-branch
   [ctx tree path x y w h sel]
@@ -234,7 +234,7 @@
         nc (count out)
         wc (cell-size w 1 nc)
         col (if (= path sel)
-              (get-in config/app [:editor :map-selection])
+              (-> config/app :editor :map-selection)
               (map-op-color (config/translate-mg-op (tree/node-operator node))))]
     (set! (.-fillStyle ctx) col)
     (.fillRect ctx x (inc (- y h)) w h)
