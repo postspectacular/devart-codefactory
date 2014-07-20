@@ -107,7 +107,7 @@
       (let [[_ size] (<! ch)]
         (when size
           (resize-canvas local)
-          (render-scene local)
+          (async/publish bus :render-scene nil)
           (async/publish bus :update-toolbar (-> @local :tools :offset))
           (recur))))))
 
@@ -180,8 +180,8 @@
         (let [[_ offset] (<! ch)
               {max :toolbar-margin-left
                right :toolbar-margin-right} (:editor config/app)
-              min (- (.-innerWidth js/window) (-> @local :tools :width) right)
-              offset (m/clamp offset min max)]
+               min (- (.-innerWidth js/window) (-> @local :tools :width) right)
+               offset (m/clamp offset min max)]
           (swap! local assoc-in [:tools :offset] offset)
           (dom/set-style! toolbar (clj->js {:marginLeft (->px offset)})))
         (recur)))))
@@ -246,9 +246,10 @@
 
 (defn end-view-tween
   [local]
-  (swap! local assoc
-         :view-tween-cancel? false
-         :view-tween? false))
+  (swap!
+   local assoc
+   :view-tween-cancel? false
+   :view-tween? false))
 
 (defn handle-view-update
   [ch ball bus local]
@@ -268,19 +269,30 @@
                     (do
                       (arcball/set-rotation ball (g/mix start target (min phase 1.0)))
                       (swap! local assoc-in [:view :phase] (m/mix phase 1.0 0.1))
-                      (render-scene local)
-                      (if (< phase 0.9995) (recur) (end-view-tween local)))
+                      ;;(render-scene local)
+                      (if (>= phase 0.9995)
+                        (end-view-tween local)
+                        (recur)))
                     (end-view-tween local))))))
           (recur))))))
 
 (defn render-loop
   [bus local]
   (let [ch (async/subscribe bus :render-scene)
-        render-fn (fn [& _] (render-scene local))]
+        render-fn (fn render*
+                    [& _]
+                    (render-scene local)
+                    (swap!
+                     local assoc
+                     :render-frame
+                     (if (or (:selection @local)
+                             (:view-tween? @local))
+                       (anim/animframe-provider render*))))]
     (go
       (loop []
         (let [_ (<! ch)]
-          (anim/animframe-provider render-fn)
+          (when-not (:render-frame @local)
+            (swap! local assoc :render-frame (anim/animframe-provider render-fn)))
           (recur))))))
 
 (defn init-arcball

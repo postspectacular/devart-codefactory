@@ -342,7 +342,7 @@
       (loop []
         (let [[_ id] (<! ch)
               {:keys [el path]} (get-in @local [:nodes id])
-              {:keys [tree meshes tools]} @editor]
+              {:keys [tree meshes tools start-time]} @editor]
           (when id
             (swap! local assoc :selected-id id)
             (swap!
@@ -352,6 +352,7 @@
                             (tree/node-at tree)
                             (tree/node-operator)
                             (config/translate-mg-op))
+             :sel-time (mm/subm (utils/now) start-time 0.001)
              :display-meshes (tree/filter-leaves-and-selection meshes tree path))
             (highlight-selected-node el (:sel-type @editor))
             (ops/enable-presets (:specs tools))

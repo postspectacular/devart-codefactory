@@ -145,9 +145,12 @@
     :leaf    {:col "#ffffff" :label "leaf"}}
 
    :op-presets
-   [[:splitx {:label "split x" :node (mg/subdiv :cols 2)}]
-    [:splity {:label "split y" :node (mg/subdiv :rows 2)}]
-    [:splitz {:label "split z" :node (mg/subdiv :slices 2)}]
+   [[:splitx2 {:label "split x2" :node (mg/subdiv :cols 2)}]
+    [:splity2 {:label "split y2" :node (mg/subdiv :rows 2)}]
+    [:splitz2 {:label "split z2" :node (mg/subdiv :slices 2)}]
+    [:splitx3 {:label "split x3" :node (mg/subdiv :cols 3)}]
+    [:splity3 {:label "split y3" :node (mg/subdiv :rows 3)}]
+    [:splitz3 {:label "split z3" :node (mg/subdiv :slices 3)}]
     [:sep]
     [:insetx {:label "inset x" :node (mg/subdiv-inset :dir :x :inset 0.5)}]
     [:insety {:label "inset y" :node (mg/subdiv-inset :dir :y :inset 0.5)}]
@@ -166,6 +169,11 @@
     [:scales {:label "scale s" :node (scale-op :s 0.5)}]
     [:scalef {:label "scale f" :node (scale-op :f 0.5)}]
     [:scaleb {:label "scale b" :node (scale-op :b 0.5)}]
+    [:sep]
+    [:tiltnf {:label "tilt ef" :node (mg/skew :e :f :offset 0.5)}]
+    [:tiltnf {:label "tilt wf" :node (mg/skew :w :f :offset 0.5)}]
+    [:tiltnf {:label "tilt nf" :node (mg/skew :n :f :offset 0.5)}]
+    [:tiltsf {:label "tilt sf" :node (mg/skew :s :f :offset 0.5)}]
     ]
 
    :routes
