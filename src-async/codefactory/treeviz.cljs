@@ -373,22 +373,23 @@
               {:keys [el path]} (get-in @local [:nodes id])
               {:keys [tree meshes tools start-time]} @editor]
           (when id
-            (swap! local assoc :selected-id id)
-            (swap!
-             editor assoc
-             :selection path
-             :sel-type (->> path
-                            (tree/node-at tree)
-                            (tree/node-operator)
-                            (config/translate-mg-op))
-             :sel-time (mm/subm (utils/now) start-time 0.001)
-             :display-meshes (tree/filter-leaves-and-selection meshes tree path))
-            (highlight-selected-node el (:sel-type @editor))
-            (ops/enable-presets (:specs tools))
-            (dom/add-class! toolbar "rollon")
-            (async/publish bus :render-scene nil)
-            (regenerate-map editor local)
-            (recur)))))))
+            (let [node (tree/node-at tree path)]
+              (swap! local assoc :selected-id id)
+              (swap!
+               editor assoc
+               :selection path
+               :sel-type (config/translate-mg-op (tree/node-operator node))
+               :sel-time (mm/subm (utils/now) start-time 0.001)
+               :display-meshes (tree/filter-leaves-and-selection meshes tree path))
+              (highlight-selected-node el (:sel-type @editor))
+              (ops/enable-presets (:specs tools))
+              (debug :sel-node node)
+              (when-let [pid (:id node)]
+                (ops/highlight-selected-preset pid (:specs tools))
+                (ops/center-preset bus pid (:specs tools)))
+              (async/publish bus :render-scene nil)
+              (regenerate-map editor local)
+              (recur))))))))
 
 (defn handle-node-deselected
   [ch bus editor local]
@@ -431,9 +432,10 @@
               (debug :new-op id preset)
               (ops/release-op-controls local)
               (ops/highlight-selected-preset id (:specs tools))
+              (ops/center-preset bus id (:specs tools))
               (ops/handle-operator
                (config/translate-mg-op (:op preset))
-               preset
+               (assoc preset :id id)
                (orig-tree-node tree selection @local)
                editor local bus)
               (async/publish bus :regenerate-scene nil)))

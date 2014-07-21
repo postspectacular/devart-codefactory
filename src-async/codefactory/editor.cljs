@@ -323,7 +323,8 @@
         toolbar    (config/dom-component :tools)
         init       (async/subscribe bus :init-editor)
         local      (atom {:tools (ops/init-op-triggers bus toolbar)})]
-
+    ;;(debug :tools (:specs (:tools @local)))
+    
     (go
       (loop []
         (let [[_ [_ params]] (<! init)

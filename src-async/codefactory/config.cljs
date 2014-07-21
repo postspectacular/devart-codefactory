@@ -111,9 +111,9 @@
     :toolbar-sep-size [15 50]
     :toolbar-margin-left 110
     :toolbar-margin-right 110
-    :root-label "<h1>TAP HERE TO BEGIN</h1><p>This is your workspace area.</p><p>Here, each shape is visualized as box.</p><p>Assign operations to these elements to create your artwork.</p><p>Each operation creates more shapes, forming a hierarchy.</p><p>You can also delete elements to create more complex forms.</p>"
+    :root-label "<h1>TAP HERE TO BEGIN</h1>"
     :leaf-label "+"
-    :map-labels ["CODE OVERVIEW" "This area always shows" "the entire code structure." "Use this widget" "to navigate your code."]}
+    :map-labels ["CODE OVERVIEW" "This area always shows" "a map of your entire code."]}
 
    :operators
    {:sd      {:col "#56ffee" :label "split"
@@ -175,6 +175,14 @@
     [:tiltwf {:label "tilt wf" :node (mg/skew :w :f :offset 0.5)}]
     [:tiltnf {:label "tilt nf" :node (mg/skew :n :f :offset 0.5)}]
     [:tiltsf {:label "tilt sf" :node (mg/skew :s :f :offset 0.5)}]
+    [:sep]
+    [:stretche {:label "stretch e" :node (mg/extrude-prop :dir :e :len 0.5)}]
+    [:stretchw {:label "stretch w" :node (mg/extrude-prop :dir :w :len 0.5)}]
+    [:stretchn {:label "stretch n" :node (mg/extrude-prop :dir :n :len 0.5)}]
+    [:stretchs {:label "stretch s" :node (mg/extrude-prop :dir :s :len 0.5)}]
+    [:stretchf {:label "stretch f" :node (mg/extrude-prop :dir :f :len 0.5)}]
+    [:stretchb {:label "stretch b" :node (mg/extrude-prop :dir :b :len 0.5)}]
+    
     ]
 
    :routes

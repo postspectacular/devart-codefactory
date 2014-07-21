@@ -42,6 +42,14 @@
         (recur (next paths))))
     [width spec]))
 
+(defn center-preset
+  [bus id specs]
+  (let [off (nth (specs id) 3)
+        w (.-innerWidth js/window)
+        x (- w off (/ w 2))]
+    (debug :center id x)
+    (async/publish bus :update-toolbar x)))
+
 (defn highlight-selected-preset
   [id specs]
   (loop [specs specs]
@@ -81,10 +89,10 @@
                                           (init-op-button
                                            el id node label
                                            icon-size op-width bus))
-                               total (+ total w)]
+                               total' (+ total w)]
                            (if spec
-                             [total (assoc specs id spec)]
-                             [total specs])))
+                             [total' (assoc specs id (conj spec total))]
+                             [total' specs])))
                        [0 {}] (:op-presets config/app))]
     (dom/set-style! tools #js {:width width})
     (disable-presets specs)
