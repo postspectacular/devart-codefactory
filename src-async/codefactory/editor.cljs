@@ -228,11 +228,12 @@
     (go
       (loop []
         (let [_ (<! ch)
-              {:keys [subs events]} @local]
+              {:keys [subs events tools]} @local]
           (debug :release-editor)
           (swap! local assoc :active? false)
           (async/unsubscribe-and-close-many bus subs)
           (dorun (map async/destroy-event-channel events))
+          (ops/disable-presets (:specs tools))
           (recur))))))
 
 (defn handle-tree-broadcast
@@ -319,9 +320,9 @@
 (defn init
   [bus]
   (let [canvas     (config/dom-component :edit-canvas)
-        toolbar    (dom/query nil "#toolbar .tools")
+        toolbar    (config/dom-component :tools)
         init       (async/subscribe bus :init-editor)
-        local      (atom {:tools (ops/init-op-triggers bus)})]
+        local      (atom {:tools (ops/init-op-triggers bus toolbar)})]
 
     (go
       (loop []

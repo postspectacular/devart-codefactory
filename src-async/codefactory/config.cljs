@@ -112,6 +112,7 @@
     :toolbar-margin-left 110
     :toolbar-margin-right 110
     :root-label "<h1>TAP HERE TO BEGIN</h1><p>This is your workspace area.</p><p>Here, each shape is visualized as box.</p><p>Assign operations to these elements to create your artwork.</p><p>Each operation creates more shapes, forming a hierarchy.</p><p>You can also delete elements to create more complex forms.</p>"
+    :leaf-label "+"
     :map-labels ["CODE OVERVIEW" "This area always shows" "the entire code structure." "Use this widget" "to navigate your code."]}
 
    :operators
@@ -231,25 +232,25 @@
     }
 
    :dom-components
-   {:home-continue "home-continue"
-    :fullscreen    "fs-toggle"
-    :seed-canvas   "seed-canvas"
-    :edit-canvas   "edit-canvas"
-    :edit-continue "edit-continue"
-    :toolbar       "toolbar"
-    :tools         ""
-    :slider        "slider"
-    :slider-wrapper "slider-wrapper"
-    :slider-range  "slider-val"
-    :slider-label  "slider-label"
-    :slider-val-label    "slider-val-label"
-    :viz-container "viz-container"
-    :viz-map       "viz-map"
-    :thanks-cancel "thanks-cancel"
-    :preview-label "preview-label"
-    :toolbar-label "toolbar-label"
-    :submit-button "bt-submit"
-    :submit-cancel "submit-cancel"}
+   {:home-continue    "home-continue"
+    :fullscreen       "fs-toggle"
+    :seed-canvas      "seed-canvas"
+    :edit-canvas      "edit-canvas"
+    :edit-continue    "edit-continue"
+    :toolbar          "toolbar"
+    :tools            "tools"
+    :slider           "slider"
+    :slider-wrapper   "slider-wrapper"
+    :slider-range     "slider-val"
+    :slider-label     "slider-label"
+    :slider-val-label "slider-val-label"
+    :viz-container    "viz-container"
+    :viz-map          "viz-map"
+    :thanks-cancel    "thanks-cancel"
+    :preview-label    "preview-label"
+    :toolbar-label    "toolbar-label"
+    :submit-button    "bt-submit"
+    :submit-cancel    "submit-cancel"}
 
    :timeouts
    {:selector 20000

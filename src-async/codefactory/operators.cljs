@@ -68,9 +68,8 @@
         (recur (next specs))))))
 
 (defn init-op-triggers
-  [bus]
-  (let [tools (dom/query nil "#toolbar .tools")
-        {icon-size :toolbar-icon-size
+  [bus tools]
+  (let [{icon-size :toolbar-icon-size
          op-width  :toolbar-op-width
          sep-size  :toolbar-sep-size
          offset    :toolbar-margin-left} (:editor config/app)

@@ -22,7 +22,9 @@
                     tp1 (vec2 (.-clientX t1) (.-clientY t1))
                     tp2 (vec2 (.-clientX t2) (.-clientY t2))
                     dist (g/dist tp1 tp2)]
-                (put! ch [dual {:p tp1 :q tp2 :dist dist :touch? true}]))
+                (put! ch [dual {:p tp1 :q tp2 :dist dist
+                                :touch? true
+                                :target (.-target e)}]))
             nil))))))
 
 (def touch-gesture-start (touch-gesture* "start"))
