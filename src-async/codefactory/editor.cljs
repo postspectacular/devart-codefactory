@@ -244,6 +244,18 @@
         (let [[_ [tree seed]] (<! ch)]
           (debug :editor-tree-received tree seed)
           (swap! local assoc :tree tree :seed-id seed)
+          (when-not tree
+            (swap! local assoc :history []))
+          (recur))))))
+
+(defn handle-tree-backup
+  [bus local]
+  (let [ch (async/subscribe bus :backup-tree)]
+    (go
+      (loop []
+        (let [[_ tree] (<! ch)]
+          (swap! local update-in [:history] conj tree)
+          (debug :backup-tree (count (:history @local)) tree)
           (recur))))))
 
 (defn init-view-tween
@@ -324,7 +336,7 @@
         init       (async/subscribe bus :init-editor)
         local      (atom {:tools (ops/init-op-triggers bus toolbar)})]
     ;;(debug :tools (:specs (:tools @local)))
-    
+
     (go
       (loop []
         (let [[_ [_ params]] (<! init)
@@ -367,6 +379,7 @@
                  :sel-time    now
                  :time        now
                  :active?     true
+                 :history     []
                  :tools       (:tools @local)})
                (init-tree local (:seed-id params))))
           (viz/init local bus)
@@ -388,4 +401,5 @@
     (render-loop bus local)
     (handle-release bus local)
     (handle-tree-broadcast bus local)
+    (handle-tree-backup bus local)
     (handle-toolbar-update bus local toolbar)))

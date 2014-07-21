@@ -448,9 +448,20 @@
   (go
     (loop []
       (let [_ (<! ch)
-            {:keys [tree selection tools]} @editor]
+            {:keys [tree history]} @editor]
         (when _
           (debug :undo)
+          (when (seq history)
+            (swap!
+             editor assoc
+             :tree (peek history)
+             :history (pop history)
+             :selection nil
+             :sel-type nil)
+            (swap! local assoc :selected-id nil)
+            (swap! editor tree/update-meshes true)
+            (ops/release-op-controls local)
+            (async/publish bus :regenerate-scene nil))
           (async/publish bus :user-action nil)
           (recur))))))
 
