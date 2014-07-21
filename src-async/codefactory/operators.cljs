@@ -22,7 +22,7 @@
     [w]))
 
 (defn init-op-button
-  [el id op label [iconw iconh] width bus]
+  [el id op label [iconw iconh] width bus & [handler]]
   (let [svg    (dom/create-ns!
                 dom/svg-ns "svg" el
                 {:width iconw
@@ -30,7 +30,9 @@
                  :viewBox "-0.05 -0.05 1.1 1.1"
                  :preserveAspectRatio "none"})
         [spec] (dom/add-listeners
-                [[el "click" (fn [] (async/publish bus :op-triggered id))]])]
+                [[el "click"
+                  (or handler
+                      (fn [] (async/publish bus :op-triggered id)))]])]
     (dom/set-attribs!
      el {:id (name id) :class (str "op-" (name op) " tool disabled")})
     (-> (dom/create! "div" el) (dom/set-text! label))
@@ -80,25 +82,26 @@
          op-width  :toolbar-op-width
          sep-size  :toolbar-sep-size
          offset    :toolbar-margin-left} (:editor config/app)
-        [width specs] (reduce
-                       (fn [[total specs] [id {:keys [label node]}]]
-                         (let [el (dom/create! "div" tools)
-                               op (config/translate-mg-op (:op node))
-                               [w spec] (if (= :sep id)
-                                          (init-op-separator el sep-size)
-                                          (init-op-button
-                                           el id op label
-                                           icon-size op-width bus))
-                               total' (+ total w)]
-                           (if spec
-                             [total' (assoc specs id (conj spec total))]
-                             [total' specs])))
-                       [0 {}] (:op-presets config/app))]
+         [width specs] (reduce
+                        (fn [[total specs] [id {:keys [label node]}]]
+                          (let [el (dom/create! "div" tools)
+                                op (config/translate-mg-op (:op node))
+                                [w spec] (if (= :sep id)
+                                           (init-op-separator el sep-size)
+                                           (init-op-button
+                                            el id op label
+                                            icon-size op-width bus))
+                                total' (+ total w)]
+                            (if spec
+                              [total' (assoc specs id (conj spec total))]
+                              [total' specs])))
+                        [0 {}] (:op-presets config/app))]
     (dom/set-style! tools #js {:width width})
     (init-op-button
      (dom/create! "div" (dom/by-id "tools-left"))
      :undo :undo "undo"
-     icon-size op-width bus)
+     icon-size op-width bus
+     (fn [] (async/publish bus :undo-triggered nil)))
     (init-op-button
      (dom/create! "div" (dom/by-id "tools-right"))
      :delete :delete "empty"

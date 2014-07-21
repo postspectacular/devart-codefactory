@@ -433,13 +433,24 @@
               (ops/release-op-controls local)
               (ops/highlight-selected-preset id (:specs tools))
               (ops/center-preset bus (id (:specs tools)))
+              (async/publish bus :backup-tree tree)
               (ops/handle-operator
                (or op id)
                (assoc preset :id id)
                (orig-tree-node tree selection @local)
                editor local bus)
-              
               (async/publish bus :regenerate-scene nil)))
+          (async/publish bus :user-action nil)
+          (recur))))))
+
+(defn handle-undo
+  [ch bus editor local]
+  (go
+    (loop []
+      (let [_ (<! ch)
+            {:keys [tree selection tools]} @editor]
+        (when _
+          (debug :undo)
           (async/publish bus :user-action nil)
           (recur))))))
 
@@ -536,7 +547,8 @@
                       (dom/set-attribs! {:width map-width :height map-height}))
         subs      (async/subscription-channels
                    bus [:node-toggle :node-selected :node-deselected
-                        :commit-operator :cancel-operator :op-triggered
+                        :commit-operator :cancel-operator
+                        :op-triggered :undo-triggered
                         :window-resize :regenerate-scene
                         :release-editor])
         m-specs   [(async/event-channel canvas "mousedown" gest/mouse-gesture-start)
@@ -572,6 +584,7 @@
     (handle-node-selected   (:node-selected subs)    bus editor local)
     (handle-node-deselected (:node-deselected subs)  bus editor local)
     (handle-op-triggered    (:op-triggered subs)     bus editor local)
+    (handle-undo            (:undo-triggered subs)   bus editor local)
     (handle-commit-op       (:commit-operator subs)  bus local)
     (handle-cancel-op       (:cancel-operator subs)  bus editor local)
     (handle-release         (:release-editor subs)   bus local)
