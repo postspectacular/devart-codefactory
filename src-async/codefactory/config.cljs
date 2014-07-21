@@ -109,8 +109,8 @@
     :toolbar-icon-size [32 32]
     :toolbar-op-width 65
     :toolbar-sep-size [15 50]
-    :toolbar-margin-left 110
-    :toolbar-margin-right 110
+    :toolbar-margin-left 65
+    :toolbar-margin-right 65
     :root-label "<h1>TAP HERE TO BEGIN</h1>"
     :leaf-label "+"
     :map-labels ["CODE OVERVIEW" "This area always shows" "a map of your entire code."]}
@@ -143,7 +143,9 @@
                        :style {:opacity "0.3"}}]}
     :delete  {:col "#aaaaaa" :label "delete"
               :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0,0 L1,1 M0,1 L1,0"}]}
-    :leaf    {:col "#ffffff" :label "leaf"}}
+    :leaf    {:col "#ffffff" :label "leaf"}
+    :undo    {:col "#aaaaaa" :label "undo"
+              :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0.2,0.8 L0.2,0.2 L0.8,0.2 M0.2,0.2 L0.8,0.8"}]}}
 
    :op-presets
    [[:splitx2 {:label "split x2" :node (mg/subdiv :cols 2)}]

@@ -22,9 +22,8 @@
     [w]))
 
 (defn init-op-button
-  [el id node label [iconw iconh] width bus]
-  (let [op     (config/translate-mg-op (:op node))
-        svg    (dom/create-ns!
+  [el id op label [iconw iconh] width bus]
+  (let [svg    (dom/create-ns!
                 dom/svg-ns "svg" el
                 {:width iconw
                  :height iconh
@@ -33,7 +32,7 @@
         [spec] (dom/add-listeners
                 [[el "click" (fn [] (async/publish bus :op-triggered id))]])]
     (dom/set-attribs!
-     el {:id (name id) :class (str "op-" (name op) " tool")})
+     el {:id (name id) :class (str "op-" (name op) " tool disabled")})
     (-> (dom/create! "div" el) (dom/set-text! label))
     (loop [paths (-> config/app :operators op :paths)]
       (when-let [p (first paths)]
@@ -43,12 +42,12 @@
     [width spec]))
 
 (defn center-preset
-  [bus id specs]
-  (let [off (nth (specs id) 3)
-        w (.-innerWidth js/window)
-        x (- w off (/ w 2))]
-    (debug :center id x)
-    (async/publish bus :update-toolbar x)))
+  [bus spec]
+  (when spec
+    (let [off (nth spec 3)
+          w (.-innerWidth js/window)
+          x (- w off (/ w 2))]
+      (async/publish bus :update-toolbar x))))
 
 (defn highlight-selected-preset
   [id specs]
@@ -84,10 +83,11 @@
         [width specs] (reduce
                        (fn [[total specs] [id {:keys [label node]}]]
                          (let [el (dom/create! "div" tools)
+                               op (config/translate-mg-op (:op node))
                                [w spec] (if (= :sep id)
                                           (init-op-separator el sep-size)
                                           (init-op-button
-                                           el id node label
+                                           el id op label
                                            icon-size op-width bus))
                                total' (+ total w)]
                            (if spec
@@ -95,7 +95,14 @@
                              [total' specs])))
                        [0 {}] (:op-presets config/app))]
     (dom/set-style! tools #js {:width width})
-    (disable-presets specs)
+    (init-op-button
+     (dom/create! "div" (dom/by-id "tools-left"))
+     :undo :undo "undo"
+     icon-size op-width bus)
+    (init-op-button
+     (dom/create! "div" (dom/by-id "tools-right"))
+     :delete :delete "empty"
+     icon-size op-width bus)
     {:width width :offset offset :specs specs}))
 
 (defn remove-op-triggers

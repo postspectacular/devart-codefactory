@@ -386,7 +386,7 @@
               (debug :sel-node node)
               (when-let [pid (:id node)]
                 (ops/highlight-selected-preset pid (:specs tools))
-                (ops/center-preset bus pid (:specs tools)))
+                (ops/center-preset bus (pid (:specs tools))))
               (async/publish bus :render-scene nil)
               (regenerate-map editor local)
               (recur))))))))
@@ -405,7 +405,6 @@
             (unhighlight-selected-node (:el node) sel-type)
             (ops/disable-presets (:specs tools))
             (ops/release-op-controls local)
-            ;;(dom/remove-class! toolbar "rollon")
             (when render?
               (swap!
                editor assoc
@@ -428,16 +427,18 @@
             {:keys [tree selection tools]} @editor]
         (when id
           (when (and selection (not (:active? tools)))
-            (let [preset (config/preset-node id)]
+            (let [preset (config/preset-node id)
+                  op (config/translate-mg-op (:op preset))]
               (debug :new-op id preset)
               (ops/release-op-controls local)
               (ops/highlight-selected-preset id (:specs tools))
-              (ops/center-preset bus id (:specs tools))
+              (ops/center-preset bus (id (:specs tools)))
               (ops/handle-operator
-               (config/translate-mg-op (:op preset))
+               (or op id)
                (assoc preset :id id)
                (orig-tree-node tree selection @local)
                editor local bus)
+              
               (async/publish bus :regenerate-scene nil)))
           (async/publish bus :user-action nil)
           (recur))))))

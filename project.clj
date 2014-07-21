@@ -46,7 +46,8 @@
 
   :profiles {:dev {:dependencies [[org.clojure/clojurescript "0.0-2246"]]
                    :plugins [[lein-cljsbuild "1.0.3"]
-                             [lein-cooper "0.0.1"]]}}
+                             ;;[lein-cooper "0.0.1"]
+                             ]}}
 
   :cljsbuild {:builds
               [{:source-paths ["src-async"]

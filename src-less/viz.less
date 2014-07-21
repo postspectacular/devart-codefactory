@@ -25,8 +25,9 @@
 .flash-keyframes(tool-flash-anim-shift; stroke; @op-col-shift; @col-sel);
 .flash-keyframes(tool-flash-anim-stretch; stroke; @op-col-stretch; @col-sel);
 .flash-keyframes(tool-flash-anim-scale; stroke; @op-col-scale; @col-sel);
-.flash-keyframes(tool-flash-anim-delete; stroke; @col-bg; @col-sel);
+.flash-keyframes(tool-flash-anim-delete; stroke; @op-col-delete; @col-sel);
 .flash-keyframes(tool-flash-anim-leaf; stroke; @op-col-leaf; @col-sel);
+.flash-keyframes(tool-flash-anim-undo; stroke; @op-col-undo; @col-sel);
 
 #toolbar {
     .flexbox(0 1 auto);
@@ -62,6 +63,8 @@
         .op-tool(op-shift; @op-col-shift; tool-flash-anim-shift);
         .op-tool(op-tilt; @op-col-tilt; tool-flash-anim-tilt);
         .op-tool(op-scale; @op-col-scale; tool-flash-anim-scale);
+        .op-tool(op-delete; @op-col-delete; tool-flash-anim-delete);
+        .op-tool(op-undo; @op-col-undo; tool-flash-anim-undo);
     }
 
     div.sep {
@@ -74,26 +77,30 @@
         position: fixed;
         left: 0px;
         z-index: 200;
-        width: 110px;
+        width: 80px;
         height: 55px;
-        background: -moz-linear-gradient(left, rgba(51,51,54,1) 0%, rgba(51,51,54,1) 50%, rgba(51,51,54,0) 100%);
-        background: -webkit-linear-gradient(left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
-        background: -o-linear-gradient(left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
-        background: -ms-linear-gradient(left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
-        background: linear-gradient(to right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
+        padding-top: 4px;
+        text-align: left;
+        background: -moz-linear-gradient(left, rgba(51,51,54,1) 0%, rgba(51,51,54,1) 75%, rgba(51,51,54,0) 100%);
+        background: -webkit-linear-gradient(left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
+        background: -o-linear-gradient(left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
+        background: -ms-linear-gradient(left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
+        background: linear-gradient(to right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
     }
 
     div#tools-right {
         position: fixed;
         right: 0px;
         z-index: 200;
-        width: 110px;
+        width: 80px;
         height: 55px;
-        background: -moz-linear-gradient(right, rgba(51,51,54,1) 0%, rgba(51,51,54,1) 50%, rgba(51,51,54,0) 100%);
-        background: -webkit-linear-gradient(right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
-        background: -o-linear-gradient(right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
-        background: -ms-linear-gradient(right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
-        background: linear-gradient(to left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 50%,rgba(51,51,54,0) 100%);
+        text-align: right;
+        padding-top: 4px;
+        background: -moz-linear-gradient(right, rgba(51,51,54,1) 0%, rgba(51,51,54,1) 75%, rgba(51,51,54,0) 100%);
+        background: -webkit-linear-gradient(right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
+        background: -o-linear-gradient(right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
+        background: -ms-linear-gradient(right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
+        background: linear-gradient(to left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
     }
 
     svg {
