@@ -174,8 +174,10 @@
                             (let [[_ p delta target] state
                                   dist (g/mag delta)]
                               (when (and (:touch? data) (< dist 20))
-                                (debug :end-touch target dist)
-                                (async/publish bus :op-triggered target))
+                                ;;(debug :end-touch target dist)
+                                (if (= target :undo)
+                                  (async/publish bus :undo-triggered target)
+                                  (async/publish bus :op-triggered target)))
                               (swap! local assoc-in [:tools :active?] false)
                               nil))
              nil)))))))
@@ -394,7 +396,7 @@
           (handle-buttons        bus local (config/timeout :editor))
 
           (async/publish bus :update-toolbar (-> config/app :editor :toolbar-margin-left))
-          (go (<! (timeout 900)) (resize-canvas local))
+          (go (<! (timeout 800)) (resize-canvas local))
 
           (recur))))
 
