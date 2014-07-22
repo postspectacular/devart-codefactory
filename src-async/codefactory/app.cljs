@@ -84,7 +84,10 @@
 
 (defn start
   []
-  (let [bus    (async/pub-sub first)
+  (let [bus    (async/pub-sub
+                (fn [e] (debug :bus (first e)) (first e))
+                ;;first
+                )
         config (config/set-config! "__APP_CONFIG__")
         state  (atom {:bus bus :ctrl-id :loader})
         satisfied? true]

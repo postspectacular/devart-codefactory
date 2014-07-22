@@ -456,7 +456,7 @@
   (go
     (loop []
       (let [_ (<! ch)
-            {:keys [tree history]} @editor]
+            {:keys [tree history tools]} @editor]
         (when _
           (when (seq history)
             (swap!
@@ -468,7 +468,8 @@
             (swap! local assoc :selected-id nil)
             (swap! editor tree/update-meshes true)
             (ops/release-op-controls local)
-            (when-not (seq (:history editor))
+            (ops/disable-presets (:specs tools))
+            (when-not (seq (:history @editor))
               (dom/add-class! (dom/by-id "undo") "disabled"))
             (async/publish bus :regenerate-scene nil))
           (async/publish bus :user-action nil)
