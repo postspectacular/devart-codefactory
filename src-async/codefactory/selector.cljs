@@ -112,11 +112,12 @@
     (route/set-route! "objects" "new" (name (:id spec)))))
 
 (defn center-click?
-  [el e radius]
-  (let [p (vec2 (.-clientX e) (.-clientY e))
-        c (g/* (vec2 (dom/size el)) 0.5)
-        d (g/dist c p)]
-    (<= d radius)))
+  [c1 c2 el e radius]
+  (when (= c1 c2)
+    (let [p (vec2 (.-clientX e) (.-clientY e))
+          c (g/* (vec2 (dom/size el)) 0.5)
+          d (g/dist c p)]
+      (<= d radius))))
 
 (defn init
   [bus]
@@ -172,7 +173,7 @@
                     [e ch] (alts! [continue select (timeout delay)])]
                 (debug :timeout)
                 (cond
-                 (or (= continue ch) (and (= select ch) (center-click? canvas e 120)))
+                 (or (= continue ch) (center-click? select ch canvas e 120))
                  (start-editor local)
                  (or #_(= cancel ch)
                      (>= (- (utils/now) (:last-click @local)) module-timeout))
