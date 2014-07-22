@@ -62,10 +62,6 @@ a:hover { color: lighten(@op-col-sd,10); }
     }
 }
 
-#thanks-wrapper div {
-    max-width: 70% !important;
-}
-
 .flex-item {
     .flexbox(1 100%);
 }
@@ -136,6 +132,10 @@ a:hover { color: lighten(@op-col-sd,10); }
     }
 }
 
+#thanks-wrapper div {
+    max-width: 70% !important;
+}
+
 .section-label {
     margin: 0 10px;
     color: @col-section;
@@ -147,7 +147,7 @@ a:hover { color: lighten(@op-col-sd,10); }
         fill: none;
         stroke: #999;
         stroke-width: 0.1;
-        display: none;
+        //display: none;
     }
 }
 
@@ -165,8 +165,8 @@ a:hover { color: lighten(@op-col-sd,10); }
 
 #map-label {
     float: right;
-    margin-right: 144px;
-   // margin-right: 130px;
+    //margin-right: 144px;
+    margin-right: 130px;
 }
 
 :before, :after {
@@ -181,8 +181,7 @@ a:hover { color: lighten(@op-col-sd,10); }
     left: 0px;
     z-index: 1000;
     display: none;
-    max-width: 2px;
-    padding: 1px;
+    max-width: 250px;
     text-align: left;
     white-space: normal;
     background-color: @col-tooltip;
@@ -202,12 +201,32 @@ a:hover { color: lighten(@op-col-sd,10); }
     margin-left: 10px;
 }
 
+.popover.right {
+    margin-right: 10px;
+}
+
 .popover.top>.arrow {
     bottom: -11px;
     left: 50%;
     margin-left: -11px;
     border-top-color: rgba(0,0,0,.25);
     border-bottom-width: 0;
+}
+
+.popover.bottom>.arrow {
+    top: -11px;
+    left: 33.3%;
+    margin-left: -11px;
+    border-bottom-color: rgba(0,0,0,.25);
+    border-top-width: 0;
+}
+
+.popover.left>.arrow {
+    top: 50%;
+    right: -11px;
+    margin-top: -11px;
+    border-left-color: rgba(0,0,0,.25);
+    border-right-width: 0;
 }
 
 .popover.right>.arrow {
@@ -236,6 +255,22 @@ a:hover { color: lighten(@op-col-sd,10); }
     content: " ";
     border-top-color: @col-tooltip;
     border-bottom-width: 0;
+}
+
+.popover.bottom>.arrow:after {
+    top: 1px;
+    margin-left: -10px;
+    content: " ";
+    border-bottom-color: @col-tooltip;
+    border-top-width: 0;
+}
+
+.popover.left>.arrow:after {
+    bottom: -10px;
+    right: 1px;
+    content: " ";
+    border-left-color: @col-tooltip;
+    border-right-width: 0;
 }
 
 .popover.right>.arrow:after {

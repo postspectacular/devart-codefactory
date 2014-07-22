@@ -300,6 +300,29 @@
                     (end-view-tween local))))))
           (recur))))))
 
+(defn handle-tooltips
+  [tooltips]
+  (let [tips      (->> tooltips keys (mapv #(-> % name dom/by-id (dom/query "svg"))))
+        chan      (fn [ev] #(first (async/event-channel % ev)))
+        on-chans  (mapv (chan "mouseenter") tips)
+        off-chans (mapv (chan "mouseleave") tips)]
+    (go
+      (loop []
+        (let [[e] (alts! on-chans)
+              id (-> (.-target e) dom/parent (dom/get-attribs ["id"]) first)
+              tip (dom/by-id (str id "-tip"))
+              {:keys [offset content]} (tooltips (keyword id))
+              [x y] (g/+ (vec2 (dom/offset (.-target e))) offset)]
+          (dom/set-text! (dom/query tip ".popover-content") content)
+          (dom/set-style! tip (clj->js {:display "block" :left (->px x) :top (->px y)}))
+          (recur))))
+    (go
+      (loop []
+        (let [[e] (alts! off-chans)
+              id (-> (.-target e) dom/parent (dom/get-attribs ["id"]) first)]
+          (dom/set-style! (dom/by-id (str id "-tip")) #js {:display "none"})
+          (recur))))))
+
 (defn render-loop
   [bus local]
   (let [ch (async/subscribe bus :render-scene)
@@ -405,4 +428,5 @@
     (handle-release bus local)
     (handle-tree-broadcast bus local)
     (handle-tree-backup bus local)
-    (handle-toolbar-update bus local toolbar)))
+    (handle-toolbar-update bus local toolbar)
+    (handle-tooltips (get-in config/app [:editor :tooltips]))))

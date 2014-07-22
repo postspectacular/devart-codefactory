@@ -111,9 +111,17 @@
     :toolbar-sep-size [15 50]
     :toolbar-margin-left 65
     :toolbar-margin-right 65
+    :tooltips {:preview-label {:offset [-80 24]
+                               :content "This is the 3d preview of your object. Any selected items in the code are highlighted here too. Click & drag to rotate view or use mousewheel / pinch to zoom."}
+               :toolbar-label {:offset [12 -40]
+                               :content "Here you can find all code operations which can be applied to a selected shape. Use undo to revert changes. Click & drag to scroll."}
+               :viz-label {:offset [12 -50]
+                           :content "This is a visualization of all code operations used to create the shape above. Select boxes to apply operations. Each will create one or more new shapes, forming a hierarchy. Click & drag to scroll."}
+               :map-label {:offset [-262 -40]
+                           :content "This is a zoomed out map of your entire code structure. The yellow rectangle marks the area visible on the left. Click & drag to scroll."}}
     :root-label "<h1>TAP HERE TO BEGIN</h1>"
     :leaf-label "+"
-    :map-labels ["CODE OVERVIEW" "This area always shows" "a map of your entire code."]}
+    :map-labels ["CODE OVERVIEW"]}
 
    :operators
    {:sd      {:col "#56ffee" :label "split"
