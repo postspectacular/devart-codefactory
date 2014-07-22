@@ -66,14 +66,6 @@ a:hover { color: lighten(@op-col-sd,10); }
     .flexbox(1 100%);
 }
 
-.preview-wrapper {
-    .flexbox(12 1 auto);
-}
-
-#editor .preview-wrapper {
-    cursor: -webkit-grab;
-}
-
 .buttonbar {
     min-height: 70;
     height: 70px;
@@ -132,6 +124,14 @@ a:hover { color: lighten(@op-col-sd,10); }
     }
 }
 
+.preview-wrapper {
+    .flexbox(12 1 auto);
+}
+
+#editor .preview-wrapper {
+    cursor: -webkit-grab;
+}
+
 #thanks-wrapper div {
     max-width: 70% !important;
 }
@@ -147,7 +147,6 @@ a:hover { color: lighten(@op-col-sd,10); }
         fill: none;
         stroke: #999;
         stroke-width: 0.1;
-        //display: none;
     }
 }
 
@@ -165,7 +164,6 @@ a:hover { color: lighten(@op-col-sd,10); }
 
 #map-label {
     float: right;
-    //margin-right: 144px;
     margin-right: 130px;
 }
 
@@ -175,7 +173,7 @@ a:hover { color: lighten(@op-col-sd,10); }
     box-sizing: border-box;
 }
 
-.popover {
+.tooltip {
     position: absolute;
     top: 0px;
     left: 0px;
@@ -193,19 +191,19 @@ a:hover { color: lighten(@op-col-sd,10); }
     box-shadow: 0 5px 10px rgba(0,0,0,.2);
 }
 
-.popover.top {
+.tooltip.top {
     margin-top: -10px;
 }
 
-.popover.right {
+.tooltip.right {
     margin-left: 10px;
 }
 
-.popover.right {
+.tooltip.right {
     margin-right: 10px;
 }
 
-.popover.top>.arrow {
+.tooltip.top>.arrow {
     bottom: -11px;
     left: 50%;
     margin-left: -11px;
@@ -213,7 +211,7 @@ a:hover { color: lighten(@op-col-sd,10); }
     border-bottom-width: 0;
 }
 
-.popover.bottom>.arrow {
+.tooltip.bottom>.arrow {
     top: -11px;
     left: 33.3%;
     margin-left: -11px;
@@ -221,7 +219,7 @@ a:hover { color: lighten(@op-col-sd,10); }
     border-top-width: 0;
 }
 
-.popover.left>.arrow {
+.tooltip.left>.arrow {
     top: 50%;
     right: -11px;
     margin-top: -11px;
@@ -229,7 +227,7 @@ a:hover { color: lighten(@op-col-sd,10); }
     border-right-width: 0;
 }
 
-.popover.right>.arrow {
+.tooltip.right>.arrow {
     top: 50%;
     left: -11px;
     margin-top: -11px;
@@ -237,10 +235,10 @@ a:hover { color: lighten(@op-col-sd,10); }
     border-left-width: 0;
 }
 
-.popover>.arrow {
+.tooltip>.arrow {
     border-width: 11px;
 }
-.popover>.arrow, .popover>.arrow:after {
+.tooltip>.arrow, .tooltip>.arrow:after {
     position: absolute;
     display: block;
     width: 0;
@@ -249,7 +247,7 @@ a:hover { color: lighten(@op-col-sd,10); }
     border-style: solid;
 }
 
-.popover.top>.arrow:after {
+.tooltip.top>.arrow:after {
     bottom: 1px;
     margin-left: -10px;
     content: " ";
@@ -257,7 +255,7 @@ a:hover { color: lighten(@op-col-sd,10); }
     border-bottom-width: 0;
 }
 
-.popover.bottom>.arrow:after {
+.tooltip.bottom>.arrow:after {
     top: 1px;
     margin-left: -10px;
     content: " ";
@@ -265,7 +263,7 @@ a:hover { color: lighten(@op-col-sd,10); }
     border-top-width: 0;
 }
 
-.popover.left>.arrow:after {
+.tooltip.left>.arrow:after {
     bottom: -10px;
     right: 1px;
     content: " ";
@@ -273,7 +271,7 @@ a:hover { color: lighten(@op-col-sd,10); }
     border-right-width: 0;
 }
 
-.popover.right>.arrow:after {
+.tooltip.right>.arrow:after {
     bottom: -10px;
     left: 1px;
     content: " ";
@@ -281,11 +279,11 @@ a:hover { color: lighten(@op-col-sd,10); }
     border-left-width: 0;
 }
 
-.popover>.arrow:after {
+.tooltip>.arrow:after {
     content: "";
     border-width: 10px;
 }
 
-.popover-content {
+.tooltip-content {
     padding: 9px 14px;
 }

@@ -302,26 +302,29 @@
 
 (defn handle-tooltips
   [tooltips]
-  (let [tips      (->> tooltips keys (mapv #(-> % name dom/by-id (dom/query "svg"))))
-        chan      (fn [ev] #(first (async/event-channel % ev)))
-        on-chans  (mapv (chan "mouseenter") tips)
-        off-chans (mapv (chan "mouseleave") tips)]
+  (let [tips     (->> tooltips keys (mapv #(-> % name dom/by-id (dom/query "svg"))))
+        channels (fn [ev] (set (map #(first (async/event-channel % ev)) tips)))
+        on       (channels "mouseenter")
+        off      (channels "mouseleave")
+        touch    (channels "touchstart")
+        all      (vec (concat on off touch))]
     (go
-      (loop []
-        (let [[e] (alts! on-chans)
+      (loop [state {}]
+        (let [[e ch] (alts! all)
               id (-> (.-target e) dom/parent (dom/get-attribs ["id"]) first)
+              kid (keyword id)
               tip (dom/by-id (str id "-tip"))
-              {:keys [offset content]} (tooltips (keyword id))
-              [x y] (g/+ (vec2 (dom/offset (.-target e))) offset)]
-          (dom/set-text! (dom/query tip ".popover-content") content)
-          (dom/set-style! tip (clj->js {:display "block" :left (->px x) :top (->px y)}))
-          (recur))))
-    (go
-      (loop []
-        (let [[e] (alts! off-chans)
-              id (-> (.-target e) dom/parent (dom/get-attribs ["id"]) first)]
-          (dom/set-style! (dom/by-id (str id "-tip")) #js {:display "none"})
-          (recur))))))
+              {:keys [offset content]} (tooltips kid)
+              [x y] (g/+ (vec2 (dom/offset (.-target e))) offset)
+              show? (or (on ch) (and (touch ch) (not (state kid))))]
+          (debug :tip (.-target e) kid)
+          (when id
+            (if show?
+              (do
+                (dom/set-text! (dom/query tip ".tooltip-content") content)
+                (dom/set-style! tip (clj->js {:display "block" :left (->px x) :top (->px y)})))
+              (dom/set-style! tip #js {:display "none"})))
+          (recur (assoc state kid show?)))))))
 
 (defn render-loop
   [bus local]
