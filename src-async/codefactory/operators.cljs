@@ -1,4 +1,6 @@
 (ns codefactory.operators
+  (:require-macros
+   [thi.ng.macromath.core :as mm])
   (:require
    [codefactory.config :as config]
    [codefactory.tree :as tree]
@@ -48,7 +50,7 @@
   (when spec
     (let [off (nth spec 3)
           w (.-innerWidth js/window)
-          x (- w off (/ w 2))]
+          x (mm/sub w off (mm/madd w 0.5 (get-in config/app [:editor :toolbar-op-width]) 0.5))]
       (async/publish bus :update-toolbar x))))
 
 (defn highlight-selected-preset
