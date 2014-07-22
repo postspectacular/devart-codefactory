@@ -257,6 +257,7 @@
       (loop []
         (let [[_ tree] (<! ch)]
           (swap! local update-in [:history] conj tree)
+          (dom/remove-class! (dom/by-id "undo") "disabled")
           (debug :backup-tree (count (:history @local)) tree)
           (recur))))))
 

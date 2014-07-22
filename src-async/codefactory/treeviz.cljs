@@ -373,23 +373,29 @@
               {:keys [el path]} (get-in @local [:nodes id])
               {:keys [tree meshes tools start-time]} @editor]
           (when id
-            (let [node (tree/node-at tree path)]
-              (swap! local assoc :selected-id id)
-              (swap!
-               editor assoc
-               :selection path
-               :sel-type (config/translate-mg-op (tree/node-operator node))
-               :sel-time (mm/subm (utils/now) start-time 0.001)
-               :display-meshes (tree/filter-leaves-and-selection meshes tree path))
-              (highlight-selected-node el (:sel-type @editor))
-              (ops/enable-presets (:specs tools))
-              (debug :sel-node node)
-              (when-let [pid (:id node)]
-                (ops/highlight-selected-preset pid (:specs tools))
-                (ops/center-preset bus (pid (:specs tools))))
-              (async/publish bus :render-scene nil)
-              (regenerate-map editor local)
-              (recur))))))))
+            (if el
+              (let [node (tree/node-at tree path)
+                    op (config/translate-mg-op (tree/node-operator node))]
+                (swap! local assoc :selected-id id)
+                (swap!
+                 editor assoc
+                 :selection path
+                 :sel-type op
+                 :sel-time (mm/subm (utils/now) start-time 0.001)
+                 :display-meshes (tree/filter-leaves-and-selection meshes tree path))
+                (when (and (not (seq path)) (= op :leaf))
+                  (dom/set-html! el ""))
+                (highlight-selected-node el (:sel-type @editor))
+                (ops/enable-presets (:specs tools))
+                (debug :sel-node node)
+                (when-let [pid (:id node)]
+                  (ops/highlight-selected-preset pid (:specs tools))
+                  (ops/center-preset bus (pid (:specs tools))))
+                (async/publish bus :render-scene nil)
+                (async/publish bus :user-action nil)
+                (regenerate-map editor local))
+              (warn :unknown-sel-id id))
+            (recur)))))))
 
 (defn handle-node-deselected
   [ch bus editor local]
@@ -398,11 +404,13 @@
       (loop []
         (let [[_ [id render?]] (<! ch)
               node (get-in @local [:nodes id])
-              {:keys [tree meshes sel-type tools]} @editor]
+              {:keys [tree meshes selection sel-type tools]} @editor]
           (when id
             (swap! local assoc :selected-id nil)
             (swap! editor assoc :selection nil :sel-type nil)
             (unhighlight-selected-node (:el node) sel-type)
+            (when (and (not (seq selection)) (nil? (:op (tree/node-at tree selection))))
+              (dom/set-html! (:el node) (get-in config/app [:editor :root-label])))
             (ops/disable-presets (:specs tools))
             (ops/release-op-controls local)
             (when render?
@@ -450,7 +458,6 @@
       (let [_ (<! ch)
             {:keys [tree history]} @editor]
         (when _
-          (debug :undo)
           (when (seq history)
             (swap!
              editor assoc
@@ -461,6 +468,8 @@
             (swap! local assoc :selected-id nil)
             (swap! editor tree/update-meshes true)
             (ops/release-op-controls local)
+            (when-not (seq (:history editor))
+              (dom/add-class! (dom/by-id "undo") "disabled"))
             (async/publish bus :regenerate-scene nil))
           (async/publish bus :user-action nil)
           (recur))))))
@@ -517,22 +526,26 @@
         (when e
           (recur
            (case e
-             :drag-start (let [scroll (:scroll @local)]
+             :drag-start (let [scroll (:scroll @local)
+                               target (loop [el (:target data)]
+                                        (if-let [id (first (dom/get-attribs el ["id"]))]
+                                          id (recur (dom/parent el))))
+                               state [scroll (:p data) (vec2) target]]
                            (swap! local assoc :scroll-active? true)
-                           [scroll (:p data) (vec2) (:target data)])
+                           (debug :touch-start target)
+                           state)
              :drag-move  (when state
                            (let [[scroll p _ target] state
                                  delta  (g/- (:p data) p)
                                  scroll' (g/madd (assoc delta :y 0) 2 scroll)]
                              (reposition-viz editor local scroll')
                              (regenerate-map editor local)
-                             [scroll p delta target] state))
+                             [scroll p delta target]))
              :gesture-end (when state
                             (let [[_ p delta target] state
                                   dist (g/mag delta)]
                               (when (and (:touch? data) (< dist 20))
-                                (async/publish
-                                 bus :node-toggle (first (dom/get-attribs target ["id"]))))
+                                (async/publish bus :node-toggle target))
                               (swap! local assoc :scroll-active? false)
                               nil))
              nil)))))))

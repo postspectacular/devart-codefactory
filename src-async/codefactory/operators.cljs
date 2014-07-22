@@ -68,7 +68,8 @@
       (let [[k [el]] (first specs)]
         (dom/remove-class! el "selected")
         (dom/add-class! el "disabled")
-        (recur (next specs))))))
+        (recur (next specs)))))
+  (dom/add-class! (dom/by-id "delete") "disabled"))
 
 (defn enable-presets
   [specs]
@@ -76,7 +77,8 @@
     (if specs
       (let [[k [el]] (first specs)]
         (dom/remove-class! el "disabled")
-        (recur (next specs))))))
+        (recur (next specs)))))
+  (dom/remove-class! (dom/by-id "delete") "disabled"))
 
 (defn init-op-triggers
   [bus tools]
