@@ -13,6 +13,7 @@
   [bus]
   (let [init     (async/subscribe bus :init-submit-confirm)
         release  (async/subscribe bus :release-submit-confirm)
+        success  (async/subscribe bus :submit-model-success)
         [cancel] (async/event-channel (config/dom-component :thanks-cancel) "click")
         active?  (atom false)]
 
@@ -30,4 +31,13 @@
       (loop []
         (<! release)
         (reset! active? false)
-        (recur)))))
+        (recur)))
+
+    (go
+      (loop []
+        (let [[_ data] (<! success)
+              {:keys [id]} (:body data)]
+          (when (get-in config/app [:modules :workshop])
+            (let [url (str "http://devartcodefactory.com/#/objects/" id)]
+              (dom/set-html! (dom/by-id "art-url") (str "<a href=\"" url "\">" url "</a>"))))
+          (recur))))))

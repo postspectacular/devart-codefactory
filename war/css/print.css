@@ -1,0 +1,13 @@
+body, section, div, p {
+    font-family: "Abel"
+    font-size: 14px;
+    text-align: left;
+}
+
+#loader, #upgrade-browser, #home, #selector, #submit-form,
+.section-label, #toolbar, #edit-treemap, .buttonbar, .noprint
+{
+    display: none;
+}
+
+.flex-container { display: block; }

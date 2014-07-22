@@ -36,7 +36,8 @@ module.exports = function(grunt) {
         },
         files: {
           'war/index.html': 'src-html/index.html',
-          'war/barbican.html': 'src-html/barbican.html'
+          'war/barbican.html': 'src-html/barbican.html',
+          'war/workshop.html': 'src-html/workshop.html'
         }
       }
     },

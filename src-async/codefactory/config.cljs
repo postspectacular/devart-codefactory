@@ -191,7 +191,7 @@
    [{:match ["home"]
      :controller :home
      :hash "home"}
-    {:match ["objects" :id]
+    #_{:match ["objects" :id]
      :bindings {:id {:validate [(v/uuid4)]}}
      :controller :editor}
     {:match ["objects" "new" :seed-id]
@@ -289,6 +289,13 @@
 (def ^:export barbican
   (-> default-config
       (assoc-in [:api :inject] {:location "barbican"})))
+
+(def ^:export workshop
+  (-> app
+      (assoc-in [:api :inject] {:location "workshop"})
+      (assoc-in [:modules :workshop] true)
+      (assoc-in [:timeouts :editor] (* 30 60 1000))
+      (assoc-in [:timeouts :thanks] (* 5 60 1000))))
 
 (defn set-config!
   [sym] (set! app (js/eval (aget js/window sym))))
