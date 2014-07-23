@@ -2,22 +2,21 @@
   (:require-macros
    [thi.ng.macromath.core :as mm])
   (:require
-   [codefactory.config :as config]
    [codefactory.color :as col]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.geom.webgl.core :as gl]
-   [thi.ng.geom.webgl.animator :as anim]
    [thi.ng.geom.webgl.buffers :as buf]
    [thi.ng.geom.webgl.shaders :as sh]
    [thi.ng.geom.webgl.utils :refer [loop-kv]]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.matrix :as mat :refer [M44]]
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
+   [thi.ng.geom.circle :as c]
+   [thi.ng.geom.polygon :as poly]
    [thi.ng.geom.rect :as r]
    [thi.ng.geom.basicmesh :as bm]
-   [thi.ng.geom.ui.arcball :as arcball]
-   [thi.ng.common.math.core :as m]
+   [thi.ng.common.math.core :as m :refer [HALF_PI]]
    ))
 
 (def lambert-shader-spec
@@ -101,8 +100,6 @@ void main() {
     :uniforms {:lightCol [0.75 0.75 0.75] :alpha 0.25}}
    })
 
-;; normal: gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
 (defn init-shader
   [gl preset-id]
   (let [preset (shader-presets preset-id)
@@ -116,19 +113,13 @@ void main() {
   (assoc state
     :shaders (mapv #(init-shader gl %) preset-ids)))
 
-(defn init-arcball
-  [state initial-view f]
-  (let [a (arcball/make-arcball :init (or initial-view (:initial-view config/webgl) [0 0 0 1]))]
-    (arcball/listen! a (:canvas state) f)
-    (assoc state :arcball a)))
-
 (defn init-webgl
-  [canvas]
+  [canvas config]
   (try
-    (let [aa? (not (dom/match-media (str "(max-width: " (:min-aa-res config/webgl) "px)")))
+    (let [aa? (not (dom/match-media (str "(max-width: " (:min-aa-res config) "px)")))
           gl (gl/gl-context canvas {:antialias aa?})]
       (-> {:canvas canvas :gl gl}
-          (init-shaders (:shader-preset-ids config/webgl))))
+          (init-shaders (:shader-preset-ids config))))
     (catch js/Error e false)))
 
 (defn prepare-render-state
@@ -137,20 +128,21 @@ void main() {
     (gl/enable gl gl/depth-test)
     (gl/disable gl gl/depth-test))
   (if (:blend state)
-    (do
-      (gl/enable gl gl/blend)
-      (.blendFunc gl gl/src-alpha gl/one))
+    (doto gl
+      (gl/enable gl/blend)
+      (.blendFunc gl/src-alpha gl/one))
     (gl/disable gl gl/blend)))
 
 (defn draw-meshes
   [gl meshes shader uniforms]
   (.useProgram gl (:program shader))
   (loop-kv #(sh/set-uniform shader % %2) uniforms)
-  (loop-kv
-   (fn [_ {:keys [attribs num-vertices]}]
-     (loop-kv #(sh/set-attribute gl shader % %2) attribs)
-     (.drawArrays gl gl/triangles 0 num-vertices))
-   meshes))
+  (loop [meshes meshes]
+    (if meshes
+      (let [{:keys [attribs num-vertices]} (first meshes)]
+        (loop-kv #(sh/set-attribute gl shader % %2) attribs)
+        (.drawArrays gl gl/triangles 0 num-vertices)
+        (recur (next meshes))))))
 
 (defn render-meshes
   [gl shader meshes shared uniforms]
@@ -162,14 +154,32 @@ void main() {
 (defn render-with-selection
   [gl shaders shared-uniforms meshes sel-meshes sel-color time sel-time]
   (let [[xray solid] shaders
-        color sel-color
-        ;; color (col/pulsate 0.5 sel-color time 0.5)
-        alpha (get-in xray [:preset :uniforms :alpha])
-        ;; alpha (m/mix 1.0 alpha (min (mm/subm time sel-time 0.2) 1.0))
-        ]
-    (debug time sel-time)
+        color (col/pulsate 0.5 sel-color time 6)
+        alpha (-> xray :preset :uniforms :alpha)]
     (render-meshes
      gl solid sel-meshes shared-uniforms {:lightCol color})
     (render-meshes
      gl xray meshes shared-uniforms {:alpha alpha})))
 
+(defn render-axes
+  [gl shader uniforms axes]
+  (render-meshes
+   gl shader [(axes 0)] uniforms {:lightCol [1 0 0]})
+  (render-meshes
+   gl shader [(axes 1)] uniforms {:lightCol [0 1 0]})
+  (render-meshes
+   gl shader [(axes 2)] uniforms {:lightCol [0 0 1]}))
+
+(defn axis-meshes
+  [gl radius len]
+  (let [z (-> (c/circle radius)
+              (g/extrude {:depth len :bottom? false})
+              (g/as-mesh {:mesh (bm/basic-mesh)}))
+        x (g/transform z (g/rotate-y M44 HALF_PI))
+        y (g/transform z (g/rotate-x M44 (- HALF_PI)))]
+    (reduce
+     (fn [specs m]
+       (conj specs
+             (-> (gl/as-webgl-buffer-spec m {:tessellate true :fnormals true})
+                 (buf/make-attribute-buffers-in-spec gl gl/static-draw))))
+     [] [x y z])))

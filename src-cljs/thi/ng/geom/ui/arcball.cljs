@@ -1,18 +1,12 @@
 (ns thi.ng.geom.ui.arcball
-  (:require-macros [thi.ng.macromath.core :as mm])
+  (:require-macros
+   [thi.ng.macromath.core :as mm])
   (:require
-   [thi.ng.cljs.app :as app]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.vector :refer [vec2 vec3 V3Y]]
    [thi.ng.geom.core.matrix :as mat]
    [thi.ng.geom.core.quaternion :as q]
    [thi.ng.common.math.core :as m]))
-
-(defn pos->sphere
-  [p r x y]
-  (let [v (vec3 (mm/subdiv x (p 0) r) (- (mm/subdiv y (p 1) r)) 0)
-        m (g/mag-squared v)]
-    (if (> m 1.0) (g/normalize v) (assoc v :z (Math/sqrt (- 1 m))))))
 
 (defprotocol PArcBall
   (down [_ x y])
@@ -22,7 +16,17 @@
   (zoom-delta [_ delta])
   (zoom-abs [_ x])
   (update-view [_])
-  (get-view [_]))
+  (get-view [_])
+  (get-rotation [_])
+  (set-rotation [_ q]))
+
+(defn pos->sphere
+  [p r x y]
+  (let [v (vec3 (mm/subdiv x (p 0) r) (- (mm/subdiv y (p 1) r)) 0)
+        m (g/mag-squared v)]
+    (if (> m 1.0)
+      (g/normalize v)
+      (assoc v :z (Math/sqrt (- 1 m))))))
 
 (deftype ArcBall
     [min-dist max-dist
@@ -48,14 +52,14 @@
             drag-rot (q/quat axis theta)]
         (set! curr-rot (g/* drag-rot click-rot))
         (update-view _))))
-  (up [_] (set! click-pos nil))
+  (up
+    [_] (set! click-pos nil))
   (resize
     [_ w h]
     (let [ww (/ w 2)
           wh (/ h 2)]
       (set! radius (* (min ww wh) 2))
       (set! center (vec2 ww wh))
-      (prn :center center)
       _))
   (zoom-delta
     [_ delta]
@@ -73,14 +77,20 @@
           target (vec3)
           up (g/transform V3Y q)]
       (set! view (mat/look-at eye target up))
-      (when-let [callback (:callback listeners)]
-        (callback view))
+      ;;(prn :arcball (pr-str curr-rot) dist)
       view))
-  (get-view [_] (or view (update-view _))))
+  (get-view
+    [_] (or view (update-view _)))
+  (get-rotation
+    [_] curr-rot)
+  (set-rotation
+    [_ q]
+    (set! curr-rot q)
+    (update-view _)))
 
 (defn make-arcball
   [& {:keys [init dist min-dist max-dist radius center] :or {dist 2.75}}]
   (let [min-dist (or min-dist (/ dist 2))
         max-dist (or max-dist (* dist 2))
         curr-rot (if init (q/quat init) (q/quat-from-axis-angle V3Y m/PI))]
-    (ArcBall. min-dist max-dist radius center dist curr-rot (vec3) nil nil nil #{})))
+    (ArcBall. min-dist max-dist radius center dist curr-rot (vec3) nil nil)))

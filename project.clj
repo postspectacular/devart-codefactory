@@ -3,17 +3,19 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  
+
+  :source-paths ["src-gae"]
+
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/data.json "0.2.5"]
                  [org.clojure/core.async "0.1.301.0-deb34a-alpha"]
-                 
+
                  [ring/ring-core "1.2.2"]
                  [compojure "1.1.8"]
                  [hiccup "1.0.5"]
                  [camel-snake-kebab "0.1.5"]
                  [simple-time "0.1.1"]
-                 
+
                  [thi.ng/geom-core "0.3.0-SNAPSHOT"]
                  [thi.ng/geom-types "0.3.0-SNAPSHOT"]
                  [thi.ng/morphogen "0.1.0-SNAPSHOT"]
@@ -50,14 +52,14 @@
                              ]}}
 
   :cljsbuild {:builds
-              [{:source-paths ["src-async"]
+              [{:source-paths ["src-cljs"]
                 :id "dev"
                 :compiler
                 {:pretty-print true
                  :output-to "war/js/app.js"
                  :optimizations :whitespace}
                 :jar false}
-               {:source-paths ["src-async"]
+               {:source-paths ["src-cljs"]
                 :id "prod"
                 :compiler
                 {:pretty-print false

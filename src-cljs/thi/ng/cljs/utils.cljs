@@ -31,3 +31,9 @@
 
 (defn now
   [] (.getTime (js/Date.)))
+
+(defn float-formatter
+  [prec]
+  (fn [x] (.toFixed (js/Number. x) prec)))
+
+(defn ->px [x] (str x "px"))

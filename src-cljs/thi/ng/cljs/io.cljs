@@ -1,5 +1,6 @@
 (ns thi.ng.cljs.io
   (:require
+   [thi.ng.cljs.log :refer [debug info warn]]
    [goog.net.XhrIo :as xhr]
    [goog.events :as ev]
    [goog.net.EventType]
@@ -38,6 +39,7 @@
         success (->callback success edn?)
         error   (->callback error edn?)
         headers (->headers headers :edn edn?)]
+    (debug :request uri :data data)
     (when success
       (ev/listen req goog.net.EventType/SUCCESS #(success req)))
     (when error

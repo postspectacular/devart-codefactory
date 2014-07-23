@@ -1,18 +1,16 @@
 (ns thi.ng.cljs.route
   (:require
    [thi.ng.validate.core :as v]
-   [thi.ng.cljs.app :as app]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.utils :as utils]
    [clojure.string :as str]))
 
 (defn get-route
-  []
-  (.slice (.split (.-hash (.-location js/window)) "/") 1))
+  [] (-> js/window (.-location) (.-hash) (.split "/") (.slice 1)))
 
 (defn set-route!
   [id & params]
-  (let [hash (apply str (interpose "/" (concat ["#" (name id)] params)))]
+  (let [hash (apply str (interpose "/" (into ["#" (name id)] params)))]
     (set! (.-hash (.-location js/window)) hash)))
 
 (defn match-route*
@@ -61,13 +59,13 @@
      routes)))
 
 (defn router
-  [routes default queue]
+  [routes default route-changed]
   (fn []
-    (let [route-info (match-route routes)]
-      (if route-info
-        (app/emit queue :route-changed route-info)
+    (let [info (match-route routes)]
+      (if info
+        (route-changed info)
         (do
-          (debug "no matching route:" (get-route) "redirect to default...")
+          (warn "no matching route:" (get-route) "redirect to default...")
           (apply set-route! (:hash default) (:params default)))))))
 
 (defn start-router!

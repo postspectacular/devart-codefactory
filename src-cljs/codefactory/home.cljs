@@ -1,62 +1,40 @@
-(ns codefactory.home)
+(ns codefactory.home
+  (:require-macros
+   [cljs.core.async.macros :as asm :refer [go]])
+  (:require
+   [codefactory.config :as config]
+   [thi.ng.cljs.async :as async]
+   [thi.ng.cljs.log :refer [debug info warn]]
+   [thi.ng.cljs.route :as route]
+   [thi.ng.cljs.utils :as utils]
+   [thi.ng.cljs.dom :as dom]
+   [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
 
-(def controller-id "HomeController")
+(defn init
+  [bus]
+  (let [chan-i  (async/subscribe bus :init-home)
+        chan-r  (async/subscribe bus :release-home)
+        [click] (async/event-channel (config/dom-component :home-continue) "click")
+        fs      (config/dom-component :fullscreen)]
 
-(def module-spec
-  {:directives
-   [{:id "videoBackground"
-     :spec
-     #js
-     ["$window"
-      (fn [$window]
-        #js
-        {:restrict "A"
-         :scope #js {:aspect "="}
-         :link (fn [scope element attribs]
-                 (let [aspect (.-aspect scope)]
-                   (set! (.-resizeBg scope)
-                         (fn []
-                           (let [ww (.-innerWidth $window)
-                                 wh (.-innerHeight $window)]
-                             (if (< (/ ww wh) aspect)
-                               (let [iw (bit-or (* wh aspect) 0)
-                                     left (bit-shift-right (- ww iw) 1)]
-                                 (.css element #js {:left (str left "px")
-                                                    :width (str iw "px")
-                                                    :height (str wh "px")
-                                                    :top "0px"}))
-                               (let [ih (bit-or (/ ww aspect) 0)
-                                     top (bit-shift-right (- wh ih) 1)]
-                                 (.css element #js {:left "0px"
-                                                    :width (str ww "px")
-                                                    :height (str ih "px")
-                                                    :top (str top "px")}))))))
-
-                   (set! (.-init scope)
-                         (fn []
-                           (.css element #js {:position "fixed" :z-index "-100"})
-                           (.resizeBg scope)
-                           (.play (aget element 0))
-                           (.addEventListener $window "resize" (.-resizeBg scope) false)))
-
-
-
-                   (.$on scope "$destroy"
-                         (fn [] (.removeEventListener $window "resize" (.-resizeBg scope))))
-
-                   (.init scope)))})]}]
-   :controllers
-   [{:id controller-id
-     :spec #js ["$scope" "$routeParams" "$window"
-                (fn [$scope $routeParams $window]
-                  (prn :init "HomeController" $routeParams)
-
-                  (set! (.-launchFullScreen $scope)
-                        (fn []
-                          #_(let [doc (.-documentElement js/document)]
-                            (cond
-                             (.-requestFullscreen doc) (.requestFullscreen doc)
-                             (.-mozRequestFullscreen doc) (.mozRequestFullscreen doc)
-                             (.-webkitRequestFullscreen doc) (.webkitRequestFullscreen doc)
-                             (.-msRequestFullscreen doc) (.msRequestFullscreen doc)
-                             :default nil)))))]}]})
+    (dom/add-listeners
+     [[fs "click"
+       (fn []
+         (dom/request-fullscreen)
+         (dom/add-class! fs "hidden"))]])
+    
+    ;; TODO enable gallery button
+    (go
+      (loop []
+        (let [[_ [state]] (<! chan-i)]
+          (debug :init-home)
+          (async/publish bus :broadcast-tree [nil nil])
+          (go
+            (let [_ (<! click)]
+              (route/set-route! "select")))
+          (recur))))
+    (go
+      (loop []
+        (let [[_ [state]] (<! chan-r)]
+          (debug :release-home)
+          (recur))))))

@@ -1,371 +1,449 @@
 (ns codefactory.editor
+  (:require-macros
+   [cljs.core.async.macros :refer [go]]
+   [thi.ng.macromath.core :as mm])
   (:require
+   [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]
    [codefactory.config :as config]
-   [codefactory.shader :as shader]
-   [thi.ng.angular :as ng]
-   [thi.ng.arcball :as arcball]
+   [codefactory.color :as col]
+   [codefactory.webgl :as webgl]
+   [codefactory.shared :as shared]
+   [codefactory.tree :as tree]
+   [codefactory.operators :as ops]
+   [codefactory.treeviz :as viz]
+   [thi.ng.cljs.async :as async]
+   [thi.ng.cljs.log :refer [debug info warn]]
+   [thi.ng.cljs.route :as route]
+   [thi.ng.cljs.utils :as utils :refer [->px]]
+   [thi.ng.cljs.dom :as dom]
+   [thi.ng.cljs.io :as io]
+   [thi.ng.cljs.gestures :as gest]
    [thi.ng.geom.webgl.core :as gl]
    [thi.ng.geom.webgl.animator :as anim]
    [thi.ng.geom.webgl.buffers :as buf]
-   [thi.ng.geom.webgl.shaders :as sh]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.matrix :as mat :refer [M44]]
-   [thi.ng.geom.core.quaternion :as quat]
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
-   [thi.ng.geom.aabb :as a]
-   [thi.ng.geom.cuboid :as cub]
    [thi.ng.geom.rect :as r]
-   [thi.ng.geom.basicmesh :as bm]
-   [thi.ng.morphogen.core :as mg]
-   [thi.ng.common.math.core :as m]
-   ))
+   [thi.ng.geom.ui.arcball :as arcball]
+   [thi.ng.common.math.core :as m]))
 
-(def controller-id "EditObjectController")
+(defn submit-model
+  [bus local]
+  (let [{:keys [tree seed-id]} @local]
+    (async/publish bus :broadcast-tree [tree seed-id])
+    (route/set-route! "objects" "submit")))
 
-(def event-render-gl "render-gl")
-(def event-tree-editor-ready "tree-editor-ready")
-(def event-op-tree-ready "op-tree-ready")
-(def event-tree-submit "submit-tree")
+(defn load-model
+  [bus id]
+  (io/request
+   :uri     (str (config/api-route :get-object) id)
+   :method  :get
+   :edn?    true
+   :success (fn [_ data]
+              (async/publish
+               bus :editor-get-model-success
+               {:uuid id
+                :seed-id (:seed data)
+                :tree (:tree data)}))
+   :error   (fn [status body]
+              (async/publish bus :editor-get-model-fail [status body]))))
 
-(def seeds
-  (->> [(a/aabb 1)
-        (cub/cuboid (mg/circle-lattice-seg 6 1 0.2))
-        (cub/cuboid (mg/sphere-lattice-seg 6 0.25 0.0955 0.2))]
-       (mapv (comp mg/seed-box g/center))))
+(defn init-model
+  [bus {:keys [id seed-id]}]
+  (if id
+    (load-model bus id)
+    (async/publish bus :editor-select-seed seed-id)))
 
-(defn make-stripes
-  ([n] (make-stripes even? n))
-  ([pred n]
-     (mg/subdiv :cols n :out (mapv #(if (pred %) {}) (range n)))))
+(defn render-scene
+  [local]
+  (when (:active? @local)
+    (let [{:keys [gl arcball shaders proj display-meshes bounds
+                  selection sel-type start-time sel-time bg-col]} @local
+                  now         (utils/now)
+                  time        (mm/subm now start-time 0.001)
+                  view        (arcball/get-view arcball)
+                  shared-unis {:view view
+                               :model (g/translate M44 (g/- (g/centroid bounds)))
+                               :proj proj
+                               :normalMat (-> (g/invert view) (g/transpose))}]
+      (apply gl/clear-color-buffer gl bg-col)
+      (gl/clear-depth-buffer gl 1.0)
+      (if selection
+        (webgl/render-with-selection
+         gl
+         shaders
+         shared-unis
+         (vals (dissoc display-meshes selection))
+         [(display-meshes selection)]
+         (col/hex->rgb (config/operator-color sel-type))
+         time sel-time)
+        (webgl/render-meshes
+         gl (shaders 1) (vals display-meshes) shared-unis nil))
+      (when (:show-axes? @local)
+        (webgl/render-axes gl (shaders 1) shared-unis (:axes @local))))))
 
-(defn stripes*
-  [pred gap-opts n]
-  (loop [acc (make-stripes pred n) i (if (= pred even?) 1 0)]
-    (if (< i n)
-      (recur
-       (assoc-in acc [:out i] (apply mg/subdiv gap-opts))
-       (+ i 2))
-      acc)))
+(defn resize-canvas
+  [local]
+  (let [{:keys [gl canvas arcball]} @local
+        [w h] (dom/size (dom/parent canvas))
+        view-rect (r/rect 0 0 w h)]
+    (dom/set-attribs! canvas {:width w :height h})
+    (dom/set-style! (config/dom-component :preview-label)
+                    #js {:width (->px (- w 20))})
+    (dom/set-style! (config/dom-component :toolbar-label)
+                    #js {:width (->px (- w 20)) :top (->px (- h 19))})
+    (swap!
+     local assoc
+     :canvas-width w :canvas-height h
+     :view-rect view-rect
+     :proj (gl/perspective 45 view-rect 0.1 10))
+    (gl/set-viewport gl view-rect)
+    (arcball/resize arcball w h)))
 
-(def mg-trees
-  {:box {:seed 0
-         :tree {}
-         :sel []}
-   :alu {:seed 0
-         :tree (let [branch (fn [[dir lpos]]
-                              (mg/subdiv-inset
-                               :dir :y :inset 0.05
-                               :out {lpos (mg/subdiv dir 3 :out {1 nil}) 4 nil}))
-                     module (mg/subdiv-inset
-                             :dir :y :inset 0.4
-                             :out (mapv branch [[:cols 0] [:cols 1] [:slices 2] [:slices 3]]))]
-                 (mg/subdiv
-                  :rows 3
-                  :out [module
-                        (mg/subdiv
-                         :rows 3 :out {1 (mg/subdiv :cols 3 :out [nil {} nil])})
-                        module]))
-         :sel [[2 0 0 0] [2 0 0 2] [2 1 1 0] [2 1 1 2] [2 2 2 0] [2 2 2 2] [2 3 3 0] [2 3 3 2]]}
-   :mit {:seed 0
-         :tree (mg/subdiv
-                :cols 3
-                :out [(mg/subdiv
-                       :cols 2 :out [(mg/subdiv-inset :dir :x :inset 0.005 :out {4 nil}) {}])
-                      (stripes* odd? [:rows 3 :out [nil {} nil]] 19)
-                      (mg/subdiv
-                       :cols 2 :out [{} (mg/subdiv-inset :dir :x :inset 0.0055 :out {4 {}} :empty? true)])])
-         :sel [[0 1]]}
-   :heatsink {:seed 0
-              :tree (let [se (stripes* even? [:rows 3 :slices 3 :out {4 {}} :empty? true]9)
-                          so (mg/subdiv :rows 2 :out [(stripes* odd? [:rows 3 :slices 3 :out {4 {}} :empty? true] 9)])]
-                      (mg/subdiv :cols 3 :slices 3 :out [se so se se nil se se so se]))
-              :sel [[7 0 6 4]]}
-   :hex {:seed 2
-         :tree (let [hex (mg/apply-recursively (mg/reflect :dir :e) 5 [1] 1)
-                     reflected-hex (mg/reflect :dir :n :out [{} hex])
-                     inject #(-> hex
-                                 (assoc-in (mg/child-path [1 1 0]) %)
-                                 (assoc-in (mg/child-path [1 1 1 1 0]) %))
-                     seed-clone (mg/reflect :dir :s :out [{} (inject reflected-hex)])]
-                 (mg/reflect :dir :s :out [(inject seed-clone) (inject reflected-hex)]))
-         :sel [[1 1 1 1 0]]}
-   :hex2 {:seed 1
-          :tree (let [hex (mg/apply-recursively (mg/reflect :dir :e) 5 [1] 1)
-                      reflected-hex (mg/reflect :dir :n :out [{} hex])
-                      inject #(-> hex
-                                  (assoc-in (mg/child-path [1 1 0]) %)
-                                  (assoc-in (mg/child-path [1 1 1 1 0]) %))
-                      seed-clone (mg/reflect :dir :s :out [{} (inject reflected-hex)])]
-                  (mg/reflect :dir :s :out [(inject seed-clone) (inject reflected-hex)]))
-          :sel [[1 1 1 1 0]]}})
+(defn handle-resize
+  [ch bus local]
+  (go
+    (loop []
+      (let [[_ size] (<! ch)]
+        (when size
+          (resize-canvas local)
+          (async/publish bus :render-scene nil)
+          (async/publish bus :update-toolbar (-> @local :tools :offset))
+          (recur))))))
 
-(defn init-shader
-  [ctx preset-id]
-  (let [preset (shader/presets preset-id)
-        shader (sh/make-shader-from-spec ctx (:spec preset))]
-    {:shader shader
-     :preset-id preset-id
-     :preset preset}))
+(defn handle-arcball
+  [canvas ball events bus local]
+  (go
+    (loop [state nil]
+      (let [[[e data] ch] (alts! events)]
+        (when e
+          (recur
+           (case e
+             :drag-start (let [[x y] (:p data)
+                               h (.-clientHeight canvas)]
+                           (arcball/down ball x (- h y))
+                           (swap! local assoc :view-tween-cancel? true)
+                           state)
+             :drag-move  (let [[x y] (:p data)
+                               h (.-clientHeight canvas)]
+                           (when (arcball/drag ball x (- h y))
+                             (async/publish bus :render-scene nil))
+                           state)
 
-(defn init-shaders
-  [{:keys [ctx] :as state} preset-ids]
-  (let [presets (mapv #(init-shader ctx %) preset-ids)]
-    (assoc state :shaders presets)))
+             :dual-start [(:dist data) 0]
 
-(defn init-camera
-  [state]
-  (assoc state
-    :cam (arcball/make-arcball :init [0.10196 0.90405 -0.30269 -0.2838])))
+             :dual-move (let [[start-dist delta] state
+                              abs-delta (- (:dist data) start-dist)
+                              delta' (mm/subm delta abs-delta 0.1)]
+                          (arcball/zoom-delta ball delta')
+                          (async/publish bus :render-scene nil)
+                          [start-dist delta'])
+             :mouse-wheel (let [delta (:delta data)]
+                            (arcball/zoom-delta ball delta)
+                            (async/publish bus :render-scene nil)
+                            state)
+
+             :gesture-end (do
+                            (arcball/up ball)
+                            (swap! local assoc :view-tween-cancel? false)
+                            state)
+             state)))))))
+
+(defn handle-toolbar-scroll
+  [toolbar events bus local]
+  (go
+    (loop [state nil]
+      (let [[[e data] ch] (alts! events)]
+        (when e
+          (recur
+           (case e
+             :drag-start (let [offset (get-in @local [:tools :offset] 0)
+                               target (loop [el (:target data)]
+                                        (if-let [id (first (dom/get-attribs el ["id"]))]
+                                          id (recur (dom/parent el))))]
+                           (swap! local assoc-in [:tools :active?] true)
+                           [offset (:p data) (vec2) (keyword target)])
+             :drag-move  (if state
+                           (let [[offset p _ target] state
+                                 delta (g/- (:p data) p)
+                                 offset' (mm/madd (:x delta) 2 offset)]
+                             (async/publish bus :update-toolbar offset')
+                             [offset p delta target])
+                           state)
+             :gesture-end (when state
+                            (let [[_ p delta target] state
+                                  dist (g/mag delta)]
+                              (when (and (:touch? data) (< dist 20))
+                                ;;(debug :end-touch target dist)
+                                (if (= target :undo)
+                                  (async/publish bus :undo-triggered target)
+                                  (async/publish bus :op-triggered target)))
+                              (swap! local assoc-in [:tools :active?] false)
+                              nil))
+             nil)))))))
+
+(defn handle-toolbar-update
+  [bus local toolbar]
+  (let [ch (async/subscribe bus :update-toolbar)]
+    (go
+      (loop []
+        (let [[_ offset] (<! ch)
+              {max :toolbar-margin-left
+               right :toolbar-margin-right} (:editor config/app)
+               min (- (.-innerWidth js/window) (-> @local :tools :width) right)
+               offset (m/clamp offset min max)]
+          (swap! local assoc-in [:tools :offset] offset)
+          (dom/set-style! toolbar (clj->js {:marginLeft (->px offset)})))
+        (recur)))))
+
+(defn handle-buttons
+  [bus local module-timeout]
+  (let [[continue] (async/event-channel "#edit-continue" "click")
+        [cancel]   (async/event-channel "#edit-cancel" "click")]
+    (go
+      (loop []
+        (let [delay (- module-timeout (- (utils/now) (:last-action @local)))
+              [_ ch] (alts! [continue cancel (timeout delay)])]
+          (cond
+           (= continue ch)
+           (submit-model bus local)
+
+           (= cancel ch)
+           (route/set-route! "select" (:seed-id @local))
+
+           (>= (- (utils/now) (:last-action @local)) module-timeout)
+           (route/set-route! "home")
+
+           :else (recur)))))))
+
+(defn handle-reset-timeout
+  [ch local]
+  (go
+    (loop []
+      (when (<! ch)
+        (swap! local assoc :last-action (utils/now))
+        (recur)))))
+
+(defn handle-release
+  [bus local]
+  (let [ch (async/subscribe bus :release-editor)]
+    (go
+      (loop []
+        (let [_ (<! ch)
+              {:keys [subs events tools]} @local]
+          (debug :release-editor)
+          (swap! local assoc :active? false)
+          (async/unsubscribe-and-close-many bus subs)
+          (dorun (map async/destroy-event-channel events))
+          (ops/disable-presets (:specs tools))
+          (recur))))))
+
+(defn handle-tree-broadcast
+  [bus local]
+  (let [ch (async/subscribe bus :broadcast-tree)]
+    (go
+      (loop []
+        (let [[_ [tree seed]] (<! ch)]
+          (debug :editor-tree-received tree seed)
+          (swap! local assoc :tree tree :seed-id seed)
+          (when-not tree
+            (swap! local assoc :history []))
+          (recur))))))
+
+(defn handle-tree-backup
+  [bus local]
+  (let [ch (async/subscribe bus :backup-tree)]
+    (go
+      (loop []
+        (let [[_ tree] (<! ch)]
+          (swap! local update-in [:history] conj tree)
+          (dom/remove-class! (dom/by-id "undo") "disabled")
+          (debug :backup-tree (count (:history @local)) tree)
+          (recur))))))
+
+(defn init-view-tween
+  [local ball target]
+  (swap! local assoc
+         :view {:start (arcball/get-rotation ball)
+                :target target
+                :phase 0}))
+
+(defn end-view-tween
+  [local]
+  (swap!
+   local assoc
+   :view-tween-cancel? false
+   :view-tween? false))
+
+(defn handle-view-update
+  [ch ball bus local]
+  (go
+    (loop []
+      (let [[_ target] (<! ch)]
+        (when target
+          (init-view-tween local ball target)
+          (when-not (:view-tween? @local)
+            (swap! local assoc :view-tween? true)
+            (go
+              (loop []
+                (<! (timeout 16))
+                (let [{{:keys [start target phase]} :view
+                       cancel? :view-tween-cancel?} @local]
+                  (if-not cancel?
+                    (do
+                      (arcball/set-rotation ball (g/mix start target (min phase 1.0)))
+                      (swap! local assoc-in [:view :phase] (m/mix phase 1.0 0.1))
+                      ;;(render-scene local)
+                      (if (>= phase 0.9995)
+                        (end-view-tween local)
+                        (recur)))
+                    (end-view-tween local))))))
+          (recur))))))
+
+(defn handle-tooltips
+  [tooltips]
+  (let [tips     (->> tooltips keys (mapv #(-> % name dom/by-id (dom/query "svg"))))
+        channels (fn [ev] (set (map #(first (async/event-channel % ev)) tips)))
+        on       (channels "mouseenter")
+        off      (channels "mouseleave")
+        touch    (channels "touchstart")
+        all      (vec (concat on off touch))]
+    (go
+      (loop [state {}]
+        (let [[e ch] (alts! all)
+              id (-> (.-target e) dom/parent (dom/get-attribs ["id"]) first)
+              kid (keyword id)
+              tip (dom/by-id (str id "-tip"))
+              {:keys [offset content]} (tooltips kid)
+              [x y] (g/+ (vec2 (dom/offset (.-target e))) offset)
+              show? (or (on ch) (and (touch ch) (not (state kid))))]
+          (debug :tip (.-target e) kid)
+          (when id
+            (if show?
+              (do
+                (dom/set-text! (dom/query tip ".tooltip-content") content)
+                (dom/set-style! tip (clj->js {:display "block" :left (->px x) :top (->px y)})))
+              (dom/set-style! tip #js {:display "none"})))
+          (recur (assoc state kid show?)))))))
+
+(defn handle-axis-toggle
+  [bus local]
+  (let [[ch] (async/event-channel "#tool-axis" "click")]
+    (go
+      (loop []
+        (<! ch)
+        (swap! local update-in [:show-axes?] not)
+        (async/publish bus :render-scene nil)
+        (recur)))))
+
+(defn render-loop
+  [bus local]
+  (let [ch (async/subscribe bus :render-scene)
+        render-fn (fn render*
+                    [& _]
+                    (render-scene local)
+                    (swap!
+                     local assoc
+                     :render-frame
+                     (if (or (:selection @local)
+                             (:view-tween? @local))
+                       (anim/animframe-provider render*))))]
+    (go
+      (loop []
+        (let [_ (<! ch)]
+          (when-not (:render-frame @local)
+            (swap! local assoc :render-frame (anim/animframe-provider render-fn)))
+          (recur))))))
+
+(defn init-arcball
+  [params]
+  (let [id (keyword (:seed-id params))
+        {:keys [view dist]} (-> config/seeds id :initial-view)]
+    (arcball/make-arcball :init view :dist dist)))
 
 (defn init-tree
-  [state id]
-  (let [{:keys [tree seed]} (mg-trees id)]
-    (assoc state
-      :tree tree
-      :computed-tree {[] (seeds seed)}
-      :meshes {}
-      :seed-id id
-      :selected-path [])))
+  [state local seed]
+  (-> (if-let [tree (:tree @local)]
+        (tree/recompute-tree-with-seed state tree seed)
+        (tree/init-tree-with-seed state seed))
+      (tree/update-meshes false)))
 
-(defn hex->rgb
-  [hex]
-  (let [h (js/parseInt (subs hex 1) 16)
-        i (/ 255.0)]
-    [(* (bit-and (bit-shift-right h 16) 0xff) i)
-     (* (bit-and (bit-shift-right h 8) 0xff) i)
-     (* (bit-and h 0xff) i)]))
+(defn init
+  [bus]
+  (let [canvas     (config/dom-component :edit-canvas)
+        toolbar    (config/dom-component :tools)
+        init       (async/subscribe bus :init-editor)
+        local      (atom {:tools (ops/init-op-triggers bus toolbar)})]
+    ;;(debug :tools (:specs (:tools @local)))
 
-(defn draw-tree
-  [node ctx x y w h]
-  (let [num-children (count (:out node))
-        w' (if (pos? num-children)
-             (/ (- w (* (dec num-children) 5)) num-children))
-        y' (- y h 5)
-        hex (config/opnode-color-hex node)]
-    (set! (.-strokeStyle ctx) hex)
-    (.strokeRect ctx x (- y h) w h)
-    ;;(prn :w w' (:op node))
-    (when (and (> w 20) node (nil? (:op node)))
-      (let [xc (+ x (/ w 2))
-            yc (- y (/ h 2))]
-        (doto ctx
-          (.beginPath)
-          (.moveTo (- xc 5) yc)
-          (.lineTo (+ xc 5) yc)
-          (.moveTo xc (- yc 5))
-          (.lineTo xc (+ yc 5))
-          (.stroke))))
-    (loop [x x, c (:out node)]
-      (when c
-        (draw-tree (first c) ctx x y' w' h)
-        (recur (+ (+ x w') 5) (next c))))))
+    (go
+      (loop []
+        (let [[_ [_ params]] (<! init)
+              subs     (async/subscription-channels
+                        bus [:window-resize
+                             :user-action
+                             :camera-update])
+              c-specs  [(async/event-channel canvas "mousedown" gest/mouse-gesture-start)
+                        (async/event-channel canvas "mousemove" gest/mouse-gesture-move)
+                        (async/event-channel js/window "mouseup" gest/gesture-end)
+                        (async/event-channel js/window (dom/wheel-event-type)
+                                             gest/mousewheel-proxy)
+                        (async/event-channel canvas "touchstart" gest/touch-gesture-start)
+                        (async/event-channel canvas "touchmove" gest/touch-gesture-move)
+                        (async/event-channel js/window "touchend" gest/gesture-end)]
+              t-specs  [(async/event-channel toolbar "mousedown" gest/mouse-gesture-start)
+                        (async/event-channel toolbar "mousemove" gest/mouse-gesture-move)
+                        (async/event-channel js/window "mouseup" gest/gesture-end)
+                        (async/event-channel toolbar "touchstart" gest/touch-gesture-start)
+                        (async/event-channel toolbar "touchmove" gest/touch-gesture-move)
+                        (async/event-channel js/window "touchend" gest/gesture-end)]
+              c-events (mapv first c-specs)
+              t-events (mapv first t-specs)
+              arcball  (init-arcball params)
+              now      (utils/now)
+              glconf   (:webgl config/app)]
+          (debug :init-editor params)
+          (reset!
+           local
+           (-> (webgl/init-webgl canvas glconf)
+               (merge
+                {:bg-col      (:bg-col glconf)
+                 :subs        subs
+                 :events      (concat c-specs t-specs)
+                 :arcball     arcball
+                 :last-action now
+                 :start-time  now
+                 :selection   nil
+                 :sel-type    nil
+                 :sel-time    now
+                 :time        now
+                 :active?     true
+                 :history     []
+                 :tools       (:tools @local)
+                 :show-axes?  false})
+               (init-tree local (:seed-id params))))
+          (swap! local assoc :axes (webgl/axis-meshes (:gl @local) 0.01 2))
+          (viz/init local bus)
+          (resize-canvas local)
+          (render-scene local)
 
-(def module-spec
-  {:controllers
-   [{:id controller-id
-     :spec
-     #js
-     ["$scope" "$routeParams" "$http" "$window"
-      (fn [$scope $routeParams $http $window]
-        (prn :init "EditObjectController" $routeParams)
-        (let [state (atom {:seed-id :hex})]
-          (ng/merge-state
-           state
-           {:init
-            (fn [evt canvas]
-              (prn :seed (:seed-id @state))
-              (let [desktop? (.-matches (.matchMedia $window "(min-width: 480px)"))]
-                (try
-                  (let [ctx (gl/gl-context canvas {:antialias desktop?})]
-                    (ng/merge-state
-                     state
-                     (-> {:inited? true
-                          :animating? false
-                          :canvas canvas
-                          :ctx ctx
-                          :time 0}
-                         (init-shaders config/shader-preset-ids)
-                         (init-camera)
-                         (init-tree (:seed-id @state))))
-                    (arcball/listen! (:cam @state) nil)
-                    ((:update-meshes @state)))
-                  (catch js/Error e
-                    (js/alert (str "WebGL not supported: " e)))))
-              (.stopPropagation evt))
+          (handle-resize         (:window-resize subs) bus local)
+          (handle-reset-timeout  (:user-action subs) local)
+          (handle-arcball        canvas arcball c-events bus local)
+          (handle-toolbar-scroll toolbar t-events bus local)
+          (handle-view-update    (:camera-update subs) arcball bus local)
+          (handle-buttons        bus local (config/timeout :editor))
 
-            :handle-keys
-            (fn [evt]
-              (let [k (int (.-keyCode evt))]
-                (if (and (>= k 49) (<= k 54))
-                  (prn ((vec (keys mg-trees)) (- k 49)))
-                  (case k
-                    83 (ng/merge-state state
-                                       {:use-selection? (not (:use-selection? @state))
-                                        :sel-time (:time @state)})
-                    nil))))
+          (async/publish bus :update-toolbar (-> config/app :editor :toolbar-margin-left))
+          (go (<! (timeout 800)) (resize-canvas local))
 
-            :resize
-            (fn [evt canvas]
-              (let [{:keys [inited? ctx render-gl animating?]} @state]
-                (when inited?
-                  (let [view-rect (r/rect 0 0 (.-width canvas) (.-height canvas))]
-                    (ng/merge-state state
-                                    {:view-rect view-rect
-                                     :proj (gl/perspective 45 view-rect 0.1 10)})
-                    (gl/set-viewport ctx view-rect)
-                    (when-not animating?
-                      (ng/assoc-state state [:animating?] true)
-                      (render-gl))))))
+          (recur))))
 
-            :tree-editor-ready
-            (fn [evt]
-              (.stopPropagation evt)
-              (.$broadcast $scope event-op-tree-ready (:tree @state) (:computed-tree @state)))
-
-            :render-gl
-            (fn []
-              (let [{:keys [ctx cam shaders cam proj meshes time animating? seed-id use-selection?]} @state
-                    shader1 (shaders 0)
-                    shader2 (shaders 1)
-                    view (arcball/get-view cam)
-                    ;;view (g/rotate-y view (* time 0.2))
-                    shared-unis {:view view
-                                 :model M44
-                                 :proj proj
-                                 :normalMat (-> (g/invert view) (g/transpose))}
-                    sel (get-in mg-trees [seed-id :sel])
-                    op-col (hex->rgb (get-in config/operators [:scale-side :col]))]
-                (apply gl/clear-color-buffer ctx config/canvas-bg)
-                (gl/clear-depth-buffer ctx 1.0)
-
-                (if use-selection?
-                  (do
-                    (shader/prepare-state ctx (:state (:preset shader2)))
-                    (shader/draw-meshes
-                     ctx
-                     (select-keys meshes sel)
-                     (:shader shader2)
-                     (merge (:uniforms (:preset shader2)) shared-unis
-                            {:lightCol (g/mix (vec3 0.5) op-col (+ 0.5 (* 0.5 (Math/sin (* time 0.5)))))}))
-
-                    (shader/prepare-state ctx (:state (:preset shader1)))
-                    (shader/draw-meshes
-                     ctx
-                     (apply dissoc meshes sel)
-                     (:shader shader1)
-                     (merge (:uniforms (:preset shader1)) shared-unis
-                            {:alpha (m/mix 1 (get-in shader1 [:preset :uniforms :alpha])
-                                           (min (* 0.2 (- time (:sel-time @state))) 1.0))})))
-
-                  (do
-                    (shader/prepare-state ctx (:state (:preset shader2)))
-                    (shader/draw-meshes
-                     ctx meshes
-                     (:shader shader2)
-                     (merge (:uniforms (:preset shader2)) shared-unis))))
-
-                (when animating?
-                  (ng/update-state state [:time] #(+ % 0.16666))
-                  (anim/animframe-provider (:render-gl @state)))))
-
-            :update-meshes
-            (fn []
-              (let [{:keys [ctx tree computed-tree selected-path meshes]} @state
-                    root (get computed-tree selected-path)
-                    sub-tree (get-in tree (mg/child-path selected-path))
-                    ;; TODO remove old attrib buffers
-                    ;; TODO delete all paths in computed-tree below selected root
-                    branch (->> selected-path
-                                (mg/compute-tree-map* root sub-tree (transient {}))
-                                (persistent!))
-                    meshes (->> branch
-                                (reduce
-                                 (fn [acc [path node]]
-                                   (if (= :leaf (mg/classify-node-at tree path))
-                                     (assoc!
-                                      acc path
-                                      (-> (g/into (bm/basic-mesh) (g/faces node))
-                                          (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
-                                          (buf/make-attribute-buffers-in-spec ctx gl/static-draw)))
-                                     acc))
-                                 (transient meshes))
-                                (persistent!))]
-                (ng/merge-state state
-                                {:computed-tree (merge computed-tree branch)
-                                 :meshes meshes})
-                (prn :mkeys (sort (keys meshes)))))
-
-            :submit-tree
-            (fn []
-              (.. $http
-                  (post "/submit" #js {:tree (pr-str (:tree @state))})
-                  (success (fn [data status] (prn "----------------------------" status _)))))
-
-            :select-operator
-            (fn [e id]
-              (prn :sel-op id)
-              (.stopPropagation e))})
-
-          (set! (.-state $scope) state)
-          (set! (.-submitTree $scope) (:submit-tree @state))
-          (set! (.-selectOperator $scope) (:select-operator @state))
-
-          (.addEventListener $window "keydown" (:handle-keys @state))
-          (.$on $scope ng/event-canvas-ready (:init @state))
-          (.$on $scope ng/event-resize-canvas (:resize @state))
-          (.$on $scope event-tree-editor-ready (:tree-editor-ready @state))
-          (.$on $scope event-tree-submit (:submit-tree @state))
-          (.$on $scope "$destroy"
-                (fn []
-                  (arcball/unlisten! (:cam @state))
-                  (.removeEventListener $window (:handle-keys @state))
-                  (ng/assoc-state state [:animating?] false)))
-          ))]}
-
-    {:id "TreeEditController"
-     :spec
-     #js
-     ["$scope"
-      (fn [$scope]
-        (prn :init "TreeEditController")
-        (let [state (atom nil)]
-          (reset! state
-                  {:init
-                   (fn [evt canvas]
-                     (ng/merge-state
-                      state
-                      {:inited? false
-                       :canvas canvas
-                       :ctx (.getContext canvas "2d")})
-                     (.stopPropagation evt))
-
-                   :resize
-                   (fn [evt canvas]
-                     (let [width (.-width canvas)
-                           height (.-height canvas)]
-                       (ng/merge-state state {:width width :height height})
-                       (.stopPropagation evt)
-                       (if (:inited? @state)
-                         ((:render @state))
-                         (.$emit $scope event-tree-editor-ready))))
-
-                   :render
-                   (fn []
-                     (let [{:keys [tree tree-depth ctx width height]} @state
-                           row-height (/ (- height (* tree-depth 5)) tree-depth)]
-                       (.clearRect ctx 0 0 width height)
-                       (draw-tree tree ctx 15 (dec height) (- width 30) row-height)))
-
-                   :tree-ready
-                   (fn [_ tree ctree]
-                     (prn :op-tree-ready)
-                     (ng/merge-state state
-                                     {:inited? true
-                                      :tree tree
-                                      :tree-depth (inc (->> ctree (keys) (map count) (sort) (last)))})
-                     ((:render @state)))})
-
-          (set! (.-state $scope) state)
-          (.$on $scope ng/event-canvas-ready (:init @state))
-          (.$on $scope ng/event-resize-canvas (:resize @state))
-          (.$on $scope event-op-tree-ready (:tree-ready @state))))]}]})
+    (render-loop bus local)
+    (handle-release bus local)
+    (handle-tree-broadcast bus local)
+    (handle-tree-backup bus local)
+    (handle-toolbar-update bus local toolbar)
+    (handle-tooltips (get-in config/app [:editor :tooltips]))
+    (handle-axis-toggle bus local)))

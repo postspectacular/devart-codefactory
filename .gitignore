@@ -3,3 +3,4 @@ war/WEB-INF/lib
 war/WEB-INF/appengine-generated
 node_modules
 bower_components
+war-dev
