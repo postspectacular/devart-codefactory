@@ -12,9 +12,11 @@
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.matrix :as mat :refer [M44]]
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
+   [thi.ng.geom.circle :as c]
+   [thi.ng.geom.polygon :as poly]
    [thi.ng.geom.rect :as r]
    [thi.ng.geom.basicmesh :as bm]
-   [thi.ng.common.math.core :as m]
+   [thi.ng.common.math.core :as m :refer [HALF_PI]]
    ))
 
 (def lambert-shader-spec
@@ -152,13 +154,32 @@ void main() {
 (defn render-with-selection
   [gl shaders shared-uniforms meshes sel-meshes sel-color time sel-time]
   (let [[xray solid] shaders
-        ;;color sel-color
         color (col/pulsate 0.5 sel-color time 6)
-        ;;age   (min (mm/subm time sel-time 2) 1.0)
-        alpha (-> xray :preset :uniforms :alpha)
-        ;;alpha (m/mix 1.0 alpha age)
-        ]
+        alpha (-> xray :preset :uniforms :alpha)]
     (render-meshes
      gl solid sel-meshes shared-uniforms {:lightCol color})
     (render-meshes
      gl xray meshes shared-uniforms {:alpha alpha})))
+
+(defn render-axes
+  [gl shader uniforms axes]
+  (render-meshes
+   gl shader [(axes 0)] uniforms {:lightCol [1 0 0]})
+  (render-meshes
+   gl shader [(axes 1)] uniforms {:lightCol [0 1 0]})
+  (render-meshes
+   gl shader [(axes 2)] uniforms {:lightCol [0 0 1]}))
+
+(defn axis-meshes
+  [gl radius len]
+  (let [z (-> (c/circle radius)
+              (g/extrude {:depth len :bottom? false})
+              (g/as-mesh {:mesh (bm/basic-mesh)}))
+        x (g/transform z (g/rotate-y M44 HALF_PI))
+        y (g/transform z (g/rotate-x M44 (- HALF_PI)))]
+    (reduce
+     (fn [specs m]
+       (conj specs
+             (-> (gl/as-webgl-buffer-spec m {:tessellate true :fnormals true})
+                 (buf/make-attribute-buffers-in-spec gl gl/static-draw))))
+     [] [x y z])))

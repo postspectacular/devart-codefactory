@@ -77,10 +77,11 @@
          (vals (dissoc display-meshes selection))
          [(display-meshes selection)]
          (col/hex->rgb (config/operator-color sel-type))
-         time
-         sel-time)
+         time sel-time)
         (webgl/render-meshes
-         gl (shaders 1) (vals display-meshes) shared-unis nil)))))
+         gl (shaders 1) (vals display-meshes) shared-unis nil))
+      (when (:show-axes? @local)
+        (webgl/render-axes gl (shaders 1) shared-unis (:axes @local))))))
 
 (defn resize-canvas
   [local]
@@ -326,6 +327,16 @@
               (dom/set-style! tip #js {:display "none"})))
           (recur (assoc state kid show?)))))))
 
+(defn handle-axis-toggle
+  [bus local]
+  (let [[ch] (async/event-channel "#tool-axis" "click")]
+    (go
+      (loop []
+        (<! ch)
+        (swap! local update-in [:show-axes?] not)
+        (async/publish bus :render-scene nil)
+        (recur)))))
+
 (defn render-loop
   [bus local]
   (let [ch (async/subscribe bus :render-scene)
@@ -409,8 +420,10 @@
                  :time        now
                  :active?     true
                  :history     []
-                 :tools       (:tools @local)})
+                 :tools       (:tools @local)
+                 :show-axes?  false})
                (init-tree local (:seed-id params))))
+          (swap! local assoc :axes (webgl/axis-meshes (:gl @local) 0.01 2))
           (viz/init local bus)
           (resize-canvas local)
           (render-scene local)
@@ -432,4 +445,5 @@
     (handle-tree-broadcast bus local)
     (handle-tree-backup bus local)
     (handle-toolbar-update bus local toolbar)
-    (handle-tooltips (get-in config/app [:editor :tooltips]))))
+    (handle-tooltips (get-in config/app [:editor :tooltips]))
+    (handle-axis-toggle bus local)))
