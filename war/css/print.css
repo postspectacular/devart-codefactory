@@ -1,5 +1,5 @@
-body, section, div, p {
-    font-family: "Abel"
+@media print body, div, p {
+    font-family: "Abel", sans-serif;
     font-size: 14px;
     text-align: left;
 }

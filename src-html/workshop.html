@@ -138,7 +138,7 @@
       <section id="editor" class="future" data-transition="concave">
         <div class="flex-container">
           <div class="flex-item preview-wrapper">
-            <div id="preview-label" class="section-label">preview
+            <div id="preview-label" class="section-label">3d preview
               <svg width="11" height="11" viewbox="0 0 1 1">
                 <path d="M0,0 L1,0 L1,1 L0,1 Z M0.25,0.4 L0.3,0.2 L0.7,0.2 L0.8,0.3 L0.45,0.55 L0.45,0.65 M0.45,0.75 L0.45,0.8" />
               </svg>
@@ -149,6 +149,13 @@
               </svg>
             </div>
             <canvas id="edit-canvas"></canvas>
+            <div id="tools-extra" class="overlay">
+              <div id="tool-axis">
+                <svg width="32" height="32" viewbox="-0.05 -0.05 1.1 1.1">
+                  <path d="M0,0 L1,0 L1,1 L0,1 Z M0.5,0.2 L0.5,0.58 L0.2,0.8 M0.8,0.8 L0.5,0.58"/>
+                </svg>
+              </div>
+            </div>
           </div>
           <div id="toolbar" class="flex-item">
             <div id="tools">
@@ -162,7 +169,7 @@
             </div>
           </div>
           <div id="edit-treemap" class="flex-item">
-            <div class="section-label">code hierarchy
+            <div id="viz-label" class="section-label">code hierarchy
               <svg width="11" height="11" viewbox="0 0 1 1">
                 <path d="M0,0 L1,0 L1,1 L0,1 Z M0.25,0.4 L0.3,0.2 L0.7,0.2 L0.8,0.3 L0.45,0.55 L0.45,0.65 M0.45,0.75 L0.45,0.8" />
               </svg>
@@ -174,10 +181,6 @@
             <canvas id="viz-map"></canvas>
             <div id="viz-container"></div>
             <div id="viz-mask-left"></div>
-            <div class="tooltip right">
-              <div class="arrow"></div>
-              <div class="tooltip-content">Vivamus sagittis lacus vel augue laoreet rutrum faucibus.</div>
-            </div>
           </div>
           <div class="flex-item buttonbar">
             <div class="inner">
@@ -197,6 +200,22 @@
               </div>
             </div>
           </div>
+        </div>
+        <div id="preview-label-tip" class="tooltip bottom">
+          <div class="arrow"></div>
+          <div class="tooltip-content"></div>
+        </div>
+        <div id="toolbar-label-tip" class="tooltip right">
+          <div class="arrow"></div>
+          <div class="tooltip-content"></div>
+        </div>
+        <div id="viz-label-tip" class="tooltip right">
+          <div class="arrow"></div>
+          <div class="tooltip-content"></div>
+        </div>
+        <div id="map-label-tip" class="tooltip left">
+          <div class="arrow"></div>
+          <div class="tooltip-content"></div>
         </div>
       </section>
 
