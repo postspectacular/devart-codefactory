@@ -176,10 +176,16 @@ void main() {
               (g/extrude {:depth len :bottom? false})
               (g/as-mesh {:mesh (bm/basic-mesh)}))
         x (g/transform z (g/rotate-y M44 HALF_PI))
-        y (g/transform z (g/rotate-x M44 (- HALF_PI)))]
+        y (g/transform z (g/rotate-x M44 (- HALF_PI)))
+        lx (-> (poly/polygon2 [[-1 -1] [-0.75 -1] [0 -0.25] [0.75 -1] [1 -1]
+                               [0.2 0] [1 1] [0.75 1] [0 0.25] [-0.75 1] [-1 1] [-0.2 0]])
+               (g/scale 0.05)
+               (g/extrude {:depth 0.01 :mesh (bm/basic-mesh)}))
+        loff (+ len 0.1)]
     (reduce
-     (fn [specs m]
+     (fn [specs [m l o]]
        (conj specs
-             (-> (gl/as-webgl-buffer-spec m {:tessellate true :fnormals true})
+             (-> (g/into m (g/translate l o))
+                 (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
                  (buf/make-attribute-buffers-in-spec gl gl/static-draw))))
-     [] [x y z])))
+     [] [[x lx (vec3 loff 0 0)] [y lx (vec3 0 loff 0)] [z lx (vec3 0 0 loff)]])))
