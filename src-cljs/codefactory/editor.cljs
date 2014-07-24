@@ -416,7 +416,8 @@
               t-events (mapv first t-specs)
               arcball  (init-arcball params)
               now      (utils/now)
-              glconf   (:webgl config/app)]
+              glconf   (:webgl config/app)
+              aconf    (:axis glconf)]
           (debug :init-editor params)
           (reset!
            local
@@ -437,7 +438,9 @@
                  :tools       (:tools @local)
                  :show-axes?  false})
                (init-tree local (:seed-id params))))
-          (swap! local assoc :axes (webgl/axis-meshes (:gl @local) 0.01 2))
+          (swap!
+           local assoc
+           :axes (webgl/axis-meshes (:gl @local) (:radius aconf) (:length aconf)))
           (viz/init local bus)
           (resize-canvas local)
           (render-scene local)

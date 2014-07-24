@@ -77,7 +77,8 @@
    :webgl
    {:min-aa-res 480
     :bg-col [0.2 0.2 0.211 1]
-    :shader-preset-ids [:xray-soft :lambert-default]}
+    :shader-preset-ids [:xray-soft :lambert-default]
+    :axis {:radius 0.005 :length 1.5}}
 
    :seeds seeds
 

@@ -173,7 +173,7 @@ void main() {
 (defn axis-meshes
   [gl radius len]
   (let [z (-> (c/circle radius)
-              (g/extrude {:depth len :bottom? false})
+              (g/extrude {:depth len :bottom? false :res 8})
               (g/as-mesh {:mesh (bm/basic-mesh)}))
         x (g/transform z (g/rotate-y M44 HALF_PI))
         y (g/transform z (g/rotate-x M44 (- HALF_PI)))
@@ -187,11 +187,13 @@ void main() {
     (reduce
      (fn [specs [m l o]]
        (conj specs
-             (-> (g/into m (g/translate
-                            (-> l
-                                (g/scale 0.01)
-                                (g/center)
-                                (g/extrude {:depth 0.01 :mesh (bm/basic-mesh)})) o))
+             (-> (g/into m (-> l
+                               (g/scale 0.01)
+                               (g/center)
+                               (g/extrude {:depth 0.01 :mesh (bm/basic-mesh)})
+                               (g/translate o)))
                  (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
                  (buf/make-attribute-buffers-in-spec gl gl/static-draw))))
-     [] [[x lx (vec3 loff 0 0)] [y lx (vec3 0 loff 0)] [z lx (vec3 0 0 loff)]])))
+     [] [[x lx (vec3 loff 0 0)]
+         [y ly (vec3 0 loff 0)]
+         [z lz (vec3 0 0 loff)]])))
