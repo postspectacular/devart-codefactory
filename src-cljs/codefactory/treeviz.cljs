@@ -51,10 +51,12 @@
         (recur)))))
 
 (defn make-node
-  [parent path op x y w h bus sel min-label-width]
+  [parent path op x y w h ox oy bus sel min-label-width]
   (let [el (dom/create! "div" parent)
         id (node-id path)
         cls (str "op-" (name op))
+        x' (+ x ox)
+        y' (+ y oy)
         [ch handler] (async/event-channel el "click")]
 
     (cond
@@ -83,8 +85,8 @@
     (doto el
       (dom/set-attribs! {:id id})
       (dom/set-style!
-       #js {:left   (->px x)
-            :top    (->px y)
+       #js {:left   (->px x')
+            :top    (->px y')
             :width  (->px w)
             :height (->px h)}))
 
@@ -93,7 +95,7 @@
 
     (node-event-handler ch bus id)
 
-    [id {:el el :path path :channel ch :handler handler}]))
+    [id {:el el :x x :y y :w w :h h :path path :channel ch :handler handler}]))
 
 (defn cell-size
   [total gap num]
@@ -154,6 +156,42 @@
             width)))
       width)))
 
+(defn reposition-branch
+  [nodes tree gap [offx offy]]
+  (fn repos-branch*
+    [path x w]
+    (let [el (:el (nodes (node-id path)))
+          nc (tree/num-children-at tree path)
+          wc (cell-size w gap nc)]
+      (dom/set-style! el #js {:left (->px (+ x offx))})
+      (if (pos? nc)
+        (loop [i 0]
+          (when (< i nc)
+            (repos-branch* (conj path i) (mm/madd i wc i gap x) wc)
+            (recur (inc i))))))))
+
+(defn reposition-viz
+  [editor local scroll]
+  (let [{:keys [viz nodes width]} @local
+        {:keys [node-cache tree]} @editor
+        {:keys [gap margin map-width]} (:editor config/app)
+        min (- (viewport-width) width)
+        scroll (assoc scroll :x (m/clamp (:x scroll) min 0))
+        offset (scroll-offset scroll viz)]
+    (debug :repos-scroll scroll)
+    (swap! local assoc :scroll scroll)
+    ((reposition-branch nodes tree gap offset) [] margin width)))
+
+(defn center-node
+  [editor local]
+  (let [{:keys [width nodes selected-id]} @local
+        {:keys [w x]} (nodes selected-id)
+        vp-width (viewport-width)
+        min (- vp-width width)
+        x' (+ (- (- x) (/ w 2)) (/ vp-width 2))
+        x' (m/clamp x' min 0)]
+    (reposition-viz editor local (vec2 x' 0))))
+
 (defn generate-branch
   [bus viz tree scroll sel]
   (let [{:keys [gap min-label-width]} (:editor config/app)
@@ -167,7 +205,7 @@
             op (config/translate-mg-op (tree/node-operator node))
             acc (conj acc
                       (make-node viz path op
-                                 (+ x offx) (+ (- y h) offy) w h
+                                 x (- y h) w h offx offy
                                  bus sel min-label-width))]
         (if (pos? nc)
           (loop [acc acc, i 0]
@@ -189,12 +227,15 @@
         layout (generate-branch bus viz tree scroll selection)]
     (dom/set-html! viz "")
     (remove-node-event-handlers bus nodes)
+    (debug :new-width width' :scroll scroll)
     (swap!
      local assoc
      :width       width'
      :node-height node-height
      ;;:scroll      scroll
-     :nodes       (layout {} [] margin height width' node-height))))
+     :nodes       (layout {} [] margin height width' node-height))
+    (if selection
+      (center-node editor local))))
 
 (defn resize-branch
   [nodes tree gap [offx offy]]
@@ -224,31 +265,6 @@
         offset      (scroll-offset scroll viz)]
     ((resize-branch nodes tree gap offset) [] margin height width node-height)
     (swap! local assoc :width width :node-height node-height)))
-
-(defn reposition-branch
-  [nodes tree gap [offx offy]]
-  (fn repos-branch*
-    [path x w]
-    (let [el (:el (nodes (node-id path)))
-          nc (tree/num-children-at tree path)
-          wc (cell-size w gap nc)]
-      (dom/set-style! el #js {:left (->px (+ x offx))})
-      (if (pos? nc)
-        (loop [i 0]
-          (when (< i nc)
-            (repos-branch* (conj path i) (mm/madd i wc i gap x) wc)
-            (recur (inc i))))))))
-
-(defn reposition-viz
-  [editor local scroll]
-  (let [{:keys [viz nodes width]} @local
-        {:keys [node-cache tree]} @editor
-        {:keys [gap margin map-width]} (:editor config/app)
-        min (- (viewport-width) width)
-        scroll (assoc scroll :x (m/clamp (:x scroll) min 0))
-        offset (scroll-offset scroll viz)]
-    (swap! local assoc :scroll scroll)
-    ((reposition-branch nodes tree gap offset) [] margin width)))
 
 (def map-op-color
   (memoize
