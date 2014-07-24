@@ -363,7 +363,11 @@
   [bus local]
   (let [tools (dom/query nil "#editor .tools-extra")
         icons (:icons config/app)
-        size (-> config/app :editor :toolbar-icon-size)]
+        size (-> config/app :editor :toolbar-icon-size)
+        zoom (fn [delta]
+               (fn []
+                 (arcball/zoom-delta (:arcball @local) delta)
+                 (async/publish bus :render-scene nil)))]
     (common/icon-button
      tools nil size (-> icons :fullscreen :paths) nil
      (fn [] (dom/request-fullscreen)))
@@ -371,7 +375,13 @@
      tools nil size (-> icons :axis :paths) nil
      (fn []
        (swap! local update-in [:show-axes?] not)
-       (async/publish bus :render-scene nil)))))
+       (async/publish bus :render-scene nil)))
+    (common/icon-button
+     tools nil size (-> icons :zoom-in :paths) nil
+     (zoom -50))
+    (common/icon-button
+     tools nil size (-> icons :zoom-out :paths) nil
+     (zoom 50))))
 
 (defn init
   [bus]
