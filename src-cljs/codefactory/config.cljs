@@ -130,7 +130,7 @@
     :zoom-in    {:paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0.2,0.5 L0.8,0.5 M0.5,0.2 L0.5,0.8"}]}
     :zoom-out   {:paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0.2,0.5 L0.8,0.5"}]}
     }
-   
+
    :operators
    {:sd      {:col "#56ffee" :label "split"
               :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z"}
@@ -200,7 +200,13 @@
     [:stretchs {:label "stretch s" :node (mg/extrude-prop :dir :s :len 0.5)}]
     [:stretchf {:label "stretch f" :node (mg/extrude-prop :dir :f :len 0.5)}]
     [:stretchb {:label "stretch b" :node (mg/extrude-prop :dir :b :len 0.5)}]
-
+    [:sep]
+    [:shiftxy {:label "shift xy" :node (mg/split-displace :x :y :offset 0.5)}]
+    [:shiftxz {:label "shift xz" :node (mg/split-displace :x :z :offset 0.5)}]
+    [:shiftyx {:label "shift yx" :node (mg/split-displace :y :x :offset 0.5)}]
+    [:shiftyz {:label "shift yz" :node (mg/split-displace :y :z :offset 0.5)}]
+    [:shiftzx {:label "shift zx" :node (mg/split-displace :z :x :offset 0.5)}]
+    [:shiftzy {:label "shift zy" :node (mg/split-displace :z :y :offset 0.5)}]
     ]
 
    :routes

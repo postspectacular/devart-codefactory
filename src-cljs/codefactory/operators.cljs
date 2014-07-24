@@ -268,7 +268,7 @@
                (assoc preset :out (:out orig))
                preset)
         len  (:len (tree/op-args-or-default op orig node))]
-    (debug :node node)
+    (debug :node node :len len)
     (show-op-controls
      {:editor editor
       :local local
@@ -283,11 +283,11 @@
 
 (defmethod handle-operator :shift
   [op preset orig editor local bus]
-  (let [{:keys [tree selection]} @editor
-        node (mg/split-displace :x :z :offset 0.1)
-        {:keys [dir ref offset] :as args} (tree/op-args-or-default op orig node)
-        children (if (same-op? op orig) (:out orig))]
-    (debug :path selection :args args :node node)
+  (let [node (if (same-op? op orig)
+               (assoc preset :out (:out orig))
+               preset)
+        offset (:offset (tree/op-args-or-default op orig node))]
+    (debug :node node :offset offset)
     (show-op-controls
      {:editor editor
       :local local
@@ -295,8 +295,7 @@
       :op op
       :slider (->SliderSpec
                "shift length" 0.0 1.0 offset 0.001
-               (fn [n {:keys [dir ref]}]
-                 (mg/split-displace dir ref :offset n :out children))
+               (fn [n _] (assoc-in node [:args :offset] n))
                float-label)
       :node node
       :orig orig})))
@@ -304,10 +303,11 @@
 (defmethod handle-operator :tilt
   [op preset orig editor local bus]
   (let [{:keys [tree selection]} @editor
-        node preset
-        {:keys [side ref offset] :as args} (tree/op-args-or-default op orig node)
-        children (if (same-op? op orig) (:out orig))]
-    (debug :path selection :args args :node node)
+        node (if (same-op? op orig)
+               (assoc preset :out (:out orig))
+               preset)
+        offset (:offset (tree/op-args-or-default op orig node))]
+    (debug :node node :offset offset)
     (show-op-controls
      {:editor editor
       :local local
@@ -315,23 +315,18 @@
       :op op
       :slider (->SliderSpec
                "offset" 0.0 2.0 offset 0.001
-               (fn [n {:keys [side ref]}]
-                 (mg/skew side ref :offset n :out children))
+               (fn [n _] (assoc-in node [:args :offset] n))
                float-label)
       :node node
       :orig orig})))
 
 (defmethod handle-operator :scale
   [op preset orig editor local bus]
-  (let [{:keys [tree selection]} @editor
-        ctor (fn [side scale out]
-               {:op :scale-side
-                :args {:side side :scale scale}
-                :out (mg/operator-output 1 out false)})
-        node preset
-        {:keys [side scale] :as args} (tree/op-args-or-default op orig node)
-        children (if (same-op? op orig) (:out orig))]
-    (debug :path selection :args args :node node)
+  (let [node (if (same-op? op orig)
+               (assoc preset :out (:out orig))
+               preset)
+        scale (:scale (tree/op-args-or-default op orig node))]
+    (debug :node node :scale scale)
     (show-op-controls
      {:editor editor
       :local local
@@ -339,7 +334,7 @@
       :op op
       :node node
       :orig orig
-      :sliders (->SliderSpec
-                "scale" 0.1 2.0 scale 0.001
-                (fn [n {:keys [side]}] (ctor side n children))
-                float-label)})))
+      :slider (->SliderSpec
+               "scale" 0.1 2.0 scale 0.001
+               (fn [n _] (assoc-in node [:args :scale] n))
+               float-label)})))
