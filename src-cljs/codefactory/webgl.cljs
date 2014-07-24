@@ -177,15 +177,21 @@ void main() {
               (g/as-mesh {:mesh (bm/basic-mesh)}))
         x (g/transform z (g/rotate-y M44 HALF_PI))
         y (g/transform z (g/rotate-x M44 (- HALF_PI)))
-        lx (-> (poly/polygon2 [[-1 -1] [-0.75 -1] [0 -0.25] [0.75 -1] [1 -1]
-                               [0.2 0] [1 1] [0.75 1] [0 0.25] [-0.75 1] [-1 1] [-0.2 0]])
-               (g/scale 0.05)
-               (g/extrude {:depth 0.01 :mesh (bm/basic-mesh)}))
+        lx (poly/polygon2 [[0 0] [0.976 0] [3.03 4.16] [5.1 0] [6.06 0] [3.51 5.14]
+                           [5.91 10] [4.94 10] [3.03 6.13] [1.12 10] [0.15 10] [2.55 5.14]])
+        ly (poly/polygon2 [[0 10] [2.59 4.77] [2.59 0] [3.49 0] [3.49 4.77]
+                           [6.05 10] [5.08 10] [3.03 5.84] [0.97 10]])
+        lz (poly/polygon2 [[0.14 10] [0.14 9.14] [4.46 9.14] [0 0.43] [0 0]
+                           [5.63 0] [5.63 0.86] [1.17 0.86] [5.63 9.57] [5.63 10]])
         loff (+ len 0.1)]
     (reduce
      (fn [specs [m l o]]
        (conj specs
-             (-> (g/into m (g/translate l o))
+             (-> (g/into m (g/translate
+                            (-> l
+                                (g/scale 0.01)
+                                (g/center)
+                                (g/extrude {:depth 0.01 :mesh (bm/basic-mesh)})) o))
                  (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
                  (buf/make-attribute-buffers-in-spec gl gl/static-draw))))
      [] [[x lx (vec3 loff 0 0)] [y lx (vec3 0 loff 0)] [z lx (vec3 0 0 loff)]])))
