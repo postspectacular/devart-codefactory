@@ -7,7 +7,7 @@
    [codefactory.config :as config]
    [codefactory.color :as col]
    [codefactory.webgl :as webgl]
-   [codefactory.shared :as shared]
+   [codefactory.common :as common]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]

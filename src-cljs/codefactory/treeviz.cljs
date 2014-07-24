@@ -8,7 +8,7 @@
    [codefactory.color :as col]
    [codefactory.tree :as tree]
    [codefactory.operators :as ops]
-   [codefactory.shared :as shared]
+   [codefactory.common :as common]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.utils :as utils :refer [->px]]

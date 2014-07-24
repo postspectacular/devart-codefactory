@@ -4,6 +4,7 @@
   (:require
    [codefactory.config :as config]
    [codefactory.tree :as tree]
+   [codefactory.common :as common]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.log :refer [debug info warn]]
@@ -24,25 +25,15 @@
     [w]))
 
 (defn init-op-button
-  [el id op label [iconw iconh] width bus & [handler]]
-  (let [svg    (dom/create-ns!
-                dom/svg-ns "svg" el
-                {:width iconw
-                 :height iconh
-                 :viewBox "-0.05 -0.05 1.1 1.1"
-                 :preserveAspectRatio "none"})
-        [spec] (dom/add-listeners
-                [[el "click"
-                  (or handler
-                      (fn [] (async/publish bus :op-triggered id)))]])]
-    (dom/set-attribs!
-     el {:id (name id) :class (str "op-" (name op) " tool disabled")})
-    (-> (dom/create! "div" el) (dom/set-text! label))
-    (loop [paths (-> config/app :operators op :paths)]
-      (when-let [p (first paths)]
-        (-> (dom/create-ns! dom/svg-ns "path" svg {:d (:d p)})
-            (dom/set-style! (clj->js (:style p))))
-        (recur (next paths))))
+  [el id op label icon-size width bus & [handler]]
+  (let [spec (common/icon-button
+              el id icon-size
+              (-> config/app :operators op :paths)
+              label
+              (or handler (fn [] (async/publish bus :op-triggered id))))]
+    (-> el
+        (dom/add-class! (str "op-" (name op)))
+        (dom/add-class! "disabled"))
     [width spec]))
 
 (defn center-preset

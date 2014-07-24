@@ -7,7 +7,7 @@
    [codefactory.config :as config]
    [codefactory.color :as col]
    [codefactory.webgl :as webgl]
-   [codefactory.shared :as shared]
+   [codefactory.common :as common]
    [codefactory.tree :as tree]
    [codefactory.operators :as ops]
    [codefactory.treeviz :as viz]
