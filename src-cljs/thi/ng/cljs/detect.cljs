@@ -1,6 +1,7 @@
 (ns thi.ng.cljs.detect
   (:require
-   [goog.style :as style]))
+   [thi.ng.cljs.dom :as dom]
+   [thi.ng.geom.webgl.core :as gl]))
 
 (def mobile?
   (and (re-find #"(?i)mobile|tablet|ip(ad|hone|od)|android|silk" (.-userAgent js/navigator))
@@ -27,3 +28,9 @@
 
 (def ie? (or (aget js/document "documentMode")
              (re-find #"MSIE" (.-userAgent js/navigator))))
+
+(def webgl?
+  (try
+    (gl/gl-context (dom/create! "canvas"))
+    true
+    (catch js/Error e false)))

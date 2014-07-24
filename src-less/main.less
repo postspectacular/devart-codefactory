@@ -56,7 +56,7 @@ a:hover { color: lighten(@op-col-sd,10); }
     .flex(column nowrap);
     .flex-justify(center);
     text-align: center;
-    div {
+    >div {
         max-width: 50%;
         margin: 0 auto;
     }
@@ -136,8 +136,11 @@ a:hover { color: lighten(@op-col-sd,10); }
     cursor: -webkit-grab;
 }
 
-#thanks-wrapper div {
-    max-width: 70% !important;
+#thanks-wrapper, #upgrade-wrapper {
+
+    >div {
+        max-width: 70% !important;
+    }
 }
 
 .section-label {

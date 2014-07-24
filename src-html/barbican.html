@@ -62,7 +62,15 @@
 
       <section id="upgrade-browser" class="future" data-transition="concave">
         <div class="flex-container">
-          <div class="center"><h1>UPGRADE YOUR BROWSER!</h1></div>
+          <div id="upgrade-wrapper" class="flex-item flex-content">
+            <h1>THANKS FOR VISITING CO(DE)FACTORY!</h1>
+            <div>
+              <p>This experience has been optimized for Chrome & Firefox browsers on desktops, laptops & tablets.</p>
+              <p>Please download one of these browsers to create your own Co(de)Factory sculpture.</p>
+              <p><a href="http://google.com/chrome">Download Google Chrome</a></p>
+              <p><a href="http://getfirefox.com">Download Mozilla Firefox</a></p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -241,8 +249,10 @@
             <div>
               <p class="noprint">Your artwork has been received.</p>
               <p class="noprint">We keep our fingers crossed that your piece will be chosen to be printed here at the Barbican!</p>
-              <p>Your unique object is stored at this web address:</p>
-              <p id="art-url"></p>
+              <div id="art-url-wrapper" class="hidden">
+                <p>Your unique object is stored at this web address:</p>
+                <p id="art-url"></p>
+              </div>
             </div>
           </div>
           <div class="flex-item buttonbar">

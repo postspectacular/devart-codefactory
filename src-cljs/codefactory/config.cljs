@@ -275,10 +275,10 @@
     :submit-cancel    "submit-cancel"}
 
    :timeouts
-   {:selector 20000
-    :editor (* 2 60 1000)
-    :thanks 5000
-    :controller-release-delay 900}
+   {:selector (* 30 1000)
+    :editor   (* 7 24 60 60 1000)
+    :thanks   (* 60 1000)
+    :controller 900}
 
    :api
    {:prefix api-prefix
@@ -300,6 +300,7 @@
 
 (def ^:export barbican
   (-> default-config
+      (assoc-in [:timeouts :editor] (* 2 60 1000))
       (assoc-in [:api :inject] {:location "barbican"})))
 
 (def ^:export workshop

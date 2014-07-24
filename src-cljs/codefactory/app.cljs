@@ -13,6 +13,7 @@
    [thi.ng.cljs.route :as route]
    [thi.ng.cljs.utils :as utils]
    [thi.ng.cljs.dom :as dom]
+   [thi.ng.cljs.detect :as detect]
    [goog.events :as events]
    [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
 
@@ -28,7 +29,7 @@
 (defn transition-controllers
   [state {new-id :controller params :params :as route}]
   (let [{:keys [bus ctrl-id]} @state
-        delay      (config/timeout :controller-release-delay)
+        delay      (config/timeout :controller)
         init-id    (keyword (str "init-" (name new-id)))
         release-id (keyword (str "release-" (name ctrl-id)))]
     (swap!
@@ -85,13 +86,15 @@
 (defn start
   []
   (let [bus    (async/pub-sub
-                (fn [e] (debug :bus (first e)) (first e))
-                ;;first
+                ;;(fn [e] (debug :bus (first e)) (first e))
+                first
                 )
         config (config/set-config! "__APP_CONFIG__")
         state  (atom {:bus bus :ctrl-id :loader})
-        satisfied? true]
-    ;; TODO add feature check and redirect if not-supported
+        ;;satisfied? false
+        satisfied? (and detect/webgl? (or detect/chrome? detect/firefox?))
+        ]
+    ;;(debug :detect detect/webgl? detect/chrome? detect/firefox?)
     (if satisfied?
       (init-modules bus state)
       (init-router
