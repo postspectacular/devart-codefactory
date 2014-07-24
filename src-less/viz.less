@@ -1,6 +1,12 @@
 @import "config.less";
 @import "mixins.less";
 
+svg {
+    fill: none;
+    stroke-width: 0.05;
+    vector-effect: non-scaling-stroke;
+}
+
 .op-tool(@class; @col; @anim) {
     &.@{class} {
         svg { stroke: @col; }
@@ -40,48 +46,30 @@
     width: 2000px;
     overflow: hidden;
 
-    div {
-        width: 65px;
+    &>div {
         display: inline-block;
-        text-align: center;
-        text-transform: uppercase;
-        font-size: 12px;
     }
 
-    div.tool {
-        cursor: pointer;
-
-        &.disabled {
-            svg { stroke: @op-col-disabled !important; }
-            color: @op-col-disabled !important;
-            cursor: default !important;
-        }
-
-        .op-tool(op-sd; @op-col-sd; tool-flash-anim-sd);
-        .op-tool(op-inset; @op-col-inset; tool-flash-anim-inset);
-        .op-tool(op-stretch; @op-col-stretch; tool-flash-anim-stretch);
-        .op-tool(op-reflect; @op-col-reflect; tool-flash-anim-reflect);
-        .op-tool(op-shift; @op-col-shift; tool-flash-anim-shift);
-        .op-tool(op-tilt; @op-col-tilt; tool-flash-anim-tilt);
-        .op-tool(op-scale; @op-col-scale; tool-flash-anim-scale);
-        .op-tool(op-delete; @op-col-delete; tool-flash-anim-delete);
-        .op-tool(op-undo; @op-col-undo; tool-flash-anim-undo);
-    }
-
-    div.sep {
-        width: 15px !important;
+    &>div.sep {
+        width: 15px;
         height: 50px;
         svg { stroke: #666; }
     }
 
+    &>div.tool {
+        width: @tool-size;
+    }
+
     div#tools-left {
+        div.tool {
+            width: @icon-size !important;
+        }
         position: fixed;
         left: 0px;
         z-index: 200;
-        width: 80px;
+        width: @tool-size;
         height: 55px;
-        padding-top: 4px;
-        text-align: left;
+        padding: 4px 0 0 10px;
         background: -moz-linear-gradient(left, rgba(51,51,54,1) 0%, rgba(51,51,54,1) 75%, rgba(51,51,54,0) 100%);
         background: -webkit-linear-gradient(left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
         background: -o-linear-gradient(left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
@@ -90,36 +78,62 @@
     }
 
     div#tools-right {
+        div.tool {
+            width: @icon-size !important;
+            float: right;
+        }
+
         position: fixed;
         right: 0px;
         z-index: 200;
-        width: 80px;
+        width: @tool-size;
         height: 55px;
-        text-align: right;
-        padding-top: 4px;
+        padding: 4px 10px 0 0;
         background: -moz-linear-gradient(right, rgba(51,51,54,1) 0%, rgba(51,51,54,1) 75%, rgba(51,51,54,0) 100%);
         background: -webkit-linear-gradient(right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
         background: -o-linear-gradient(right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
         background: -ms-linear-gradient(right, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
         background: linear-gradient(to left, rgba(51,51,54,1) 0%,rgba(51,51,54,1) 75%,rgba(51,51,54,0) 100%);
     }
-
-    svg {
-        fill: none;
-        stroke-width: 0.05;
-        vector-effect: non-scaling-stroke;
-    }
 }
 
-#tools-extra {
+div.tool {
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 12px;
+    cursor: pointer;
+
+    &.disabled {
+        svg { stroke: @op-col-disabled !important; }
+        color: @op-col-disabled !important;
+        cursor: default !important;
+    }
+
+    .op-tool(op-sd; @op-col-sd; tool-flash-anim-sd);
+    .op-tool(op-inset; @op-col-inset; tool-flash-anim-inset);
+    .op-tool(op-stretch; @op-col-stretch; tool-flash-anim-stretch);
+    .op-tool(op-reflect; @op-col-reflect; tool-flash-anim-reflect);
+    .op-tool(op-shift; @op-col-shift; tool-flash-anim-shift);
+    .op-tool(op-tilt; @op-col-tilt; tool-flash-anim-tilt);
+    .op-tool(op-scale; @op-col-scale; tool-flash-anim-scale);
+    .op-tool(op-delete; @op-col-delete; tool-flash-anim-delete);
+    .op-tool(op-undo; @op-col-undo; tool-flash-anim-undo);
+}
+
+.tools-extra {
     right: 10px;
     top: 45px;
 
-    div { margin-bottom: 10px;}
+    div {
+        margin-bottom: 10px;
+
+        &:hover {
+            svg { stroke: lighten(@col-tool,20); }
+        }
+    }
 
     svg {
-        fill: none;
-        stroke: #999;
+        stroke: @col-tool;
         stroke-width: 0.05;
     }
 }
@@ -210,23 +224,13 @@
 
         &.selected { background-color: yellow !important; }
 
-        h1, p { margin: 0; padding: 0 10px; }
+        h1 { margin: 0; padding: 0 10px; }
 
         svg {
-            /*
-              &.op-sd { stroke: @op-col-sd; }
-              &.op-inset { stroke: @op-col-inset; }
-              &.op-stretch { stroke: @op-col-stretch; }
-              &.op-reflect { stroke: @op-col-reflect; }
-              &.op-shift { stroke: @op-col-shift; }
-              &.op-tilt { stroke: @op-col-tilt; }
-              &.op-scale { stroke: @op-col-scale; }
-              &.op-leaf { stroke: white; }
-              */
             &.op-delete { stroke: @op-col-delete; }
 
             path, rect {
-                fill: none;
+                //fill: none;
                 stroke-width: 2px;
                 vector-effect: non-scaling-stroke;
             }

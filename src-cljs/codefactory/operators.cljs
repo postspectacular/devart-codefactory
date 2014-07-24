@@ -15,8 +15,9 @@
    [thi.ng.geom.core.quaternion :as q]))
 
 (defn init-op-separator
-  [el [w h]]
-  (let [svg (dom/create-ns!
+  [parent [w h]]
+  (let [el  (dom/create! "div" parent)
+        svg (dom/create-ns!
              dom/svg-ns "svg" el
              {:width w :height h :viewBox "0 0 1 1"
               :preserveAspectRatio "none"})]
@@ -25,12 +26,12 @@
     [w]))
 
 (defn init-op-button
-  [el id op label icon-size width bus & [handler]]
-  (let [spec (common/icon-button
-              el id icon-size
-              (-> config/app :operators op :paths)
-              label
-              (or handler (fn [] (async/publish bus :op-triggered id))))]
+  [parent id op label icon-size width bus & [handler]]
+  (let [[el :as spec] (common/icon-button
+                       parent id icon-size
+                       (-> config/app :operators op :paths)
+                       label
+                       (or handler (fn [] (async/publish bus :op-triggered id))))]
     (-> el
         (dom/add-class! (str "op-" (name op)))
         (dom/add-class! "disabled"))
@@ -79,12 +80,11 @@
          offset    :toolbar-margin-left} (:editor config/app)
          [width specs] (reduce
                         (fn [[total specs] [id {:keys [label node]}]]
-                          (let [el (dom/create! "div" tools)
-                                op (config/translate-mg-op (:op node))
+                          (let [op (config/translate-mg-op (:op node))
                                 [w spec] (if (= :sep id)
-                                           (init-op-separator el sep-size)
+                                           (init-op-separator tools sep-size)
                                            (init-op-button
-                                            el id op label
+                                            tools id op label
                                             icon-size op-width bus))
                                 total' (+ total w)]
                             (if spec

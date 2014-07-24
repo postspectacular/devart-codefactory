@@ -109,8 +109,8 @@
     :toolbar-icon-size [32 32]
     :toolbar-op-width 65
     :toolbar-sep-size [15 50]
-    :toolbar-margin-left 65
-    :toolbar-margin-right 65
+    :toolbar-margin-left 58
+    :toolbar-margin-right 58
     :tooltips {:preview-label {:offset [-80 24]
                                :content "This is the 3d preview of your object. Any selected items in the code are highlighted here too. Click & drag to rotate view or use mousewheel / pinch to zoom."}
                :toolbar-label {:offset [12 -50]
@@ -123,6 +123,10 @@
     :leaf-label "+"
     :map-labels ["CODE OVERVIEW"]}
 
+   :icons
+   {:fullscreen {:paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0.2,0.4 L0.2,0.2 L0.4,0.2 M0.2,0.2 L0.4,0.4 M0.8,0.4 L0.8,0.2 L0.6,0.2 M0.8,0.2 L0.6,0.4 M0.8,0.6 L0.8,0.8 L0.6,0.8 M0.8,0.8 L0.6,0.6 M0.4,0.8 L0.2,0.8 L0.2,0.6 M0.2,0.8 L0.4,0.6"}]}
+    :axis       {:paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0.5,0.2 L0.5,0.58 L0.2,0.8 M0.8,0.8 L0.5,0.58"}]}}
+   
    :operators
    {:sd      {:col "#56ffee" :label "split"
               :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z"}
@@ -136,7 +140,7 @@
                        :style {:opacity "0.3"}}
                       {:d "M0.25,0.25 L0.75,0.25 L0.75,0.75 L0.25,0.75 Z"}]}
     :scale   {:col "#bd10d5" :label "scale"
-              :paths [{:d "M0,0 L1,0 L1,1 L0,1 z"
+              :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z"
                        :style {:opacity "0.3"}}
                       {:d "M0,1 L0,0.5 L0.5,0.5 L0.5,1 Z"}]}
     :stretch {:col "#3fa6f2" :label "stretch"
@@ -192,7 +196,7 @@
     [:stretchs {:label "stretch s" :node (mg/extrude-prop :dir :s :len 0.5)}]
     [:stretchf {:label "stretch f" :node (mg/extrude-prop :dir :f :len 0.5)}]
     [:stretchb {:label "stretch b" :node (mg/extrude-prop :dir :b :len 0.5)}]
-    
+
     ]
 
    :routes
@@ -200,8 +204,8 @@
      :controller :home
      :hash "home"}
     #_{:match ["objects" :id]
-     :bindings {:id {:validate [(v/uuid4)]}}
-     :controller :editor}
+       :bindings {:id {:validate [(v/uuid4)]}}
+       :controller :editor}
     {:match ["objects" "new" :seed-id]
      :bindings {:seed-id {:validate [(v/member-of (set (map name (keys seeds))))]}}
      :controller :editor}

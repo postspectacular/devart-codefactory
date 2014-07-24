@@ -119,6 +119,15 @@
           d (g/dist c p)]
       (<= d radius))))
 
+(defn init-buttons
+  [bus]
+  (let [tools (dom/query nil "#selector .tools-extra")
+        icons (:icons config/app)
+        size (-> config/app :editor :toolbar-icon-size)]
+    (common/icon-button
+     tools nil size (-> icons :fullscreen :paths) nil
+     (fn [] (dom/request-fullscreen)))))
+
 (defn init
   [bus]
   (let [init       (async/subscribe bus :init-selector)
@@ -139,6 +148,8 @@
                        atom)
         module-timeout (config/timeout :selector)]
 
+    (init-buttons bus)
+    
     ;; init
     (go
       (loop []

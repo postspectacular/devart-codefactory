@@ -6,8 +6,9 @@
   [] (dom/remove-class! (dom/query nil "nav") "hidden"))
 
 (defn icon-button
-  [el id [w h] paths label handler]
-  (let [svg    (dom/create-ns!
+  [parent id [w h] paths label handler]
+  (let [el     (dom/create! "div" parent)
+        svg    (dom/create-ns!
                 dom/svg-ns "svg" el
                 {:width w
                  :height h
@@ -15,7 +16,7 @@
                  :preserveAspectRatio "none"})
         [spec] (dom/add-listeners [[el "click" handler]])]
     (dom/set-attribs!
-     el {:id (name id) :class "tool"})
+     el {:id (if id (name id)) :class "tool"})
     (when label
       (-> (dom/create! "div" el)
           (dom/set-text! label)))

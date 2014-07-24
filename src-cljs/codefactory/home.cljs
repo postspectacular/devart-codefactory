@@ -3,6 +3,7 @@
    [cljs.core.async.macros :as asm :refer [go]])
   (:require
    [codefactory.config :as config]
+   [codefactory.common :as common]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
@@ -10,18 +11,22 @@
    [thi.ng.cljs.dom :as dom]
    [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
 
+(defn init-buttons
+  [bus]
+  (let [tools (dom/query nil "#home .tools-extra")
+        icons (:icons config/app)
+        size (-> config/app :editor :toolbar-icon-size)]
+    (common/icon-button
+     tools nil size (-> icons :fullscreen :paths) nil
+     (fn [] (dom/request-fullscreen)))))
+
 (defn init
   [bus]
   (let [chan-i  (async/subscribe bus :init-home)
         chan-r  (async/subscribe bus :release-home)
-        [click] (async/event-channel (config/dom-component :home-continue) "click")
-        fs      (config/dom-component :fullscreen)]
+        [click] (async/event-channel (config/dom-component :home-continue) "click")]
 
-    (dom/add-listeners
-     [[fs "click"
-       (fn []
-         (dom/request-fullscreen)
-         (dom/add-class! fs "hidden"))]])
+    (init-buttons bus)
     
     ;; TODO enable gallery button
     (go

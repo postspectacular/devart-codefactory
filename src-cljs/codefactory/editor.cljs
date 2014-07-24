@@ -327,16 +327,6 @@
               (dom/set-style! tip #js {:display "none"})))
           (recur (assoc state kid show?)))))))
 
-(defn handle-axis-toggle
-  [bus local]
-  (let [[ch] (async/event-channel "#tool-axis" "click")]
-    (go
-      (loop []
-        (<! ch)
-        (swap! local update-in [:show-axes?] not)
-        (async/publish bus :render-scene nil)
-        (recur)))))
-
 (defn render-loop
   [bus local]
   (let [ch (async/subscribe bus :render-scene)
@@ -368,6 +358,20 @@
         (tree/recompute-tree-with-seed state tree seed)
         (tree/init-tree-with-seed state seed))
       (tree/update-meshes false)))
+
+(defn init-extra-tools
+  [bus local]
+  (let [tools (dom/query nil "#editor .tools-extra")
+        icons (:icons config/app)
+        size (-> config/app :editor :toolbar-icon-size)]
+    (common/icon-button
+     tools nil size (-> icons :fullscreen :paths) nil
+     (fn [] (dom/request-fullscreen)))
+    (common/icon-button
+     tools nil size (-> icons :axis :paths) nil
+     (fn []
+       (swap! local update-in [:show-axes?] not)
+       (async/publish bus :render-scene nil)))))
 
 (defn init
   [bus]
@@ -446,4 +450,4 @@
     (handle-tree-backup bus local)
     (handle-toolbar-update bus local toolbar)
     (handle-tooltips (get-in config/app [:editor :tooltips]))
-    (handle-axis-toggle bus local)))
+    (init-extra-tools bus local)))
