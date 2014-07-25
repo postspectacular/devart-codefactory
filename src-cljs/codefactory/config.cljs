@@ -8,7 +8,7 @@
    [thi.ng.geom.cuboid :as cub]
    [thi.ng.morphogen.core :as mg]
    [thi.ng.common.math.core :refer [HALF_PI]]
-   [thi.ng.cljs.utils :as utils]
+   [thi.ng.cljs.utils :as utils :refer [deep-merge]]
    [thi.ng.validate.core :as v]))
 
 (defn scale-op
@@ -78,7 +78,7 @@
    {:min-aa-res 480
     :bg-col [0.2 0.2 0.211 1]
     :shader-preset-ids [:xray-soft :lambert-default]
-    :axis {:radius 0.005 :length 1.5}}
+    :axis {:radius 0.005 :length 2}}
 
    :seeds seeds
 
@@ -103,8 +103,8 @@
     :height 245
     :min-size 24
     :map-bg "#222223"
-    :map-selection "#a8a800"
-    :map-color-offset -0.33
+    :map-selection "#ffff00"
+    :map-color-offset 0
     :map-label-font "14px \"Abel\",sans-serif"
     :map-label-size 18
     :toolbar-icon-size [32 32]
@@ -113,15 +113,17 @@
     :toolbar-margin-left 58
     :toolbar-margin-right 58
     :tooltips {:preview-label {:offset [-80 24]
-                               :content "This is the 3d preview of your object. Any selected items in the code are highlighted here too. Click & drag to rotate view or use mousewheel / pinch to zoom."}
+                               :content "Drag the shape to rotate. Use touchpad or mouse wheel to zoom."}
                :toolbar-label {:offset [12 -50]
-                               :content "Here you can find all code operations which can be applied to a selected shape. Use the \"Empty\" tool to clear shapes. Use the \"Undo\" button to revert changes. Click & drag to scroll."}
-               :viz-label {:offset [12 -50]
-                           :content "This is a visualization of all code operations used to create the object above. Select boxes to apply operations. Each will create one or more new shapes, forming a hierarchy. Click & drag to scroll."}
-               :map-label {:offset [-262 -40]
-                           :content "This is a zoomed out map of your entire code structure. The yellow rectangle marks the region visible on the left. Click & drag to scroll."}}
+                               :content "These are the tools to modify your shape. Drag to scroll left/right to reveal more tools. The slider below varies the amount of change for some tools. If you made a mistake, use \"Undo\" to go back."}
+               :viz-label     {:offset [12 -32]
+                               :content "A visualization of your code. Click any of the boxes to select them for modification. Drag to scroll."}
+               :map-label     {:offset [-262 -32]
+                               :content "A zoomed out map of your code structure. The yellow rectangle marks the region visible on the left. Drag to scroll."}
+               :axis-label    {:offset [-262 -22]
+                               :content "Click here to display the XYZ axes for better orientation."}}
     :root-label "<h1>TAP HERE TO BEGIN</h1>"
-    :leaf-label "+"
+    :leaf-label "TAP TO MODIFY"
     :map-labels ["CODE OVERVIEW"]}
 
    :icons
@@ -159,7 +161,7 @@
                        :style {:opacity "0.3"}}]}
     :delete  {:col "#aaaaaa" :label "delete"
               :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0,0 L1,1 M0,1 L1,0"}]}
-    :leaf    {:col "#ffffff" :label "leaf"}
+    :leaf    {:col "#dddddd" :label "leaf"}
     :undo    {:col "#aaaaaa" :label "undo"
               :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0.2,0.8 L0.2,0.2 L0.8,0.2 M0.2,0.2 L0.8,0.8"}]}}
 
@@ -309,16 +311,21 @@
              :routes-unsupported [(get-in app [:routes 0])])))
 
 (def ^:export barbican
-  (-> default-config
-      (assoc-in [:timeouts :editor] (* 2 60 1000))
-      (assoc-in [:api :inject] {:location "barbican"})))
+  (deep-merge
+   app
+   {:timeouts {:editor (* 2 60 1000)}
+    :api {:inject {:location "barbican"}}
+    :editor {:tooltips {:preview-label {:content "Touch the shape to rotate. Pinch to zoom."}
+                        :viz-label {:content "A visualization of your code. Tap any of the boxes to select them for modification. Drag to scroll."}
+                        :axis-label {:content "Tap here to display the XYZ axes for better orientation."}}}}))
 
 (def ^:export workshop
-  (-> app
-      (assoc-in [:api :inject] {:location "workshop"})
-      (assoc-in [:modules :workshop] true)
-      (assoc-in [:timeouts :editor] (* 30 60 1000))
-      (assoc-in [:timeouts :thanks] (* 5 60 1000))))
+  (deep-merge
+   app
+   {:api {:inject {:location "workshop"}}
+    :modules {:workshop true}
+    :timeouts {:editor (* 30 60 1000)
+               :thanks (* 5 60 1000)}}))
 
 (defn set-config!
   [sym] (set! app (js/eval (aget js/window sym))))

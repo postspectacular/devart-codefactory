@@ -18,7 +18,8 @@
         size (-> config/app :editor :toolbar-icon-size)]
     (common/icon-button
      tools nil size (-> icons :fullscreen :paths) nil
-     (fn [] (dom/request-fullscreen)))))
+     (fn [] (dom/request-fullscreen))
+     "fs-toggle")))
 
 (defn init
   [bus]

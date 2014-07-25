@@ -222,6 +222,12 @@ div.tool {
         &.op-delete:hover { background-color: lighten(@op-col-delete,10); }
         &.op-leaf:hover { background-color: lighten(@op-col-leaf,10); }
 
+        &.op-root {
+            background-color: transparent !important;
+            color: @col-bt-continue !important;
+            border: 2px solid @border-col;
+        }
+
         &.selected { background-color: yellow !important; }
 
         h1 { margin: 0; padding: 0 10px; }

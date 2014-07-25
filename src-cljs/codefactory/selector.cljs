@@ -126,7 +126,8 @@
         size (-> config/app :editor :toolbar-icon-size)]
     (common/icon-button
      tools nil size (-> icons :fullscreen :paths) nil
-     (fn [] (dom/request-fullscreen)))))
+     (fn [] (dom/request-fullscreen))
+     "fs-toggle")))
 
 (defn init
   [bus]
@@ -136,7 +137,7 @@
         [right]    (async/event-channel "#seed-right" "click")
         [continue] (async/event-channel "#seed-continue" "click")
         [select]   (async/event-channel "#seed-canvas" "click")
-        ;;[cancel]   (async/event-channel "#seed-cancel" "click")
+        [cancel]   (async/event-channel "#seed-cancel" "click")
         canvas     (config/dom-component :seed-canvas)
         glconf     (:webgl config/app)
         mconf      (:seed-select config/app)
@@ -181,12 +182,12 @@
           (go
             (loop []
               (let [delay (- module-timeout (- (utils/now) (:last-click @local)))
-                    [e ch] (alts! [continue select (timeout delay)])]
+                    [e ch] (alts! [continue cancel select (timeout delay)])]
                 (debug :timeout)
                 (cond
                  (or (= continue ch) (center-click? select ch canvas e 120))
                  (start-editor local)
-                 (or #_(= cancel ch)
+                 (or (= cancel ch)
                      (>= (- (utils/now) (:last-click @local)) module-timeout))
                  (route/set-route! "home")
                  :else (recur)))))

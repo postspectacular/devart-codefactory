@@ -17,6 +17,9 @@
        (apply f maps)))
    maps))
 
+(defn deep-merge
+  [& maps] (apply deep-merge-with (fn[& maps] (last maps)) maps))
+
 (defn parse-int
   ([x] (parse-int x 10 nil))
   ([x radix nf]

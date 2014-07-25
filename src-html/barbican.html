@@ -97,6 +97,12 @@
         <div class="flex-container">
           <div class="flex-item flex-content">
             <h1>CREATE A PIECE OF ART USING CODE</h1>
+            <div class="credits">
+              <p>Currently printing at the Barbican:</p>
+              <span id="credits-title">Desert Rose</span>
+              <span id="credits-author">Anonymous</span>
+              <span id="credits-date">2014-07-25</span>
+            </div>
           </div>
           <div class="flex-item buttonbar">
             <div class="inner">
@@ -123,13 +129,11 @@
           </div>
           <div class="flex-item buttonbar">
             <div class="inner">
-              <!--
-                  <div id="seed-cancel" class="flex-item center">
-                    <svg width="50%" height="50" viewbox="0 0 1 1">
-                      <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
-                    </svg>
-                  </div>
-                  -->
+              <div id="seed-cancel" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 1 1">
+                  <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
+                </svg>
+              </div>
               <div id="seed-continue" class="flex-item center flash-border flash">
                 <svg width="50%" height="50" viewbox="0 0 1 1">
                   <g fill="none" stroke="#89c33f" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
@@ -152,7 +156,7 @@
                 <path d="M0,0 L1,0 L1,1 L0,1 Z M0.25,0.4 L0.3,0.2 L0.7,0.2 L0.8,0.3 L0.45,0.55 L0.45,0.65 M0.45,0.75 L0.45,0.8" />
               </svg>
             </div>
-            <div id="toolbar-label" class="section-label">toolbar
+            <div id="toolbar-label" class="section-label">code operations
               <svg width="11" height="11" viewbox="0 0 1 1">
                 <path d="M0,0 L1,0 L1,1 L0,1 Z M0.25,0.4 L0.3,0.2 L0.7,0.2 L0.8,0.3 L0.45,0.55 L0.45,0.65 M0.45,0.75 L0.45,0.8" />
               </svg>
@@ -172,7 +176,7 @@
             </div>
           </div>
           <div id="edit-treemap" class="flex-item">
-            <div id="viz-label" class="section-label">code hierarchy
+            <div id="viz-label" class="section-label">code structure
               <svg width="11" height="11" viewbox="0 0 1 1">
                 <path d="M0,0 L1,0 L1,1 L0,1 Z M0.25,0.4 L0.3,0.2 L0.7,0.2 L0.8,0.3 L0.45,0.55 L0.45,0.65 M0.45,0.75 L0.45,0.8" />
               </svg>
@@ -217,6 +221,10 @@
           <div class="tooltip-content"></div>
         </div>
         <div id="map-label-tip" class="tooltip left">
+          <div class="arrow"></div>
+          <div class="tooltip-content"></div>
+        </div>
+        <div id="axis-label-tip" class="tooltip left">
           <div class="arrow"></div>
           <div class="tooltip-content"></div>
         </div>

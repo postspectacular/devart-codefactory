@@ -50,37 +50,40 @@
         (async/publish bus :node-toggle id)
         (recur)))))
 
+(defn set-node-label
+  [el path op depth width min-width]
+  (cond
+   (= :leaf op)
+   (if (empty? path)
+     (-> el
+         (dom/set-html! (-> config/app :editor :root-label))
+         (dom/add-class! "op-root flash"))
+     (dom/set-text! el (if (== 2 depth) (-> config/app :editor :leaf-label) "+")))
+
+   (= :delete op)
+   (let [svg (dom/create-ns!
+              dom/svg-ns "svg" el
+              {:width "100%" :height "100%"
+               :viewBox "0 0 1 1"
+               :preserveAspectRatio "none"
+               :class "op-delete"})]
+     (dom/create-ns!
+      dom/svg-ns "path" svg {:d "M0,0 L1,1 M0,1 L1,0"})
+     (dom/create-ns!
+      dom/svg-ns "rect" svg {:x 0 :y 0 :width 1 :height 1}))
+
+   :else
+   (when (>= width min-width)
+     (dom/set-text! el (-> config/app :operators op :label)))))
+
 (defn make-node
-  [parent path op x y w h ox oy bus sel min-label-width]
+  [parent path op x y w h ox oy bus sel]
   (let [el (dom/create! "div" parent)
         id (node-id path)
         cls (str "op-" (name op))
         x' (+ x ox)
         y' (+ y oy)
         [ch handler] (async/event-channel el "click")]
-
-    (cond
-     (= :leaf op)
-     (dom/set-html!
-      el (if (empty? path)
-           (-> config/app :editor :root-label)
-           (-> config/app :editor :leaf-label)))
-
-     (= :delete op)
-     (let [svg (dom/create-ns!
-                dom/svg-ns "svg" el
-                {:width "100%" :height "100%"
-                 :viewBox "0 0 1 1"
-                 :preserveAspectRatio "none"
-                 :class "op-delete"})]
-       (dom/create-ns!
-        dom/svg-ns "path" svg {:d "M0,0 L1,1 M0,1 L1,0"})
-       (dom/create-ns!
-        dom/svg-ns "rect" svg {:x 0 :y 0 :width 1 :height 1}))
-
-     :else
-     (when (>= w min-label-width)
-       (dom/set-text! el (-> config/app :operators op :label))))
 
     (doto el
       (dom/set-attribs! {:id id})
@@ -193,20 +196,21 @@
     (reposition-viz editor local (vec2 x' 0))))
 
 (defn generate-branch
-  [bus viz tree scroll sel]
+  [bus viz tree depth scroll sel]
   (let [{:keys [gap min-label-width]} (:editor config/app)
         [offx offy] (scroll-offset scroll viz)]
     (fn gen-branch*
       [acc path x y w h]
       (let [node (tree/node-at tree path)
-            nc (count (:out node))
-            wc (cell-size w gap nc)
-            cy (mm/sub y h gap)
-            op (config/translate-mg-op (tree/node-operator node))
-            acc (conj acc
-                      (make-node viz path op
-                                 x (- y h) w h offx offy
-                                 bus sel min-label-width))]
+            nc   (count (:out node))
+            wc   (cell-size w gap nc)
+            cy   (mm/sub y h gap)
+            op   (config/translate-mg-op (tree/node-operator node))
+            [x y w h] (if (and (== 1 depth) (empty? path))
+                        [x (- y 4) (- w 4) (- h 4)] [x y w h])
+            node (make-node viz path op x (- y h) w h offx offy bus sel)
+            acc  (conj acc node)]
+        (set-node-label (-> node second :el) path op depth w min-label-width)
         (if (pos? nc)
           (loop [acc acc, i 0]
             (if (< i nc)
@@ -223,8 +227,7 @@
         {:keys [gap margin height]} (:editor config/app)
         width' (compute-required-width editor)
         node-height (cell-size height gap tree-depth)
-        ;;scroll (if (== width width') scroll (vec2))
-        layout (generate-branch bus viz tree scroll selection)]
+        layout (generate-branch bus viz tree tree-depth scroll selection)]
     (dom/set-html! viz "")
     (remove-node-event-handlers bus nodes)
     (debug :new-width width' :scroll scroll)

@@ -90,14 +90,14 @@
         view-rect (r/rect 0 0 w h)]
     (dom/set-attribs! canvas {:width w :height h})
     (dom/set-style! (config/dom-component :preview-label)
-                    #js {:width (->px (- w 20))})
+                    #js {:width (->px (- w 62))})
     (dom/set-style! (config/dom-component :toolbar-label)
                     #js {:width (->px (- w 20)) :top (->px (- h 19))})
     (swap!
      local assoc
      :canvas-width w :canvas-height h
      :view-rect view-rect
-     :proj (gl/perspective 45 view-rect 0.1 10))
+     :proj (gl/perspective 45 view-rect 0.1 20))
     (gl/set-viewport gl view-rect)
     (arcball/resize arcball w h)))
 
@@ -370,7 +370,8 @@
                  (async/publish bus :render-scene nil)))]
     (common/icon-button
      tools nil size (-> icons :fullscreen :paths) nil
-     (fn [] (dom/request-fullscreen)))
+     (fn [] (dom/request-fullscreen))
+     "fs-toggle")
     (common/icon-button
      tools nil size (-> icons :axis :paths) nil
      (fn []

@@ -91,15 +91,42 @@ a:hover { color: lighten(@op-col-sd,10); }
     }
 }
 
+.tools-extra {
+    top: 10px;
+    right: 10px;
+
+    div {
+        margin-bottom: 10px;
+
+        &:hover {
+            svg { stroke: @col-tool-hover; }
+        }
+    }
+
+    div.fs-toggle {
+        margin-bottom: 20px;
+        svg {
+            stroke: @col-tool-fs !important;
+        }
+    }
+
+    svg {
+        stroke: @col-tool;
+        stroke-width: 0.05;
+    }
+}
+
 #home {
     background-image: url('/img/renders/20140701.jpg');
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
-}
 
-#home, #selector {
-    .tools-extra { top: 10px; }
+    div.credits {
+        margin-top: 100px;
+
+        span { display: block; }
+    }
 }
 
 #seed-overlay {
@@ -152,7 +179,7 @@ a:hover { color: lighten(@op-col-sd,10); }
     svg {
         margin-left: 5px;
         fill: none;
-        stroke: #999;
+        stroke: @col-section;
         stroke-width: 0.1;
     }
 }
