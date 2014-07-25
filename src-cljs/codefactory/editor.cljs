@@ -30,8 +30,8 @@
 
 (defn submit-model
   [bus local]
-  (let [{:keys [tree seed-id]} @local]
-    (async/publish bus :broadcast-tree [tree seed-id])
+  (let [{:keys [tree seed-id history]} @local]
+    (async/publish bus :broadcast-tree [tree seed-id history])
     (route/set-route! "objects" "submit")))
 
 (defn load-model
@@ -244,9 +244,9 @@
   (let [ch (async/subscribe bus :broadcast-tree)]
     (go
       (loop []
-        (let [[_ [tree seed]] (<! ch)]
-          (debug :editor-tree-received tree seed)
-          (swap! local assoc :tree tree :seed-id seed)
+        (let [[_ [tree seed history]] (<! ch)]
+          (debug :editor-tree-received tree seed history)
+          (swap! local assoc :tree tree :seed-id seed :history history)
           (when-not tree
             (swap! local assoc :history []))
           (recur))))))
@@ -390,7 +390,6 @@
         toolbar    (config/dom-component :tools)
         init       (async/subscribe bus :init-editor)
         local      (atom {:tools (ops/init-op-triggers bus toolbar)})]
-    ;;(debug :tools (:specs (:tools @local)))
 
     (go
       (loop []
@@ -435,7 +434,7 @@
                  :sel-time    now
                  :time        now
                  :active?     true
-                 :history     []
+                 :history     (or (:history @local) [])
                  :tools       (:tools @local)
                  :show-axes?  false})
                (init-tree local (:seed-id params))))

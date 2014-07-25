@@ -34,7 +34,7 @@
       (loop []
         (let [[_ [state]] (<! chan-i)]
           (debug :init-home)
-          (async/publish bus :broadcast-tree [nil nil])
+          (async/publish bus :broadcast-tree nil)
           (go
             (let [_ (<! click)]
               (route/set-route! "select")))

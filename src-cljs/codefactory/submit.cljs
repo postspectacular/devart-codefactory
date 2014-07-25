@@ -19,10 +19,10 @@
    :edn?    true
    :data    (config/inject-api-request-data data)
    :success (fn [status body]
-              (debug :success-response status body)
+              (info :success-response status body)
               (async/publish bus :submit-model-success body))
    :error   (fn [status body]
-              (debug :error-response status body)
+              (warn :error-response status body)
               (async/publish bus :submit-model-fail body))))
 
 (defn handle-init
@@ -41,8 +41,8 @@
   (let [ch (async/subscribe bus :broadcast-tree)]
     (go
       (loop []
-        (let [[_ [tree seed]] (<! ch)]
-          (swap! local assoc :tree tree :seed seed)
+        (let [[_ [tree seed history]] (<! ch)]
+          (swap! local assoc :tree tree :seed seed :history history)
           (recur))))))
 
 (defn handle-submit
