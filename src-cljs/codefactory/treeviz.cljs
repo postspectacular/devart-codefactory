@@ -241,13 +241,15 @@
       (center-node editor local))))
 
 (defn resize-branch
-  [nodes tree gap [offx offy]]
+  [nodes tree depth gap [offx offy]]
   (fn resize-branch*
     [path x y w h]
     (let [el (:el (nodes (node-id path)))
           nc (tree/num-children-at tree path)
-          cy (mm/sub y h gap)
-          wc (cell-size w gap nc)]
+          [x y w h] (if (and (== 1 depth) (empty? path))
+                      [x (- y 4) (- w 4) (- h 4)] [x y w h])
+          wc (cell-size w gap nc)
+          cy (mm/sub y h gap)]
       (dom/set-style!
        el #js {:left  (->px (+ x offx))
                :top   (->px (+ (- y h) offy))
@@ -266,7 +268,7 @@
         width       (compute-required-width editor)
         node-height (cell-size height gap tree-depth)
         offset      (scroll-offset scroll viz)]
-    ((resize-branch nodes tree gap offset) [] margin height width node-height)
+    ((resize-branch nodes tree tree-depth gap offset) [] margin height width node-height)
     (swap! local assoc :width width :node-height node-height)))
 
 (def map-op-color
