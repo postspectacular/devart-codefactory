@@ -120,24 +120,6 @@ div.tool {
     .op-tool(op-undo; @op-col-undo; tool-flash-anim-undo);
 }
 
-.tools-extra {
-    right: 10px;
-    top: 45px;
-
-    div {
-        margin-bottom: 10px;
-
-        &:hover {
-            svg { stroke: @col-tool-hover; }
-        }
-    }
-
-    svg {
-        stroke: @col-tool;
-        stroke-width: 0.05;
-    }
-}
-
 #slider {
     .flex(row nowrap);
     .flex-justify(center);
@@ -222,13 +204,33 @@ div.tool {
         &.op-delete:hover { background-color: lighten(@op-col-delete,10); }
         &.op-leaf:hover { background-color: lighten(@op-col-leaf,10); }
 
+        &.op-sd.deselected { background-color: darken(@op-col-sd,30); color: @op-col-sd;}
+        &.op-inset.deselected { background-color: darken(@op-col-inset,30); color: @op-col-inset; }
+        &.op-stretch.deselected { background-color: darken(@op-col-stretch,30); color: @op-col-stretch; }
+        &.op-reflect.deselected { background-color: darken(@op-col-reflect,30); color: @op-col-reflect; }
+        &.op-shift.deselected { background-color: darken(@op-col-shift,30); color: @op-col-shift; }
+        &.op-tilt.deselected { background-color: darken(@op-col-tilt,30); color: @op-col-tilt; }
+        &.op-scale.deselected { background-color: darken(@op-col-scale,30); color: @op-col-scale; }
+        &.op-delete.deselected { background-color: darken(@op-col-delete,30); color: @op-col-delete; }
+        &.op-leaf.deselected { background-color: darken(@op-col-leaf,30); color: @op-col-leaf; }
+
+        &.op-sd.deselected:hover { background-color: darken(@op-col-sd,20); color: @op-col-sd;}
+        &.op-inset.deselected:hover { background-color: darken(@op-col-inset,20); color: @op-col-inset; }
+        &.op-stretch.deselected:hover { background-color: darken(@op-col-stretch,20); color: @op-col-stretch; }
+        &.op-reflect.deselected:hover { background-color: darken(@op-col-reflect,20); color: @op-col-reflect; }
+        &.op-shift.deselected:hover { background-color: darken(@op-col-shift,20); color: @op-col-shift; }
+        &.op-tilt.deselected:hover { background-color: darken(@op-col-tilt,20); color: @op-col-tilt; }
+        &.op-scale.deselected:hover { background-color: darken(@op-col-scale,20); color: @op-col-scale; }
+        &.op-delete.deselected:hover { background-color: darken(@op-col-delete,20); color: @op-col-delete; }
+        &.op-leaf.deselected:hover { background-color: darken(@op-col-leaf,20); color: @op-col-leaf; }
+
         &.op-root {
             background-color: transparent !important;
             color: @col-bt-continue !important;
             border: 2px solid @border-col;
         }
 
-        &.selected { background-color: yellow !important; }
+        //&.deselected { color: #fff !important; }
 
         h1 { margin: 0; padding: 0 10px; }
 
@@ -236,7 +238,6 @@ div.tool {
             &.op-delete { stroke: @op-col-delete; }
 
             path, rect {
-                //fill: none;
                 stroke-width: 2px;
                 vector-effect: non-scaling-stroke;
             }
@@ -249,8 +250,8 @@ div.tool {
     z-index: 200;
     right: 0;
     bottom: 70;
-    border-left: 10px solid @col-bg;
-    border-right: 10px solid @col-bg;
+    border-left: @margin solid @col-bg;
+    border-right: @margin solid @col-bg;
     cursor: ew-resize;
 }
 
@@ -263,43 +264,3 @@ div.tool {
     height: @viz-height;
     background-color: @col-bg;
 }
-
-#op-container {
-    .flex(column nowrap);
-    height: @viz-height;
-    margin: 0 10px;
-    padding: 0px 40px;
-    border: 2px solid white;
-
-    &.op-sd { border-color: @op-col-sd; color: @op-col-sd;}
-    &.op-inset { border-color: @op-col-inset; color: @op-col-inset; }
-    &.op-stretch { border-color: @op-col-stretch; color: @op-col-stretch; }
-    &.op-reflect { border-color: @op-col-reflect; color: @op-col-reflect; }
-    &.op-shift { border-color: @op-col-shift; color: @op-col-shift; }
-    &.op-tilt { border-color: @op-col-tilt; color: @op-col-tilt; }
-    &.op-scale { border-color: @op-col-scale; color: @op-col-scale; }
-    &.op-delete { border-color: @op-col-delete; color: @op-col-delete; }
-    &.op-leaf { border-color: #ddd; color: #ddd; }
-}
-
-#op-ctrl {
-    .flex(row nowrap);
-
-    p {
-        text-transform: uppercase;
-    }
-}
-
-#op-sliders {
-    .flexbox(6 0 auto);
-}
-
-#op-buttons {
-    .flexbox(1 0 auto);
-    padding-top: 32px;
-    text-align: right;
-
-    div { margin: 10px 0; }
-}
-
-#op-help { margin-top: 2em; }

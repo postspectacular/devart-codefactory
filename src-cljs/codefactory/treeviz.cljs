@@ -24,12 +24,20 @@
   (memoize (fn [path] (apply str (cons "node-" (interpose "-" path))))))
 
 (defn highlight-selected-node
-  [el op]
-  (dom/add-class! el (str "sel-flash-" (name op))))
+  [el nodes]
+  (loop [nodes nodes]
+    (when-let [n (first nodes)]
+      (if (= n el)
+        (dom/remove-class! n "deselected")
+        (dom/add-class! n "deselected"))
+      (recur (next nodes)))))
 
 (defn unhighlight-selected-node
-  [el op]
-  (dom/remove-class! el (str "sel-flash-" (name op))))
+  [el nodes]
+  (loop [nodes nodes]
+    (when nodes
+      (dom/remove-class! (first nodes) "deselected")
+      (recur (next nodes)))))
 
 (defn remove-node-event-handlers
   [bus nodes]
@@ -94,7 +102,7 @@
             :height (->px h)}))
 
     (if (not= :delete op) (dom/add-class! el cls))
-    (if (= path sel) (highlight-selected-node el op))
+    (if (and sel (not= path sel)) (dom/add-class! el "deselected"))
 
     (node-event-handler ch bus id)
 
@@ -406,7 +414,7 @@
                  :display-meshes (tree/filter-leaves-and-selection meshes tree path))
                 (when (and (not (seq path)) (= op :leaf))
                   (dom/set-html! el ""))
-                (highlight-selected-node el (:sel-type @editor))
+                (highlight-selected-node el (->> @local :nodes vals (map :el)))
                 (ops/enable-presets (:specs tools))
                 (debug :sel-node node)
                 (when-let [pid (:id node)]
@@ -429,7 +437,7 @@
           (when id
             (swap! local assoc :selected-id nil)
             (swap! editor assoc :selection nil :sel-type nil)
-            (unhighlight-selected-node (:el node) sel-type)
+            (unhighlight-selected-node (:el node) (->> @local :nodes vals (map :el)))
             (when (and (not (seq selection)) (nil? (:op (tree/node-at tree selection))))
               (dom/set-html! (:el node) (get-in config/app [:editor :root-label])))
             (ops/disable-presets (:specs tools))
