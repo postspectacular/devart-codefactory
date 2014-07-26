@@ -106,7 +106,11 @@
             :height (->px h)}))
 
     (dom/add-class! el cls)
-    (if (and sel (not= path sel)) (dom/add-class! el "deselected"))
+    (if sel
+      (if (= path sel)
+        (dom/add-class! el "selected")
+        (dom/add-class! el "deselected")))
+    ;;(if (and sel (not= path sel)) (dom/add-class! el "deselected"))
 
     (node-event-handler ch bus id)
 
@@ -238,6 +242,7 @@
         {:keys [tree tree-depth selection]} @editor
         {:keys [gap margin height]} (:editor config/app)
         width' (compute-required-width editor)
+        scroll (if (< width' (m/abs (:x scroll))) (vec2) scroll)
         node-height (cell-size height gap tree-depth)
         layout (generate-branch bus viz tree tree-depth scroll selection)]
     (dom/set-html! viz "")
@@ -248,7 +253,7 @@
      local assoc
      :width       width'
      :node-height node-height
-     ;;:scroll      scroll
+     :scroll      scroll
      :nodes       (layout {} [] margin height width' node-height))
     (if selection
       (center-node editor local))))
@@ -292,20 +297,25 @@
       (config/operator-color op)
       (-> config/app :editor :map-color-offset)))))
 
-(defn map-branch
+(defn draw-map-branch
   [ctx tree path x y w h sel]
   (let [{:keys [op out] :as node} (tree/node-at tree path)
         nc (count out)
         wc (cell-size w 1 nc)
-        col (if (= path sel)
-              (-> config/app :editor :map-selection)
-              (map-op-color (config/translate-mg-op (tree/node-operator node))))]
-    (set! (.-fillStyle ctx) col)
-    (.fillRect ctx x (inc (- y h)) w h)
+        col (map-op-color (config/translate-mg-op (tree/node-operator node)))]
+    (if (or (not sel) (= path sel))
+      (do
+        (set! (.-fillStyle ctx) col)
+        (set! (.-strokeStyle ctx) "")
+        (.fillRect ctx x (inc (- y h)) w (dec h)))
+      (do
+        (set! (.-fillStyle ctx) "")
+        (set! (.-strokeStyle ctx) col)
+        (.strokeRect ctx x (inc (- y h)) (max (dec w) 1) (dec h))))
     (if (pos? nc)
       (loop [i 0]
         (when (< i nc)
-          (map-branch ctx tree (conj path i) (mm/madd i wc i 1 x) (- y h) wc h sel)
+          (draw-map-branch ctx tree (conj path i) (mm/madd i wc i 1 x) (- y h) wc h sel)
           (recur (inc i)))))))
 
 (defn draw-map-labels
@@ -324,22 +334,23 @@
   [editor local]
   (let [{:keys [ctx width height]} @local
         {:keys [tree tree-depth selection]} @editor
-        {:keys [map-bg map-width map-height] :as econf} (:editor config/app)
+        {:keys [map-bg map-label-col map-width map-height] :as econf} (:editor config/app)
         [vx vy vw vh :as vp] (map-focus-rect
                               (compute-viewport local)
                               width height map-width map-height)]
     (swap! local assoc :viewport vp)
     (set! (.-fillStyle ctx) map-bg)
     (set! (.-strokeStyle ctx) nil)
-    (.fillRect ctx 0 0 map-width map-height)
-    (map-branch ctx tree [] 0 map-height
-                map-width (/ map-height tree-depth)
-                selection)
-    (when (== 1 tree-depth)
+    (set! (.-lineWidth ctx) 1)
+    (.fillRect ctx 0 0 map-width map-height)    
+    (if (< 1 tree-depth)
+      (draw-map-branch ctx tree [] 0 map-height
+                       map-width (cell-size map-height 1 tree-depth)
+                       selection)
       (let [{:keys [map-labels map-label-font map-label-size]} econf]
         (draw-map-labels ctx map-labels
                          (/ map-width 2) (/ map-height 2)
-                         map-bg map-label-font map-label-size)))
+                         map-label-col map-label-font map-label-size)))
     (set! (.-strokeStyle ctx) "yellow")
     (set! (.-lineWidth ctx) 2)
     (.strokeRect ctx vx vy vw vh)))

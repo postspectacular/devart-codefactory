@@ -106,6 +106,7 @@
     :map-selection "#ffff00"
     :map-color-offset 0
     :map-label-font "14px \"Abel\",sans-serif"
+    :map-label-col "#999"
     :map-label-size 18
     :toolbar-icon-size [32 32]
     :toolbar-op-width 65
