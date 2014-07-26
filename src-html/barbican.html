@@ -112,11 +112,11 @@
               <!--
                   <div id="home-gallery" class="flex-item center">
                     <svg width="50%" height="50" viewbox="0 0 1 1">
-                      <g fill="none" stroke="#ffd541" stroke-width="0.05"><path d="M0.2,0.2 L0.8,0.2 L0.8,0.8 L0.2,0.8 z M 0.5,0.2 L 0.5, 0.8 M 0.2,0.5 L 0.8,0.5"/></g></svg></div>
+                      <g stroke="#ffd541"><path fill="none" d="M0.2,0.2 L0.8,0.2 L0.8,0.8 L0.2,0.8 z M 0.5,0.2 L 0.5, 0.8 M 0.2,0.5 L 0.8,0.5"/></g></svg></div>
                   -->
               <div id="home-continue" class="flex-item center flash-border flash">
                 <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g fill="none" stroke="#89c33f" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                  <g stroke="#89c33f"><path fill="none" d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
                 </svg>
               </div>
             </div>
@@ -134,12 +134,12 @@
             <div class="inner">
               <div id="seed-cancel" class="flex-item center">
                 <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
+                  <g stroke="#ff772a"><path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
                 </svg>
               </div>
               <div id="seed-continue" class="flex-item center flash-border flash">
                 <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g fill="none" stroke="#89c33f" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                  <g stroke="#89c33f"><path fill="none" d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
                 </svg>
               </div>
             </div>
@@ -196,15 +196,16 @@
             <div class="inner">
               <div id="edit-cancel" class="flex-item center">
                 <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g fill="none" stroke="#ff772a" stroke-width="0.05">
-                    <path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/>
+                  <g fill="none" stroke="#ff772a">
+                    <path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/>
                   </g>
                 </svg>
               </div>
               <div id="edit-continue" class="flex-item center">
-                <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g fill="none" stroke="#89c33f" stroke-width="0.05">
-                    <path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/>
+                <svg width="50%" height="50" viewbox="0 0 3 1">
+                  <g fill="#89c33f" stroke="#89c33f">
+                    <path fill="none" d="M0.2,0.6 L0.2,0.8 L0.8,0.8 L0.8,0.6 M0.3,0.4 L0.5,0.2 L0.7,0.4 M0.5,0.2 L0.5,0.7"/>
+                    <text x="1.1" y="0.71" font-size="0.6" stroke="none">SUBMIT</text>
                   </g>
                 </svg>
               </div>
@@ -250,7 +251,7 @@
             <div class="inner">
               <div id="submit-cancel" class="flex-item center">
                 <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g></svg></div>
+                  <g stroke="#ff772a"><path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g></svg></div>
             </div>
           </div>
         </div>
@@ -264,16 +265,10 @@
               <p class="noprint">Your artwork has been received.</p>
               <p class="noprint">We keep our fingers crossed that your piece will be chosen to be printed here at the Barbican!</p>
               <div id="art-url-wrapper" class="hidden">
-                <p>Your unique object is stored at this web address:</p>
+                <p>Your object is stored at this unique web address:</p>
                 <p id="art-url"></p>
               </div>
-            </div>
-          </div>
-          <div class="flex-item buttonbar">
-            <div class="inner">
-              <div id="thanks-cancel" class="flex-item center flash-border flash">
-                <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g fill="none" stroke="#ff772a" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g></svg></div>
+              <input id="thanks-cancel" type="button" value="RESTART"/>
             </div>
           </div>
         </div>
