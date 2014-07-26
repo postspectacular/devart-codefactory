@@ -101,7 +101,7 @@
     :map-height 245
     :min-label-width 50
     :height 245
-    :min-size 24
+    :min-size 28
     :map-bg "#222223"
     :map-selection "#ffff00"
     :map-color-offset 0
@@ -121,11 +121,11 @@
                                :content "A visualization of your code. Click any of the boxes to select them for modification. Drag to scroll."}
                :map-label     {:offset [-262 -32]
                                :content "A zoomed out map of your code structure. The yellow rectangle marks the region visible on the left. Drag to scroll."}
-               :axis-label    {:offset [-262 -22]
+               :axis-label    {:offset [-262 -12]
                                :auto? true
                                :content "Click here to display the XYZ axes for better orientation."}}
-    :root-label "<h1>TAP HERE TO BEGIN</h1>"
-    :leaf-label "TAP TO MODIFY"
+    :root-label "<h1>Tap here to begin</h1>"
+    :leaf-label "Tap to modify"
     :map-labels ["CODE OVERVIEW"]}
 
    :icons
@@ -292,7 +292,8 @@
    {:selector (* 30 1000)
     :editor   (* 7 24 60 60 1000)
     :thanks   (* 60 1000)
-    :controller 900}
+    :controller 900
+    :tooltip  3000}
 
    :api
    {:prefix api-prefix

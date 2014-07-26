@@ -225,6 +225,13 @@
         (swap! local assoc :last-action (utils/now))
         (recur)))))
 
+(defn hide-tooltips
+  []
+  (->> (get-in config/app [:editor :tooltips])
+       keys
+       (map #(-> % name (str "-tip") dom/by-id (dom/add-class! "hidden")))
+       (dorun)))
+
 (defn handle-release
   [bus local]
   (let [ch (async/subscribe bus :release-editor)]
@@ -237,6 +244,7 @@
           (async/unsubscribe-and-close-many bus subs)
           (dorun (map async/destroy-event-channel events))
           (ops/disable-presets (:specs tools))
+          (hide-tooltips)
           (recur))))))
 
 (defn handle-tree-broadcast
@@ -301,9 +309,37 @@
                     (end-view-tween local))))))
           (recur))))))
 
+(defn handle-tooltip-display
+  [bus]
+  (let [show     (async/subscribe bus :show-tooltip)
+        hide     (async/subscribe bus :hide-tooltip)
+        tooltips (get-in config/app [:editor :tooltips])]
+    (go
+      (loop []
+        (let [[_ [el kid]] (<! show)
+              id (name kid)
+              tip (dom/by-id (str id "-tip"))
+              {:keys [offset content auto?]} (tooltips kid)
+              [x y] (g/+ (vec2 (dom/offset el)) offset)]
+          (dom/set-text! (dom/query tip ".tooltip-content") content)
+          (-> tip
+              (dom/set-style! (clj->js {:display "block" :left (->px x) :top (->px y)}))
+              (dom/remove-class! "hidden"))
+          (when auto?
+            (go (<! (timeout (config/timeout :tooltip)))
+                (async/publish bus :hide-tooltip kid)))
+          (recur))))
+    (go
+      (loop []
+        (let [[_ id] (<! hide)
+              tip (dom/by-id (str (name id) "-tip"))]
+          (dom/set-style! tip #js {:display "none"})
+          (recur))))))
+
 (defn handle-tooltips
-  [tooltips]
-  (let [tips     (->> tooltips
+  [bus]
+  (let [tooltips (get-in config/app [:editor :tooltips])
+        tips     (->> tooltips
                       (filter (comp not :auto? val))
                       keys
                       (mapv #(-> % name dom/by-id (dom/query "svg"))))
@@ -315,19 +351,15 @@
     (go
       (loop [state {}]
         (let [[e ch] (alts! all)
-              id (-> (.-target e) dom/parent (dom/get-attribs ["id"]) first)
+              el (.-target e)
+              id (-> el dom/parent (dom/get-attribs ["id"]) first)
               kid (keyword id)
-              tip (dom/by-id (str id "-tip"))
-              {:keys [offset content]} (tooltips kid)
-              [x y] (g/+ (vec2 (dom/offset (.-target e))) offset)
               show? (or (on ch) (and (touch ch) (not (state kid))))]
-          (debug :tip (.-target e) kid)
+          (debug :tip el kid)
           (when id
             (if show?
-              (do
-                (dom/set-text! (dom/query tip ".tooltip-content") content)
-                (dom/set-style! tip (clj->js {:display "block" :left (->px x) :top (->px y)})))
-              (dom/set-style! tip #js {:display "none"})))
+              (async/publish bus :show-tooltip [el kid])
+              (async/publish bus :hide-tooltip kid)))
           (recur (assoc state kid show?)))))))
 
 (defn render-loop
@@ -376,7 +408,7 @@
      (fn [] (dom/request-fullscreen))
      "fs-toggle")
     (common/icon-button
-     tools nil size (-> icons :axis :paths) nil
+     tools "axis-toggle" size (-> icons :axis :paths) nil
      (fn []
        (swap! local update-in [:show-axes?] not)
        (async/publish bus :render-scene nil)))
@@ -439,7 +471,8 @@
                  :active?     true
                  :history     (or (:history @local) [])
                  :tools       (:tools @local)
-                 :show-axes?  false})
+                 :show-axes?  false
+                 :axis-hint-shown? false})
                (init-tree local (:seed-id params))))
           (swap!
            local assoc
@@ -465,5 +498,6 @@
     (handle-tree-broadcast bus local)
     (handle-tree-backup bus local)
     (handle-toolbar-update bus local toolbar)
-    (handle-tooltips (get-in config/app [:editor :tooltips]))
+    (handle-tooltips bus)
+    (handle-tooltip-display bus)
     (init-extra-tools bus local)))
