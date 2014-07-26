@@ -39,6 +39,7 @@
         (let [[_ data] (<! success)
               {:keys [id]} (:body data)]
           (let [url (str "http://devartcodefactory.com/#/objects/" id)]
-            (dom/set-html! (dom/by-id "art-url") (str "<a href=\"" url "\">" url "</a>")))
+            ;;(dom/set-html! (dom/by-id "art-url") (str "<a href=\"" url "\">" url "</a>"))
+            (dom/set-html! (dom/by-id "art-url") url))
           (dom/remove-class! (dom/by-id "art-url-wrapper") "hidden")
           (recur))))))
