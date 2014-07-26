@@ -25,15 +25,21 @@
               (warn :error-response status body)
               (async/publish bus :submit-model-fail body))))
 
+(defn reset-form
+  [id]
+  (let [form (aget (.-forms js/document) id)]
+    (set! (.-value (aget form "title")) "")
+    (set! (.-value (aget form "author")) "")))
+
 (defn handle-init
-  [bus]
-  (let [ch (async/subscribe bus :init-submit)]
+  [bus local]
+  (let [ch (async/subscribe bus :init-submit-form)]
     (go
       (loop []
-        (let [[_ [state]] (<! ch)
-              form (aget (.-forms js/document) "submit-art-form")]
-          (dom/set-attribs! (aget form "title") {:value ""})
-          (dom/set-attribs! (aget form "author") {:value ""})
+        (let [[_ [state]] (<! ch)]
+          (if (:tree @local)
+            (reset-form "submit-art-form")
+            (route/set-route! "home"))
           (recur))))))
 
 (defn handle-tree
@@ -85,7 +91,7 @@
 (defn init
   [bus]
   (let [local (atom {})]
-    (handle-init    bus)
+    (handle-init    bus local)
     (handle-tree    bus local)
     (handle-submit  bus local)
     (handle-success bus)
