@@ -28,15 +28,17 @@
   (loop [nodes nodes]
     (when-let [n (first nodes)]
       (if (= n el)
-        (dom/remove-class! n "deselected")
-        (dom/add-class! n "deselected"))
+        (-> n (dom/remove-class! "deselected") (dom/add-class! "selected"))
+        (-> n (dom/remove-class! "selected") (dom/add-class! "deselected")))
       (recur (next nodes)))))
 
 (defn unhighlight-selected-node
   [el nodes]
   (loop [nodes nodes]
     (when nodes
-      (dom/remove-class! (first nodes) "deselected")
+      (-> (first nodes)
+          (dom/remove-class! "selected")
+          (dom/remove-class! "deselected"))
       (recur (next nodes)))))
 
 (defn remove-node-event-handlers
@@ -64,9 +66,11 @@
    (= :leaf op)
    (if (empty? path)
      (-> el
-         (dom/set-html! (-> config/app :editor :root-label))
+         (dom/set-html! (str "<span>" (-> config/app :editor :root-label) "</span>"))
          (dom/add-class! "op-root flash"))
-     (dom/set-text! el (if (== 2 depth) (-> config/app :editor :leaf-label) "+")))
+     (dom/set-html!
+      el
+      (str "<span>" (if (== 2 depth) (-> config/app :editor :leaf-label) "+") "</span>")))
 
    (= :delete op)
    (let [svg (dom/create-ns!
@@ -78,11 +82,11 @@
      (dom/create-ns!
       dom/svg-ns "path" svg {:d "M0,0 L1,1 M0,1 L1,0"})
      (dom/create-ns!
-      dom/svg-ns "rect" svg {:x 0 :y 0 :width 1 :height 1}))
+      dom/svg-ns "rect" svg {:x 0.01 :y 0.01 :width 0.98 :height 0.98}))
 
    :else
    (when (>= width min-width)
-     (dom/set-text! el (-> config/app :operators op :label)))))
+     (dom/set-html! el (str "<span>" (-> config/app :operators op :label) "</span>")))))
 
 (defn make-node
   [parent path op x y w h ox oy bus sel]
@@ -101,7 +105,7 @@
             :width  (->px w)
             :height (->px h)}))
 
-    (if (not= :delete op) (dom/add-class! el cls))
+    (dom/add-class! el cls)
     (if (and sel (not= path sel)) (dom/add-class! el "deselected"))
 
     (node-event-handler ch bus id)
@@ -237,6 +241,7 @@
         node-height (cell-size height gap tree-depth)
         layout (generate-branch bus viz tree tree-depth scroll selection)]
     (dom/set-html! viz "")
+    (dom/set-attribs! viz {:class (str "depth" tree-depth)})
     (remove-node-event-handlers bus nodes)
     (debug :new-width width' :scroll scroll)
     (swap!

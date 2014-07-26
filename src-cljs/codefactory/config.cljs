@@ -121,6 +121,7 @@
                :map-label     {:offset [-262 -32]
                                :content "A zoomed out map of your code structure. The yellow rectangle marks the region visible on the left. Drag to scroll."}
                :axis-label    {:offset [-262 -22]
+                               :auto? true
                                :content "Click here to display the XYZ axes for better orientation."}}
     :root-label "<h1>TAP HERE TO BEGIN</h1>"
     :leaf-label "TAP TO MODIFY"
@@ -316,7 +317,7 @@
    {:timeouts {:editor (* 2 60 1000)}
     :api {:inject {:location "barbican"}}
     :editor {:tooltips {:preview-label {:content "Touch the shape to rotate. Pinch to zoom."}
-                        :viz-label {:content "A visualization of your code. Tap any of the boxes to select them for modification. Drag to scroll."}
+                        :viz-label {:content "A visualization of your code. Tap any of the boxes to select them for modification. Tap again to deselect. Drag to scroll."}
                         :axis-label {:content "Tap here to display the XYZ axes for better orientation."}}}}))
 
 (def ^:export workshop

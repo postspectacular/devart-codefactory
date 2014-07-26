@@ -23,14 +23,20 @@ body {
     user-select: none;
 }
 
-h1 {
+h1, h2 {
     font-weight: 400;
     line-height: 1;
+    text-transform: uppercase;
 }
+
+h1 { font-size: 360%; }
+h2 { font-size: 180%; }
 
 .hidden { display: none !important; }
 .center { text-align: center; }
 .right { text-align: right; }
+
+.disclaimer { margin: 2em 0; }
 
 .overlay {
     position: fixed;
@@ -122,10 +128,15 @@ a:hover { color: lighten(@op-col-sd,10); }
     background-size: cover;
     background-position: center;
 
-    div.credits {
-        margin-top: 100px;
+    .flex-content>div { max-width: 95% !important; }
 
+    div.credits {
         span { display: block; }
+    }
+
+    .wrapper {
+        .flex(column nowrap);
+        height: 90%;
     }
 }
 

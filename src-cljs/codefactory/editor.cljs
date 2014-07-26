@@ -303,7 +303,10 @@
 
 (defn handle-tooltips
   [tooltips]
-  (let [tips     (->> tooltips keys (mapv #(-> % name dom/by-id (dom/query "svg"))))
+  (let [tips     (->> tooltips
+                      (filter (comp not :auto? val))
+                      keys
+                      (mapv #(-> % name dom/by-id (dom/query "svg"))))
         channels (fn [ev] (set (map #(first (async/event-channel % ev)) tips)))
         on       (channels "mouseenter")
         off      (channels "mouseleave")

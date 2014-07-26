@@ -164,6 +164,32 @@ div.tool {
     flex: 1 0 auto;
 }
 
+.viz-op(@class; @col) {
+    &.@{class} { background-color: @col; }
+    &.@{class}:hover { background-color: lighten(@col,20); }
+    &.@{class}.deselected {
+        color: @col;
+        span {
+            display: block;
+            background: @col-bg;
+            margin: 2px;
+        }
+    }
+}
+
+.depth2 .deselected span { padding: 50px 0; }
+.depth3 .deselected span { padding: 31px 0; }
+.depth4 .deselected span { padding: 19px 0; }
+.depth5 .deselected span { padding: 13px 0; }
+.depth6 .deselected span { padding: 9px 0; }
+.depth7 .deselected span { padding: 6px 0; }
+.depth8 .deselected span { padding: 4px 0; }
+.depth9 .deselected span { padding: 2px 0; }
+.depth10 .deselected span { padding: 1px 0; }
+.depth11 .deselected span { padding: 0 0; }
+.depth12 .deselected span { padding: 2px 0; font-size: 11px; line-height: 11px; }
+.depth13 .deselected span { padding: 2px 0; font-size: 11px; line-height: 11px; }
+
 #viz-container {
 
     width: 100%;
@@ -184,53 +210,20 @@ div.tool {
         text-align: center;
         color: @col-bg;
 
-        &.op-sd { background-color: @op-col-sd; }
-        &.op-inset { background-color: @op-col-inset; }
-        &.op-stretch { background-color: @op-col-stretch; }
-        &.op-reflect { background-color: @op-col-reflect; }
-        &.op-shift { background-color: @op-col-shift; }
-        &.op-tilt { background-color: @op-col-tilt; }
-        &.op-scale { background-color: @op-col-scale; }
-        &.op-delete { background-color: @op-col-delete; }
-        &.op-leaf { background-color: @op-col-leaf; color: #333; }
-
-        &.op-sd:hover { background-color: lighten(@op-col-sd,10); }
-        &.op-inset:hover { background-color: lighten(@op-col-inset,10); }
-        &.op-stretch:hover { background-color: lighten(@op-col-stretch,10); }
-        &.op-reflect:hover { background-color: lighten(@op-col-reflect,10); }
-        &.op-shift:hover { background-color: lighten(@op-col-shift,10); }
-        &.op-tilt:hover { background-color: lighten(@op-col-tilt,10); }
-        &.op-scale:hover { background-color: lighten(@op-col-scale,10); }
-        &.op-delete:hover { background-color: lighten(@op-col-delete,10); }
-        &.op-leaf:hover { background-color: lighten(@op-col-leaf,10); }
-
-        &.op-sd.deselected { background-color: darken(@op-col-sd,30); color: @op-col-sd;}
-        &.op-inset.deselected { background-color: darken(@op-col-inset,30); color: @op-col-inset; }
-        &.op-stretch.deselected { background-color: darken(@op-col-stretch,30); color: @op-col-stretch; }
-        &.op-reflect.deselected { background-color: darken(@op-col-reflect,30); color: @op-col-reflect; }
-        &.op-shift.deselected { background-color: darken(@op-col-shift,30); color: @op-col-shift; }
-        &.op-tilt.deselected { background-color: darken(@op-col-tilt,30); color: @op-col-tilt; }
-        &.op-scale.deselected { background-color: darken(@op-col-scale,30); color: @op-col-scale; }
-        &.op-delete.deselected { background-color: darken(@op-col-delete,30); color: @op-col-delete; }
-        &.op-leaf.deselected { background-color: darken(@op-col-leaf,30); color: @op-col-leaf; }
-
-        &.op-sd.deselected:hover { background-color: darken(@op-col-sd,20); color: @op-col-sd;}
-        &.op-inset.deselected:hover { background-color: darken(@op-col-inset,20); color: @op-col-inset; }
-        &.op-stretch.deselected:hover { background-color: darken(@op-col-stretch,20); color: @op-col-stretch; }
-        &.op-reflect.deselected:hover { background-color: darken(@op-col-reflect,20); color: @op-col-reflect; }
-        &.op-shift.deselected:hover { background-color: darken(@op-col-shift,20); color: @op-col-shift; }
-        &.op-tilt.deselected:hover { background-color: darken(@op-col-tilt,20); color: @op-col-tilt; }
-        &.op-scale.deselected:hover { background-color: darken(@op-col-scale,20); color: @op-col-scale; }
-        &.op-delete.deselected:hover { background-color: darken(@op-col-delete,20); color: @op-col-delete; }
-        &.op-leaf.deselected:hover { background-color: darken(@op-col-leaf,20); color: @op-col-leaf; }
+        .viz-op(op-sd; @op-col-sd);
+        .viz-op(op-inset; @op-col-inset);
+        .viz-op(op-stretch; @op-col-stretch);
+        .viz-op(op-reflect; @op-col-reflect);
+        .viz-op(op-shift; @op-col-shift);
+        .viz-op(op-tilt; @op-col-tilt);
+        .viz-op(op-scale; @op-col-scale);
+        .viz-op(op-leaf; @op-col-leaf);
 
         &.op-root {
             background-color: transparent !important;
             color: @col-bt-continue !important;
             border: 2px solid @border-col;
         }
-
-        //&.deselected { color: #fff !important; }
 
         h1 { margin: 0; padding: 0 10px; }
 
@@ -241,6 +234,11 @@ div.tool {
                 stroke-width: 2px;
                 vector-effect: non-scaling-stroke;
             }
+        }
+
+        &.op-delete.selected {
+            background-color: darken(@op-col-leaf,30);
+            svg { stroke: @op-col-leaf; }
         }
     }
 }
