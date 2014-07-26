@@ -8,6 +8,7 @@
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
    [thi.ng.geom.basicmesh :as bm]
+   [thi.ng.geom.aabb :as a]
    [thi.ng.geom.cuboid :as cu]
    [thi.ng.geom.types.utils :as tu]
    [thi.ng.morphogen.core :as mg]
@@ -162,7 +163,9 @@
   (let [{:keys [node-cache tree display-meshes]} @state
         [min-w path] (compute-densest-branch tree [] 1 1 [])
         depth (compute-tree-depth node-cache)
-        bounds (tu/coll-bounds (vals (select-keys node-cache (keys display-meshes))))]
+        bounds (if (seq display-meshes)
+                 (tu/coll-bounds (vals (select-keys node-cache (keys display-meshes))))
+                 (a/aabb 0))]
     (debug :path path :depth depth)
     (swap!
      state assoc
