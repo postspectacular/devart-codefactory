@@ -86,7 +86,11 @@
 
    :else
    (when (>= width min-width)
-     (dom/set-html! el (str "<span>" (-> config/app :operators op :label) "</span>")))))
+     (let [label (-> config/app :operators op :label)
+           label (if (== 2 depth)
+                   (str label " (" (-> config/app :editor :leaf-label) ")")
+                   label)]
+       (dom/set-html! el (str "<span>" label "</span>"))))))
 
 (defn make-node
   [parent path op x y w h ox oy bus sel]
@@ -345,7 +349,7 @@
     (.fillRect ctx 0 0 map-width map-height)    
     (if (< 1 tree-depth)
       (draw-map-branch ctx tree [] 0 map-height
-                       map-width (cell-size map-height 1 tree-depth)
+                       map-width (/ map-height tree-depth)
                        selection)
       (let [{:keys [map-labels map-label-font map-label-size]} econf]
         (draw-map-labels ctx map-labels
@@ -492,7 +496,12 @@
                (assoc preset :id id)
                (orig-tree-node tree selection @local)
                editor local bus)
-              (async/publish bus :regenerate-scene nil)))
+              (async/publish bus :regenerate-scene nil)
+              (debug :axis-hint (select-keys @editor [:axis-hint-shown? :tree-depth]))
+              (when (and (not (:axis-hint-shown? @editor))
+                         (== 1 (:tree-depth @editor)))
+                (swap! editor assoc :axis-hint-shown? true)
+                (async/publish bus :show-tooltip [(dom/by-id "axis-toggle") :axis-label]))))
           (async/publish bus :user-action nil)
           (recur))))))
 
