@@ -82,6 +82,8 @@
 
    :seeds seeds
 
+   :home {:credits nil}
+   
    :seed-select
    {:space 1.5
     :camz -4
@@ -329,6 +331,11 @@
     :modules {:workshop true}
     :timeouts {:editor (* 30 60 1000)
                :thanks (* 5 60 1000)}}))
+
+(def ^:export staging
+  (deep-merge
+   barbican
+   {:home {:credits {:title "Hello World" :author "David Bruno" :date "2014-07-26"}}}))
 
 (defn set-config!
   [sym] (set! app (js/eval (aget js/window sym))))

@@ -21,6 +21,13 @@
      (fn [] (dom/request-fullscreen))
      "fs-toggle")))
 
+(defn show-credits
+  [{:keys [title author date]}]
+  (dom/remove-class! (dom/query nil "#home .credits .intro") "hidden")
+  (dom/set-text! (dom/by-id "credits-title") title)
+  (dom/set-text! (dom/by-id "credits-author") author)
+  (dom/set-text! (dom/by-id "credits-date") date))
+
 (defn init
   [bus]
   (let [chan-i  (async/subscribe bus :init-home)
@@ -28,13 +35,15 @@
         [click] (async/event-channel (config/dom-component :home-continue) "click")]
 
     (init-buttons bus)
-    
+
     ;; TODO enable gallery button
     (go
       (loop []
         (let [[_ [state]] (<! chan-i)]
           (debug :init-home)
           (async/publish bus :broadcast-tree nil)
+          (when-let [credits (-> config/app :home :credits)]
+            (show-credits credits))
           (go
             (let [_ (<! click)]
               (route/set-route! "select")))
