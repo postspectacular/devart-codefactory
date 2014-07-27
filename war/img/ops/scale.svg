@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" version="1.1" width="88" height="80">
-  <g style="fill:none;stroke:#bb11d3;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none">
-    <path d="m 7.71313,78.125 72.57375,0 0,-72.57375 -72.57375,0 0,72.57375 z" style="opacity:0.5;"/>
-    <path d="m 7.71313,78.125 36.28375,0 0,-37.375 -36.28375,0 0,37.375 z"/>
-  </g>
-</svg>

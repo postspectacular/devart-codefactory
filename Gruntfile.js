@@ -9,10 +9,10 @@ module.exports = function(grunt) {
       dev: {
         options: {
           paths: "src-less",
-          compress: false
+          compress: true
         },
         files: {
-          "war/css/app.css": "src-less/main.less"
+          "war/staging/css/app.css": "src-less/main.less"
         }
       },
       prod: {
@@ -26,6 +26,18 @@ module.exports = function(grunt) {
       }
     },
     htmlmin: {
+      dev: {
+        options: {
+          removeComments: true,
+          collapseWhitespace: true,
+          keepClosingSlash: true,
+          caseSensitive: true,
+          minifyJS: true
+        },
+        files: {
+          'war/staging/index.html': 'src-html/staging.html'
+        }
+      },
       prod: {
         options: {
           removeComments: true,
@@ -36,9 +48,17 @@ module.exports = function(grunt) {
         },
         files: {
           'war/index.html': 'src-html/index.html',
-          'war/barbican.html': 'src-html/barbican.html',
-          'war/workshop.html': 'src-html/workshop.html'
+          'war/barbican/index.html': 'src-html/barbican.html',
+          'war/workshop/index.html': 'src-html/workshop.html',
+          'war/staging/index.html': 'src-html/staging.html'
         }
+      }
+    },
+    copy: {
+      staging: {
+        files: [{expand: true, cwd: 'war/css/', src: ['*.css'], dest: 'war/staging/css/'},
+                {expand: true, cwd: 'war/img/', src: ['**'], dest: 'war/staging/img/'},
+                {expand: true, cwd: 'war/js/', src: ['app.js'], dest: 'war/staging/js/'}]
       }
     },
     watch: {
@@ -58,7 +78,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-less');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-htmlmin');
+  grunt.loadNpmTasks('grunt-contrib-copy');
 
   // Default task.
-  grunt.registerTask('default', ['less:prod','htmlmin:prod','watch:prod']);
+  grunt.registerTask('default', ['less:dev','htmlmin:dev','watch:dev']);
 };

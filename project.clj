@@ -56,8 +56,15 @@
                 :id "dev"
                 :compiler
                 {:pretty-print true
-                 :output-to "war/js/app.js"
+                 :output-to "war/staging/js/app.js"
                  :optimizations :whitespace}
+                :jar false}
+               {:source-paths ["src-cljs"]
+                :id "stage"
+                :compiler
+                {:pretty-print false
+                 :output-to "war/staging/js/app.js"
+                 :optimizations :advanced}
                 :jar false}
                {:source-paths ["src-cljs"]
                 :id "prod"
