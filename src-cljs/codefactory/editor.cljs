@@ -333,11 +333,11 @@
               id (-> el dom/parent (dom/get-attribs ["id"]) first)
               kid (keyword id)
               show? (or (on ch) (and (touch ch) (not (state kid))))]
-          (debug :tip el kid)
           (when id
             (if show?
               (async/publish bus :show-tooltip [el kid])
               (async/publish bus :hide-tooltip kid)))
+          (async/publish bus :user-action nil)
           (recur (assoc state kid show?)))))))
 
 (defn render-loop

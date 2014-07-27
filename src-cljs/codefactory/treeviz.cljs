@@ -595,7 +595,7 @@
                                           id (recur (dom/parent el))))
                                state [scroll (:p data) (vec2) target]]
                            (swap! local assoc :scroll-active? true)
-                           (debug :touch-start target)
+                           (async/publish bus :user-action nil)
                            state)
              :drag-move  (when state
                            (let [[scroll p _ target] state
@@ -603,6 +603,7 @@
                                  scroll' (g/madd (assoc delta :y 0) 2 scroll)]
                              (reposition-viz editor local scroll')
                              (regenerate-map editor local)
+                             (async/publish bus :user-action nil)
                              [scroll p delta target]))
              :gesture-end (when state
                             (let [[_ p delta target] state
@@ -610,6 +611,7 @@
                               (when (and (:touch? data) (< dist 20))
                                 (async/publish bus :node-toggle target))
                               (swap! local assoc :scroll-active? false)
+                              (async/publish bus :user-action nil)
                               nil))
              nil)))))))
 
@@ -620,7 +622,6 @@
           {:keys [viz canvas op-triggers nodes subs ctrls]} @local]
       (debug :tedit-release)
       (remove-node-event-handlers bus nodes)
-      ;;(ops/remove-op-triggers bus op-triggers)
       (ops/release-op-controls local)
       (dorun (map async/destroy-event-channel (:events @local)))
       (async/unsubscribe-and-close-many bus subs)
