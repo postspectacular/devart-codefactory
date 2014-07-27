@@ -1,0 +1,13 @@
+@media print body, div, p {
+    font-family: "Abel", sans-serif;
+    font-size: 14px;
+    text-align: left;
+}
+
+#loader, #upgrade-browser, #object-loader, #home, #selector, #submit-form,
+#toolbar, #edit-treemap, .section-label, .buttonbar, .noprint, .tooltip, .tools-extra
+{
+    display: none !important;
+}
+
+.flex-container { display: block; }

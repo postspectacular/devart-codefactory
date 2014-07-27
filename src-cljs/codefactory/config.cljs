@@ -88,7 +88,7 @@
 
    :home {:credits nil}
 
-   :thanks {:link-clickable? false}
+   :thanks {:link-clickable? true}
 
    :seed-select
    {:space 1.45

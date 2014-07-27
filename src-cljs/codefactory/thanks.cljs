@@ -15,16 +15,19 @@
         release  (async/subscribe bus :release-submit-confirm)
         success  (async/subscribe bus :submit-model-success)
         [cancel] (async/event-channel (config/dom-component :thanks-cancel) "click")
-        local    (atom {:active? true :queue []})]
+        local    (atom {:active? true})]
 
     (go
       (loop []
         (let [[_ [state params]] (<! init)]
-          (swap! local assoc :active? true)
-          (go
-            (alts! [cancel (timeout (config/timeout :thanks))])
-            (when (:active? @local)
-              (route/set-route! "home"))))
+          (if (:url @local)
+            (do
+              (swap! local assoc :active? true)
+              (go
+                (alts! [cancel (timeout (config/timeout :thanks))])
+                (when (:active? @local)
+                  (route/set-route! "home"))))
+            (route/set-route! "home")))
         (recur)))
 
     (go
@@ -38,8 +41,11 @@
       (loop []
         (let [[_ data] (<! success)
               {:keys [id]} (:body data)
-              url (str "http://devartcodefactory.com/#/objects/" id)
+              loc (.-location js/window)
+              url (str (.-protocol loc) "//" (.-host loc) (.-pathname loc)
+                       "#/objects/" id)
               el (config/dom-component :object-url)]
+          (swap! local assoc :url url)
           (if (-> config/app :thanks :link-clickable?)
             (dom/set-html! el (str "<a href=\"" url "\">" url "</a>"))
             (dom/set-html! el url))

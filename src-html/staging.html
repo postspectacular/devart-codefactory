@@ -64,10 +64,11 @@
       <section id="object-loader" class="future" data-transition="concave">
         <div class="flex-container">
           <div id="object-load-progress" class="center">
-            Loading artwork...<br/><img src="/img/loading.gif" alt="loading" />
+            <p>Loading artwork...</p>
+            <img src="/img/loading.gif" alt="loading" />
           </div>
           <div id="object-error" class="center">
-            <p>This object couldn't be loaded or found in our records.</p>
+            <p>Unfortunately, this object couldn't be found in our records.</p>
             <p><input id="object-restart" type="button" value="RESTART"/></p>
           </div>
         </div>
@@ -280,7 +281,7 @@
                 <p>Your object is stored at this unique web address:</p>
                 <p id="art-url"></p>
               </div>
-              <input id="thanks-cancel" type="button" value="RESTART"/>
+              <input id="thanks-cancel" class="noprint" type="button" value="RESTART"/>
             </div>
           </div>
         </div>
