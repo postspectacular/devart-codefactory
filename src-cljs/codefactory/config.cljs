@@ -84,6 +84,8 @@
    :seeds seeds
 
    :home {:credits nil}
+
+   :thanks {:link-clickable? false}
    
    :seed-select
    {:space 1.45
@@ -291,7 +293,10 @@
     :preview-label    "preview-label"
     :toolbar-label    "toolbar-label"
     :submit-button    "bt-submit"
-    :submit-cancel    "submit-cancel"}
+    :submit-cancel    "submit-cancel"
+    :thanks-wrapper   "art-url-wrapper"
+    :object-url       "art-url"
+    }
 
    :timeouts
    {:selector (* 30 1000)

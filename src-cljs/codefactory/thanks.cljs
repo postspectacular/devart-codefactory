@@ -31,15 +31,17 @@
       (loop []
         (<! release)
         (swap! local assoc :active? false)
-        (dom/add-class! (dom/by-id "art-url-wrapper") "hidden")
+        (dom/add-class! (config/dom-component :thanks-wrapper) "hidden")
         (recur)))
 
     (go
       (loop []
         (let [[_ data] (<! success)
-              {:keys [id]} (:body data)]
-          (let [url (str "http://devartcodefactory.com/#/objects/" id)]
-            ;;(dom/set-html! (dom/by-id "art-url") (str "<a href=\"" url "\">" url "</a>"))
-            (dom/set-html! (dom/by-id "art-url") url))
-          (dom/remove-class! (dom/by-id "art-url-wrapper") "hidden")
+              {:keys [id]} (:body data)
+              url (str "http://devartcodefactory.com/#/objects/" id)
+              el (config/dom-component :object-url)]
+          (if (-> config/app :thanks :link-clickable?)
+            (dom/set-html! el (str "<a href=\"" url "\">" url "</a>"))
+            (dom/set-html! el url))
+          (dom/remove-class! (config/dom-component :thanks-wrapper) "hidden")
           (recur))))))
