@@ -114,8 +114,8 @@
     :toolbar-icon-size [32 32]
     :toolbar-op-width 60
     :toolbar-sep-size [15 60]
-    :toolbar-margin-left 58
-    :toolbar-margin-right 58
+    :toolbar-margin-left 55
+    :toolbar-margin-right 55
     :tooltips {:preview-label {:offset [-5 24]
                                :content "Drag the shape to rotate. Use touchpad or mouse wheel to zoom."}
                :toolbar-label {:offset [12 -50]
