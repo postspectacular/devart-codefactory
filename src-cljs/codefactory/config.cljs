@@ -116,7 +116,7 @@
     :toolbar-sep-size [15 50]
     :toolbar-margin-left 58
     :toolbar-margin-right 58
-    :tooltips {:preview-label {:offset [-80 24]
+    :tooltips {:preview-label {:offset [-5 24]
                                :content "Drag the shape to rotate. Use touchpad or mouse wheel to zoom."}
                :toolbar-label {:offset [12 -50]
                                :content "These are the tools to modify your shape. Drag to scroll left/right to reveal more tools. The slider below varies the amount of change for some tools. If you made a mistake, use \"Undo\" to go back."}
