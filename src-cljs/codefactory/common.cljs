@@ -19,7 +19,7 @@
     (dom/set-attribs! el (if id (assoc attrs :id (name id)) attrs))
     (when label
       (-> (dom/create! "div" el)
-          (dom/set-text! label)))
+          (dom/set-html! label)))
     (loop [paths paths]
       (when-let [p (first paths)]
         (-> (dom/create-ns! dom/svg-ns "path" svg {:d (:d p)})

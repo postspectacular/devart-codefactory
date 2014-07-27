@@ -12,7 +12,8 @@
    [thi.ng.common.math.core :as m :refer [HALF_PI]]
    [thi.ng.morphogen.core :as mg]
    [thi.ng.geom.core.vector :refer [V3X V3Y V3Z]]
-   [thi.ng.geom.core.quaternion :as q]))
+   [thi.ng.geom.core.quaternion :as q]
+   [clojure.string :as str]))
 
 (defn init-op-separator
   [parent [w h]]
@@ -30,7 +31,7 @@
   (let [[el :as spec] (common/icon-button
                        parent id icon-size
                        (-> config/app :operators op :paths)
-                       label
+                       (str/replace label " " "<br/>")
                        (or handler (fn [] (async/publish bus :op-triggered id))))]
     (-> el
         (dom/add-class! (str "op-" (name op)))
