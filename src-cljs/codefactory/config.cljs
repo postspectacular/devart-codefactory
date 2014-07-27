@@ -73,8 +73,11 @@
     :selector true
     :editor true
     :submit true
-    :thanks true}
+    :thanks true
+    :object-loader true}
 
+   :min-window-size [480 600]
+   
    :webgl
    {:min-aa-res 480
     :bg-col [0.2 0.2 0.211 1]
@@ -86,7 +89,7 @@
    :home {:credits nil}
 
    :thanks {:link-clickable? false}
-   
+
    :seed-select
    {:space 1.45
     :camz -3
@@ -224,10 +227,10 @@
    [{:match ["home"]
      :controller :home
      :hash "home"}
-    #_{:match ["objects" :id]
-       :bindings {:id {:validate [(v/uuid4)]}}
-       :controller :editor}
-    {:match ["objects" "new" :seed-id]
+    {:match ["objects" :id]
+     :bindings {:id {:validate [(v/uuid4)]}}
+     :controller :object-loader}
+    {:match ["objects" "edit" :seed-id]
      :bindings {:seed-id {:validate [(v/member-of (set (map name (keys seeds))))]}}
      :controller :editor}
     {:match ["select" :seed-id]
@@ -296,6 +299,8 @@
     :submit-cancel    "submit-cancel"
     :thanks-wrapper   "art-url-wrapper"
     :object-url       "art-url"
+    :object-error     "object-error"
+    :object-loader    "object-load-progress"
     }
 
    :timeouts

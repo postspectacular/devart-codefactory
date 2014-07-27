@@ -16,7 +16,6 @@
    [thi.ng.cljs.route :as route]
    [thi.ng.cljs.utils :as utils :refer [->px]]
    [thi.ng.cljs.dom :as dom]
-   [thi.ng.cljs.io :as io]
    [thi.ng.cljs.gestures :as gest]
    [thi.ng.geom.webgl.core :as gl]
    [thi.ng.geom.webgl.animator :as anim]
@@ -33,27 +32,6 @@
   (let [{:keys [tree seed-id history]} @local]
     (async/publish bus :broadcast-tree [tree seed-id history])
     (route/set-route! "objects" "submit")))
-
-(defn load-model
-  [bus id]
-  (io/request
-   :uri     (str (config/api-route :get-object) id)
-   :method  :get
-   :edn?    true
-   :success (fn [_ data]
-              (async/publish
-               bus :editor-get-model-success
-               {:uuid id
-                :seed-id (:seed data)
-                :tree (:tree data)}))
-   :error   (fn [status body]
-              (async/publish bus :editor-get-model-fail [status body]))))
-
-(defn init-model
-  [bus {:keys [id seed-id]}]
-  (if id
-    (load-model bus id)
-    (async/publish bus :editor-select-seed seed-id)))
 
 (defn render-scene
   [local]
@@ -413,10 +391,10 @@
        (swap! local update-in [:show-axes?] not)
        (async/publish bus :render-scene nil)))
     (common/icon-button
-     tools nil size (-> icons :zoom-in :paths) nil
+     tools "zoom-in" size (-> icons :zoom-in :paths) nil
      (zoom -50))
     (common/icon-button
-     tools nil size (-> icons :zoom-out :paths) nil
+     tools "zoom-out" size (-> icons :zoom-out :paths) nil
      (zoom 50))))
 
 (defn init

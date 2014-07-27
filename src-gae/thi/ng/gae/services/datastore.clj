@@ -1,7 +1,8 @@
 (ns thi.ng.gae.services.datastore
   (:require
    [thi.ng.gae.services.core :refer [defservice]]
-   [thi.ng.gae.util :as util])
+   [thi.ng.gae.util :as util]
+   [clojure.edn :as edn])
   (:import
    [com.google.appengine.api.datastore
     DatastoreService DatastoreServiceFactory
@@ -68,7 +69,7 @@
              (fn [e' [k v]]
                (let [k (keyword k)]
                  (assoc e' k (if (clj-props k)
-                               (read-string (.getValue ^Text v))
+                               (edn/read-string (.getValue ^Text v))
                                v))))
              e')))))
 

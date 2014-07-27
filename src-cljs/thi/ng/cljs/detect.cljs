@@ -34,3 +34,8 @@
     (gl/gl-context (dom/create! "canvas"))
     true
     (catch js/Error e false)))
+
+(defn min-window-size
+  [w h]
+  (and (>= (.-innerWidth js/window) w)
+       (>= (.-innerHeight js/window) h)))

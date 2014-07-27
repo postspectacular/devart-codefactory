@@ -110,7 +110,7 @@
   (let [{:keys [meshes selection]} @state
         spec (mesh-spec-for-id meshes selection)]
     (swap! state assoc :active? false)
-    (route/set-route! "objects" "new" (name (:id spec)))))
+    (route/set-route! "objects" "edit" (name (:id spec)))))
 
 (defn center-click?
   [c1 c2 el e radius]

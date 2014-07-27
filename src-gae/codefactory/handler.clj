@@ -13,7 +13,8 @@
    [ring.util.response :as resp]
    [simple-time.core :as time]
    [clojure.data.json :as json]
-   [clojure.java.io :as io])
+   [clojure.java.io :as io]
+   [clojure.edn :as edn])
   (:import
    [codefactory.model CodeTree]))
 
@@ -98,11 +99,12 @@
            (let [[params err] (validate-params params :api :new-object)]
              (if (nil? err)
                (try
-                 (let [{:strs [tree author title parent location]} params
+                 (let [{:strs [tree seed author title parent location]} params
                        entity (model/make-code-tree
                                {:id (str (java.util.UUID/randomUUID))
                                 :parent-id parent
-                                :tree tree
+                                :tree (edn/read-string tree)
+                                :seed seed
                                 :author author
                                 :author-location location
                                 :title title

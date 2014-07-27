@@ -85,7 +85,7 @@
     (go
       (loop []
         (<! ch)
-        (route/set-route! "objects" "new" (:seed @local))
+        (route/set-route! "objects" "edit" (:seed @local))
         (recur)))))
 
 (defn init

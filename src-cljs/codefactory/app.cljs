@@ -6,6 +6,7 @@
    [codefactory.home :as home]
    [codefactory.editor :as editor]
    [codefactory.selector :as selector]
+   [codefactory.object-loader :as obj]
    [codefactory.submit :as submit]
    [codefactory.thanks :as thanks]
    [thi.ng.cljs.async :as async]
@@ -76,23 +77,27 @@
   [bus state]
   (listen-dom bus)
   (let [{:keys [modules routes default-route]} config/app]
-    (when (:home modules)     (home/init bus))
-    (when (:selector modules) (selector/init bus))
-    (when (:editor modules)   (editor/init bus))
-    (when (:submit modules)   (submit/init bus))
-    (when (:thanks modules)   (thanks/init bus))
+    (when (:home modules)          (home/init bus))
+    (when (:selector modules)      (selector/init bus))
+    (when (:editor modules)        (editor/init bus))
+    (when (:object-loader modules) (obj/init bus))
+    (when (:submit modules)        (submit/init bus))
+    (when (:thanks modules)        (thanks/init bus))
     (init-router bus state routes default-route)))
 
 (defn start
   []
-  (let [bus    (async/pub-sub
-                ;;(fn [e] (debug :bus (first e)) (first e))
-                first
-                )
-        config (config/set-config! "__APP_CONFIG__")
-        state  (atom {:bus bus :ctrl-id :loader})
+  (let [bus        (async/pub-sub
+                    ;;(fn [e] (debug :bus (first e)) (first e))
+                    first
+                    )
+        config     (config/set-config! "__APP_CONFIG__")
+        state      (atom {:bus bus :ctrl-id :loader})
         ;;satisfied? false
-        satisfied? (and detect/webgl? (or detect/chrome? detect/firefox?))
+        [w h]      (:min-window-size config/app)
+        satisfied? (and detect/webgl?
+                        (or detect/chrome? detect/firefox?)
+                        (and (detect/min-window-size w h)))
         ]
     ;;(debug :detect detect/webgl? detect/chrome? detect/firefox?)
     (if satisfied?
