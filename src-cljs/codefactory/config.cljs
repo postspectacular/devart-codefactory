@@ -128,7 +128,9 @@
                                :auto? true
                                :content "Click here to display the XYZ axes for better orientation."}}
     :root-label "<h1>Tap here to begin</h1>"
-    :leaf-label "Tap to select"
+    :ftu-label-sel "<span>Apply a code operation<br/>to modify</span>"
+    :ftu-label "<span>Tap to select</span>"
+    :leaf-label "<span>+</span>"
     :map-labels ["CODE OVERVIEW"]}
 
    :icons

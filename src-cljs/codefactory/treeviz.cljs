@@ -66,11 +66,13 @@
    (= :leaf op)
    (if (empty? path)
      (-> el
-         (dom/set-html! (str "<span>" (-> config/app :editor :root-label) "</span>"))
+         (dom/set-html! (-> config/app :editor :root-label))
          (dom/add-class! "op-root flash"))
      (dom/set-html!
       el
-      (str "<span>" (if (== 2 depth) (-> config/app :editor :leaf-label) "+") "</span>")))
+      (if (== 2 depth)
+        (-> config/app :editor :ftu-label)
+        (-> config/app :editor :leaf-label))))
 
    (= :delete op)
    (let [svg (dom/create-ns!
@@ -417,7 +419,7 @@
       (loop []
         (let [[_ id] (<! ch)
               {:keys [el path]} (get-in @local [:nodes id])
-              {:keys [tree meshes tools start-time]} @editor]
+              {:keys [tree tree-depth meshes tools start-time]} @editor]
           (when id
             (if el
               (let [node (tree/node-at tree path)
@@ -429,8 +431,10 @@
                  :sel-type op
                  :sel-time (mm/subm (utils/now) start-time 0.001)
                  :display-meshes (tree/filter-leaves-and-selection meshes tree path))
-                (when (and (not (seq path)) (= op :leaf))
-                  (dom/set-html! el ""))
+                (when (and (< tree-depth 3) (= op :leaf))
+                  (-> el
+                      (dom/set-html! (-> config/app :editor :ftu-label-sel))
+                      (dom/remove-class! "op-root")))
                 (highlight-selected-node el (->> @local :nodes vals (map :el)))
                 (ops/enable-presets (:specs tools))
                 (debug :sel-node node)
@@ -449,14 +453,21 @@
     (go
       (loop []
         (let [[_ [id render?]] (<! ch)
-              node (get-in @local [:nodes id])
-              {:keys [tree meshes selection sel-type tools]} @editor]
+              {:keys [el]} (get-in @local [:nodes id])
+              {:keys [tree tree-depth meshes selection sel-type tools]} @editor
+              node (tree/node-at tree selection)
+              op (config/translate-mg-op (tree/node-operator node))]
           (when id
             (swap! local assoc :selected-id nil)
             (swap! editor assoc :selection nil :sel-type nil)
-            (unhighlight-selected-node (:el node) (->> @local :nodes vals (map :el)))
-            (when (and (not (seq selection)) (nil? (:op (tree/node-at tree selection))))
-              (dom/set-html! (:el node) (get-in config/app [:editor :root-label])))
+            (unhighlight-selected-node el (->> @local :nodes vals (map :el)))
+            (if (= op :leaf)
+              (if (seq selection)
+                (if (< tree-depth 3)
+                  (dom/set-html! el (-> config/app :editor :ftu-label)))
+                (-> el
+                    (dom/set-html! (get-in config/app [:editor :root-label]))
+                    (dom/add-class! "op-root"))))
             (ops/disable-presets (:specs tools))
             (ops/release-op-controls local)
             (when render?
