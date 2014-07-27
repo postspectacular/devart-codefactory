@@ -24,7 +24,7 @@
                  <path d="M 0.275,0 L 0.275,1 M 0.5,0 L 0.5,1 M 0.725,0 L 0.725,1"/>
                </g>
            </svg></a>
-      </div> -->
+        </div> -->
       <div class="flex-item center"><h1>Co(de)Factory</h1></div>
       <!-- <div class="flex-item"></div> -->
       <!--
@@ -97,13 +97,13 @@
         <div class="flex-container">
           <div class="flex-item">
             <div class="wrapper">
-              <div class="flex-item flex-content"><h2>Co(de)Factory</h2></div>
-              <div class="flex-item flex-content"><h1>Create a piece of art using code</h1></div>
+              <div class="header flex-item flex-content"><h2>Co(de)Factory</h2></div>
+              <div class="main-title flex-item flex-content"><h1>Create a piece of art using code</h1></div>
               <div class="credits flex-item flex-content">
-                <p class="intro">Currently printing at the Barbican:</p>
-                <div id="credits-title"></div>
-                <div id="credits-author"></div>
-                <div id="credits-date"></div>
+                <p id="credits-intro">Currently printing at the Barbican:</p>
+                <div>title:<span id="credits-title"></span></div>
+                <div>author:<span id="credits-author"></span></div>
+                <div>date:<span id="credits-date"></span></div>
               </div>
             </div>
           </div>
@@ -111,12 +111,12 @@
             <div class="inner">
               <!--
                   <div id="home-gallery" class="flex-item center">
-                    <svg width="50%" height="50" viewbox="0 0 1 1">
-                      <g stroke="#ffd541"><path fill="none" d="M0.2,0.2 L0.8,0.2 L0.8,0.8 L0.2,0.8 z M 0.5,0.2 L 0.5, 0.8 M 0.2,0.5 L 0.8,0.5"/></g></svg></div>
+                    <svg width="50%" height="50" viewbox="0 0 1 1" class="gallery">
+                      <g><path fill="none" d="M0.2,0.2 L0.8,0.2 L0.8,0.8 L0.2,0.8 z M 0.5,0.2 L 0.5, 0.8 M 0.2,0.5 L 0.8,0.5"/></g></svg></div>
                   -->
               <div id="home-continue" class="flex-item center flash-border flash">
-                <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g stroke="#89c33f"><path fill="none" d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="continue">
+                  <g><path fill="none" d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
                 </svg>
               </div>
             </div>
@@ -133,13 +133,13 @@
           <div class="flex-item buttonbar">
             <div class="inner">
               <div id="seed-cancel" class="flex-item center">
-                <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g stroke="#ff772a"><path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="cancel">
+                  <g><path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
                 </svg>
               </div>
               <div id="seed-continue" class="flex-item center flash-border flash">
-                <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g stroke="#89c33f"><path fill="none" d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="continue">
+                  <g><path fill="none" d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
                 </svg>
               </div>
             </div>
@@ -195,15 +195,13 @@
           <div class="flex-item buttonbar">
             <div class="inner">
               <div id="edit-cancel" class="flex-item center">
-                <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g fill="none" stroke="#ff772a">
-                    <path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/>
-                  </g>
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="cancel">
+                  <g><path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
                 </svg>
               </div>
               <div id="edit-continue" class="flex-item center">
-                <svg width="50%" height="50" viewbox="0 0 3 1">
-                  <g fill="#89c33f" stroke="#89c33f">
+                <svg width="50%" height="50" viewbox="0 0 3 1" class="continue">
+                  <g>
                     <path fill="none" d="M0.2,0.6 L0.2,0.8 L0.8,0.8 L0.8,0.6 M0.3,0.4 L0.5,0.2 L0.7,0.4 M0.5,0.2 L0.5,0.7"/>
                     <text x="1.1" y="0.71" font-size="0.6" stroke="none">SUBMIT</text>
                   </g>
@@ -250,8 +248,10 @@
           <div class="flex-item buttonbar">
             <div class="inner">
               <div id="submit-cancel" class="flex-item center">
-                <svg width="50%" height="50" viewbox="0 0 1 1">
-                  <g stroke="#ff772a"><path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g></svg></div>
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="cancel">
+                  <g><path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
+                </svg>
+              </div>
             </div>
           </div>
         </div>

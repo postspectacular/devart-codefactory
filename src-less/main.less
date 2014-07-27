@@ -72,6 +72,21 @@ a:hover { color: lighten(@op-col-sd,10); }
     .flexbox(1 100%);
 }
 
+svg.gallery {
+    fill:   @col-bt-gallery;
+    stroke: @col-bt-gallery;
+}
+
+svg.continue {
+    fill: @col-bt-continue;
+    stroke: @col-bt-continue;
+}
+
+svg.cancel {
+    fill: @col-bt-cancel;
+    stroke: @col-bt-cancel;
+}
+
 .buttonbar {
     min-height: 70;
     height: 70px;
@@ -80,21 +95,21 @@ a:hover { color: lighten(@op-col-sd,10); }
     .inner {
         min-height: 70px;
         line-height: 50px;
-    }
 
-    .inner div {
-        margin: 10px;
-        border: 2px solid @border-col;
-    }
+        div {
+            margin: 10px;
+            border: 2px solid @border-col;
+        }
 
-    .inner div:hover {
-        border: 2px solid @border-col-hover;
-        cursor: pointer;
+        div:hover {
+            border: 2px solid @border-col-hover;
+            cursor: pointer;
 
-        svg g {
-            stroke-width: 0.05;
-            stroke: #fff;
-            fill: #fff;
+            svg g {
+                stroke-width: 0.05;
+                stroke: #fff;
+                fill: #fff;
+            }
         }
     }
 }
@@ -133,7 +148,20 @@ a:hover { color: lighten(@op-col-sd,10); }
     .flex-content>div { max-width: 95% !important; }
 
     div.credits {
-        span { display: block; }
+        width: 50%;
+        max-width: 50%;
+        margin: auto;
+        visibility: none;
+
+        div {
+            text-align: left;
+            text-transform: uppercase;
+            border-bottom: 1px solid white;
+            margin-bottom: 0.5em;
+            width: 100%;
+        }
+
+        span { float: right; }
     }
 
     .wrapper {
@@ -141,6 +169,10 @@ a:hover { color: lighten(@op-col-sd,10); }
         height: 90%;
         text-shadow: black 0 0 8px;
     }
+
+    .header { .flexbox(4 0 auto); }
+    .credits { .flexbox(1 0 auto); }
+    .main-title { .flexbox(12 0 auto); }
 }
 
 #seed-overlay {
@@ -195,7 +227,7 @@ a:hover { color: lighten(@op-col-sd,10); }
     svg {
         margin-left: 5px;
         fill: none;
-        stroke: @col-section;
+        stroke: @col-tooltip-hook;
         stroke-width: 0.1;
     }
 }
