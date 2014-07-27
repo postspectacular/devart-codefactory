@@ -55,16 +55,16 @@ module.exports = function(grunt) {
       }
     },
     copy: {
-      staging: {
-        files: [{expand: true, cwd: 'war/css/', src: ['*.css'], dest: 'war/staging/css/'},
-                {expand: true, cwd: 'war/img/', src: ['**'], dest: 'war/staging/img/'},
-                {expand: true, cwd: 'war/js/', src: ['app.js'], dest: 'war/staging/js/'}]
+      applystage: {
+        files: [{expand: true, cwd: 'war/staging/css/', src: ['*.css'], dest: 'war/css/'},
+                {expand: true, cwd: 'war/staging/img/', src: ['**'], dest: 'war/img/'},
+                {expand: true, cwd: 'war/staging/js/', src: ['app.js'], dest: 'war/js/'}]
       }
     },
     watch: {
       dev: {
         files: ['src-less/*.less','src-html/*.html'],
-        tasks: ['less:dev','htmlmin:prod']
+        tasks: ['less:dev','htmlmin:dev']
       },
       prod: {
         files: ['src-less/*.less','src-html/*.html'],
