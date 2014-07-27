@@ -36,9 +36,10 @@
 (defn init-meshes*
   [gl seeds]
   (reduce
-   (fn [acc [id {:keys [seed]}]]
+   (fn [acc [id {:keys [seed scale]}]]
      (->> {:id id
            :mesh (-> (g/into (bm/basic-mesh) (g/faces seed))
+                     (g/scale scale)
                      (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
                      (buf/make-attribute-buffers-in-spec gl gl/static-draw))}
           (conj acc)))

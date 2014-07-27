@@ -38,6 +38,7 @@
 (def seeds
   (->>
    {:box   {:seed (a/aabb 1)
+            :scale 0.71
             :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2.5}}
     :pent3 {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 5 5 0.25)) (- HALF_PI))
             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
@@ -85,14 +86,14 @@
    :home {:credits nil}
    
    :seed-select
-   {:space 1.5
-    :camz -4
+   {:space 1.45
+    :camz -3
     :camy 1
     :cam-up V3Y
-    :cam-offset 0.2
+    :cam-offset 0.05
     :rot-speed 2
     :scroll-speed 0.15
-    :falloff [1.0 0.4 0.2]}
+    :falloff [1.0 0.25 0.1875]}
 
    :editor
    {:inset 11
@@ -127,7 +128,7 @@
                                :auto? true
                                :content "Click here to display the XYZ axes for better orientation."}}
     :root-label "<h1>Tap here to begin</h1>"
-    :leaf-label "Tap to modify"
+    :leaf-label "Tap to select"
     :map-labels ["CODE OVERVIEW"]}
 
    :icons

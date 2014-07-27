@@ -85,12 +85,8 @@
       dom/svg-ns "rect" svg {:x 0.01 :y 0.01 :width 0.98 :height 0.98}))
 
    :else
-   (when (>= width min-width)
-     (let [label (-> config/app :operators op :label)
-           label (if (== 2 depth)
-                   (str label " (" (-> config/app :editor :leaf-label) ")")
-                   label)]
-       (dom/set-html! el (str "<span>" label "</span>"))))))
+   (if (>= width min-width)
+     (dom/set-html! el (str "<span>" (-> config/app :operators op :label) "</span>")))))
 
 (defn make-node
   [parent path op x y w h ox oy bus sel]
@@ -346,18 +342,19 @@
     (set! (.-fillStyle ctx) map-bg)
     (set! (.-strokeStyle ctx) nil)
     (set! (.-lineWidth ctx) 1)
-    (.fillRect ctx 0 0 map-width map-height)    
+    (.fillRect ctx 0 0 map-width map-height)
     (if (< 1 tree-depth)
-      (draw-map-branch ctx tree [] 0 map-height
-                       map-width (/ map-height tree-depth)
-                       selection)
+      (do
+        (draw-map-branch ctx tree [] 0 map-height
+                         map-width (/ map-height tree-depth)
+                         selection)
+        (set! (.-strokeStyle ctx) "yellow")
+        (set! (.-lineWidth ctx) 2)
+        (.strokeRect ctx vx vy vw vh))
       (let [{:keys [map-labels map-label-font map-label-size]} econf]
         (draw-map-labels ctx map-labels
                          (/ map-width 2) (/ map-height 2)
-                         map-label-col map-label-font map-label-size)))
-    (set! (.-strokeStyle ctx) "yellow")
-    (set! (.-lineWidth ctx) 2)
-    (.strokeRect ctx vx vy vw vh)))
+                         map-label-col map-label-font map-label-size)))))
 
 (defn scroll-viewport
   [editor local x]
