@@ -26,8 +26,9 @@
    :uri     (str (config/api-route :get-object) id)
    :method  :get
    :edn?    true
-   :success (fn [_ {{:keys [tree seed]} :body :or {seed "box"} :as data}]
-              (let [tree (if (string? tree) (read-string tree) tree)]
+   :success (fn [_ {{:keys [tree seed]} :body  :as data}]
+              (let [tree (if (string? tree) (read-string tree) tree)
+                    seed (or seed "box")]
                 (async/publish bus :broadcast-tree [tree (keyword seed)])
                 (go (<! (timeout 1000)) (route/set-route! "objects" "edit" seed))))
    :error   (fn [status body]
