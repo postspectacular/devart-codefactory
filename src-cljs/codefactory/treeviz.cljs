@@ -438,10 +438,9 @@
                 (highlight-selected-node el (->> @local :nodes vals (map :el)))
                 (ops/enable-presets (:specs tools))
                 (debug :sel-node node)
-                (when-let [pid (:id node)]
-                  (ops/highlight-selected-preset pid (:specs tools))
-                  (ops/center-preset bus (pid (:specs tools))))
-                (async/publish bus :render-scene nil)
+                (if-not (#{:leaf :delete} op)
+                  (async/publish bus :op-triggered (:id node))
+                  (async/publish bus :render-scene nil))
                 (async/publish bus :user-action nil)
                 (regenerate-map editor local))
               (warn :unknown-sel-id id))
