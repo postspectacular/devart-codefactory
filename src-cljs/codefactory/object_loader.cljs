@@ -1,0 +1,50 @@
+(ns codefactory.object-loader
+  (:require-macros
+   [cljs.core.async.macros :as asm :refer [go]])
+  (:require
+   [codefactory.config :as config]
+   [thi.ng.cljs.async :as async]
+   [thi.ng.cljs.log :refer [debug info warn]]
+   [thi.ng.cljs.route :as route]
+   [thi.ng.cljs.utils :as utils]
+   [thi.ng.cljs.dom :as dom]
+   [thi.ng.cljs.io :as io]
+   [cljs.reader :refer [read-string]]
+   [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
+
+(defn toggle-error
+  [state]
+  (let [[on off] (if state
+                   [:object-loader :object-error]
+                   [:object-error :object-loader])]
+    (dom/add-class!    (config/dom-component on)  "hidden")
+    (dom/remove-class! (config/dom-component off) "hidden")))
+
+(defn load-model
+  [bus id]
+  (io/request
+   :uri     (str (config/api-route :get-object) id)
+   :method  :get
+   :edn?    true
+   :success (fn [_ {{:keys [tree seed]} :body :or {seed "box"} :as data}]
+              (let [tree (if (string? tree) (read-string tree) tree)]
+                (async/publish bus :broadcast-tree [tree (keyword seed)])
+                (go (<! (timeout 1000)) (route/set-route! "objects" "edit" seed))))
+   :error   (fn [status body]
+              (warn :response body)
+              (toggle-error true))))
+
+(defn init
+  [bus]
+  (let [init (async/subscribe bus :init-object-loader)]
+
+    (dom/add-listeners
+     [["#object-restart" "click" (fn [] (route/set-route! "home"))]])
+    
+    (go
+      (loop []
+        (let [[_ [_ params]] (<! init)]
+          (toggle-error false)
+          (async/publish bus :broadcast-tree nil)
+          (load-model bus (:id params))
+          (recur))))))
