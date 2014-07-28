@@ -29,7 +29,10 @@
   [id]
   (let [form (aget (.-forms js/document) id)]
     (set! (.-value (aget form "title")) "")
-    (set! (.-value (aget form "author")) "")))
+    (set! (.-value (aget form "author")) "")
+    (-> (config/dom-component :submit-button)
+        (dom/set-attribs! {:value "SUBMIT"})
+        (dom/remove-attribs! ["disabled"]))))
 
 (defn handle-init
   [bus local]
@@ -53,7 +56,8 @@
 
 (defn handle-submit
   [bus local]
-  (let [[ch] (async/event-channel (config/dom-component :submit-button) "click")]
+  (let [bt   (config/dom-component :submit-button)
+        [ch] (async/event-channel bt "click")]
     (go
       (loop []
         (<! ch)
@@ -61,6 +65,8 @@
               title  (.-value (aget form "title"))
               author (.-value (aget form "author"))
               {:keys [tree seed]} @local]
+          (dom/set-attribs!
+           bt {:value "PLEASE WAIT..." :disabled true})
           (submit-model
            bus {:tree (pr-str tree)
                 :seed seed

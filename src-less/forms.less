@@ -62,7 +62,7 @@ input[type="range"]::-moz-range-thumb {
 input[type="text"], input[type="password"], input[type="submit"], input[type="button"] {
     width: 300px;
     height: 40px;
-    font-size: 2em;
+    font-size: 28px;
     font-family: "Abel";
     line-height: 36px;
     text-align: center;
@@ -73,3 +73,7 @@ input[type="text"], input[type="password"], input[type="submit"], input[type="bu
 }
 
 input[type="submit"], input[type="button"] { cursor: pointer; }
+input[disabled="true"] {
+    color: @op-col-disabled;
+    border: 2px solid @op-col-disabled;
+}
