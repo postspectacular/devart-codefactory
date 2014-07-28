@@ -185,7 +185,15 @@
 (def direction-label tree/direction-labels)
 
 (defn same-op?
-  [op orig] (= (config/op-aliases op) (:op orig)))
+  [op orig]
+  (debug :same-op (= (config/op-aliases op) (:op orig)) op (dissoc orig :out))
+  (= (config/op-aliases op) (:op orig)))
+
+(defn inject-orig-args
+  [node preset & keys]
+  (-> preset
+      (update-in [:args] merge (select-keys (:args node) keys))
+      (assoc :out (:out node))))
 
 (defmulti handle-operator
   (fn [op preset orig editor local bus] op))
@@ -230,12 +238,11 @@
         max-inset (* 0.45 min-len)
         step      (* 0.025 min-len)
         preset    (assoc-in preset [:args :inset] (m/mix min-inset max-inset 0.5))
-        inset     (m/clamp (:inset (tree/op-args-or-default op orig preset))
-                           min-inset max-inset)
         node      (if (same-op? op orig)
-                    (assoc preset :out (:out orig))
-                    preset)]
-    (debug :path selection :node node)
+                    (inject-orig-args orig preset :inset)
+                    preset)
+        inset     (m/clamp (-> node :args :inset) min-inset max-inset)]
+    (debug :node node)
     (show-op-controls
      {:editor editor
       :local local
@@ -266,10 +273,9 @@
 (defmethod handle-operator :stretch
   [op preset orig editor local bus]
   (let [node (if (same-op? op orig)
-               (assoc preset :out (:out orig))
-               preset)
-        len  (:len (tree/op-args-or-default op orig node))]
-    (debug :node node :len len)
+               (inject-orig-args orig preset :len)
+               preset)]
+    (debug :node node)
     (show-op-controls
      {:editor editor
       :local local
@@ -278,24 +284,23 @@
       :node node
       :orig orig
       :slider (->SliderSpec
-               "length" 0.02 2.0 len 0.001
+               "length" 0.02 2.0 (-> node :args :len) 0.001
                (fn [n _] (assoc-in node [:args :len] n))
                float-label)})))
 
 (defmethod handle-operator :shift
   [op preset orig editor local bus]
   (let [node (if (same-op? op orig)
-               (assoc preset :out (:out orig))
-               preset)
-        offset (:offset (tree/op-args-or-default op orig node))]
-    (debug :node node :offset offset)
+               (inject-orig-args orig preset :offset)
+               preset)]
+    (debug :node node)
     (show-op-controls
      {:editor editor
       :local local
       :bus bus
       :op op
       :slider (->SliderSpec
-               "shift length" 0.0 1.0 offset 0.001
+               "shift length" 0.0 1.0 (-> node :args :offset) 0.001
                (fn [n _] (assoc-in node [:args :offset] n))
                float-label)
       :node node
@@ -305,17 +310,16 @@
   [op preset orig editor local bus]
   (let [{:keys [tree selection]} @editor
         node (if (same-op? op orig)
-               (assoc preset :out (:out orig))
-               preset)
-        offset (:offset (tree/op-args-or-default op orig node))]
-    (debug :node node :offset offset)
+               (inject-orig-args orig preset :offset)
+               preset)]
+    (debug :node node)
     (show-op-controls
      {:editor editor
       :local local
       :bus bus
       :op op
       :slider (->SliderSpec
-               "offset" 0.0 2.0 offset 0.001
+               "offset" 0.0 2.0 (-> node :args :offset) 0.001
                (fn [n _] (assoc-in node [:args :offset] n))
                float-label)
       :node node
@@ -324,10 +328,9 @@
 (defmethod handle-operator :scale
   [op preset orig editor local bus]
   (let [node (if (same-op? op orig)
-               (assoc preset :out (:out orig))
-               preset)
-        scale (:scale (tree/op-args-or-default op orig node))]
-    (debug :node node :scale scale)
+               (inject-orig-args orig preset :scale)
+               preset)]
+    (debug :node node)
     (show-op-controls
      {:editor editor
       :local local
@@ -336,6 +339,6 @@
       :node node
       :orig orig
       :slider (->SliderSpec
-               "scale" 0.1 2.0 scale 0.001
+               "scale" 0.1 2.0 (-> node :args :scale) 0.001
                (fn [n _] (assoc-in node [:args :scale] n))
                float-label)})))
