@@ -122,6 +122,22 @@ void main() {
           (init-shaders (:shader-preset-ids config))))
     (catch js/Error e false)))
 
+(defn mesh-buffer
+  [gl mesh]
+  (-> mesh
+      (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
+      (buf/make-attribute-buffers-in-spec gl gl/static-draw)))
+
+(defn delete-meshes
+  [gl meshes]
+  (loop [meshes meshes]
+    (when meshes
+      (let [{{:keys [position normal]} :attribs} (first meshes)]
+        (debug :delete-buffer position normal)
+        (.deleteBuffer gl (:buffer position))
+        (.deleteBuffer gl (:buffer normal))
+        (recur (next meshes))))))
+
 (defn prepare-render-state
   [gl state]
   (if (:depth-test state)

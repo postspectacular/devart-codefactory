@@ -39,10 +39,8 @@
    (fn [acc id]
      (let [{:keys [seed scale] :or {scale 1.0}} (seeds id)]
        (->> {:id id
-             :mesh (-> (g/into (bm/basic-mesh) (g/faces seed))
-                       (g/scale scale)
-                       (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
-                       (buf/make-attribute-buffers-in-spec gl gl/static-draw))}
+             :mesh (webgl/mesh-buffer
+                    gl (-> (g/into (bm/basic-mesh) (g/faces seed)) (g/scale scale)))}
             (conj acc))))
    [] ids))
 

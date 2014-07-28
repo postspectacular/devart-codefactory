@@ -1,10 +1,9 @@
 (ns codefactory.tree
   (:require
    [codefactory.config :as config]
+   [codefactory.webgl :as webgl]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
-   [thi.ng.geom.webgl.core :as gl]
-   [thi.ng.geom.webgl.buffers :as buf]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
    [thi.ng.geom.basicmesh :as bm]
@@ -77,10 +76,7 @@
   (let [d-meshes (select-sub-paths meshes root)
         d-meshes (if incl-root? (conj d-meshes [root (meshes root)]) d-meshes)
         meshes (apply dissoc meshes (keys d-meshes))]
-    (dorun
-     (map
-      (fn [[id m]]
-        (.deleteBuffer gl (:buffer m))) d-meshes))
+    (webgl/delete-meshes gl (vals d-meshes))
     meshes))
 
 (defn compute-tree-depth
@@ -143,9 +139,10 @@
                      (fn [acc [path node]]
                        (assoc!
                         acc path
-                        (-> (g/into (bm/basic-mesh) (g/faces node))
-                            (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
-                            (buf/make-attribute-buffers-in-spec gl gl/static-draw))))
+                        (->> node
+                             (g/faces)
+                             (g/into (bm/basic-mesh))
+                             (webgl/mesh-buffer gl))))
                      (transient meshes))
                     (persistent!))
         node-cache (merge node-cache branch)
@@ -176,8 +173,8 @@
 (defn node-shortest-edge
   [node]
   (->> node
-      (:points)
-      (thi.ng.geom.types.Cuboid.)
-      (g/edges)
-      (reduce (fn [acc e] (min acc (apply g/dist-squared e))) 1e9)
-      (Math/sqrt)))
+       (:points)
+       (thi.ng.geom.types.Cuboid.)
+       (g/edges)
+       (reduce (fn [acc e] (min acc (apply g/dist-squared e))) 1e9)
+       (Math/sqrt)))

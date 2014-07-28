@@ -234,8 +234,9 @@
     (go
       (loop []
         (let [_ (<! ch)
-              {:keys [subs events tools]} @local]
-          (debug :release-editor)
+              {:keys [subs events tools gl display-meshes]} @local]
+          (debug :release-editor display-meshes)
+          (webgl/delete-meshes gl (vals display-meshes))
           (swap! local assoc :active? false)
           (async/unsubscribe-and-close-many bus subs)
           (dorun (map async/destroy-event-channel events))
