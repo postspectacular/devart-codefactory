@@ -19,31 +19,32 @@
 
     (go
       (loop []
-        (let [[_ [state params]] (<! init)]
-          (if (:url @local)
-            (do
-              (swap! local assoc :active? true)
-              (go
-                (alts! [cancel (timeout (config/timeout :thanks))])
-                (when (:active? @local)
-                  (route/set-route! "home"))))
-            (route/set-route! "home")))
+        (<! init)
+        (if (:url @local)
+          (do
+            (swap! local assoc :active? true)
+            (go
+              (alts! [cancel (timeout (config/timeout :thanks))])
+              (when (:active? @local)
+                (route/set-route! "home"))))
+          (route/set-route! "home"))
         (recur)))
 
     (go
       (loop []
         (<! release)
-        (swap! local assoc :active? false)
+        (swap! local assoc :active? false :url nil)
         (dom/add-class! (config/dom-component :thanks-wrapper) "hidden")
         (recur)))
 
     (go
       (loop []
         (let [[_ data] (<! success)
-              {:keys [id]} (:body data)
+              {:keys [id short-uri]} (:body data)
               loc (.-location js/window)
-              url (str (.-protocol loc) "//" (.-host loc) (.-pathname loc)
-                       "#/objects/" id)
+              url (or short-uri
+                      (str (.-protocol loc) "//" (.-host loc) (.-pathname loc)
+                           "#/objects/" id))
               el (config/dom-component :object-url)]
           (swap! local assoc :url url)
           (if (-> config/app :thanks :link-clickable?)

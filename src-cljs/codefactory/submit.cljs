@@ -74,9 +74,9 @@
     (go
       (loop []
         (let [[_ data] (<! ch)
-              {:keys [id]} (:body data)]
-          (debug :success id)
-          (route/set-route! "thanks" id)
+              {:keys [id short-uri]} (:body data)]
+          (debug :success id short-uri)
+          (route/set-route! "thanks")
           (recur))))))
 
 (defn handle-cancel

@@ -71,4 +71,7 @@
    :db
    {:query-result-limit query-result-limit
     :public-codetree-keys [:id :parent-id :tree :seed
-                           :title :author :created :preview-uri :stl-uri]}})
+                           :title :author :created
+                           :short-uri :preview-uri :stl-uri]}
+
+   :google {:api-key ""}})

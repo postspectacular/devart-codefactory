@@ -4,6 +4,7 @@
    [codefactory.model :as model]
    [codefactory.view :as view]
    [thi.ng.gae.services.datastore :as ds]
+   [thi.ng.gae.services.url-shortener :as shortener]
    [thi.ng.gae.middleware.multipart-params :refer [wrap-multipart-params]]
    [thi.ng.gae.util :as util]
    [thi.ng.validate.core :as v]
@@ -100,14 +101,18 @@
              (if (nil? err)
                (try
                  (let [{:strs [tree seed author title parent location]} params
+                       id (str (java.util.UUID/randomUUID))
+                       long-url (str "http://devartcodefactory.com/#/objects/" id)
+                       short-url (shortener/short-url long-url (-> config/app :google :api-key))
                        entity (model/make-code-tree
-                               {:id (str (java.util.UUID/randomUUID))
+                               {:id id
                                 :parent-id parent
                                 :tree (edn/read-string tree)
                                 :seed seed
                                 :author author
                                 :author-location location
                                 :title title
+                                :short-uri short-url
                                 :created (time/datetime->epoch (time/utc-now))})]
                    (prn :created-entity (:id entity))
                    (ds/save! entity)

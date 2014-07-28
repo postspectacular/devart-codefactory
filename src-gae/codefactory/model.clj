@@ -9,6 +9,7 @@
    ^:clj tree
    seed
    author-location
+   short-uri
    stl-uri
    video-uri
    preview-uri
