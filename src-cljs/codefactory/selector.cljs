@@ -30,24 +30,25 @@
   (let [id (keyword seed-name)]
     (loop [seeds seeds, i 0]
       (if seeds
-        (if (= (ffirst seeds) id)
+        (if (= (first seeds) id)
           i (recur (next seeds) (inc i)))))))
 
 (defn init-meshes*
-  [gl seeds]
+  [gl seeds ids]
   (reduce
-   (fn [acc [id {:keys [seed scale]}]]
-     (->> {:id id
-           :mesh (-> (g/into (bm/basic-mesh) (g/faces seed))
-                     (g/scale scale)
-                     (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
-                     (buf/make-attribute-buffers-in-spec gl gl/static-draw))}
-          (conj acc)))
-   [] seeds))
+   (fn [acc id]
+     (let [{:keys [seed scale] :or {scale 1.0}} (seeds id)]
+       (->> {:id id
+             :mesh (-> (g/into (bm/basic-mesh) (g/faces seed))
+                       (g/scale scale)
+                       (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
+                       (buf/make-attribute-buffers-in-spec gl gl/static-draw))}
+            (conj acc))))
+   [] ids))
 
 (defn init-meshes
-  [state seeds]
-  (assoc state :meshes (init-meshes* (:gl state) seeds)))
+  [state seeds ids]
+  (assoc state :meshes (init-meshes* (:gl state) seeds ids)))
 
 (defn mesh-spec-for-id
   [meshes id]
@@ -143,8 +144,9 @@
         glconf     (:webgl config/app)
         mconf      (:seed-select config/app)
         seeds      (:seeds config/app)
+        seed-ids   (:seed-order mconf)
         local      (-> (webgl/init-webgl canvas glconf)
-                       (init-meshes seeds)
+                       (init-meshes seeds seed-ids)
                        (assoc :module-config mconf
                               :bg-col (:bg-col glconf))
                        atom)
@@ -156,7 +158,7 @@
     (go
       (loop []
         (let [[_ [state params]] (<! init)
-              sel (or (seed->index seeds (:seed-id params)) 0)
+              sel (or (seed->index seed-ids (:seed-id params)) 0)
               resize (async/subscribe bus :window-resize)
               now (utils/now)]
           (debug :init-selector)

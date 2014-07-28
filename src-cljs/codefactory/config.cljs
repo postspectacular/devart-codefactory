@@ -88,7 +88,7 @@
 
    :home {:credits nil}
 
-   :thanks {:link-clickable? true}
+   :thanks {:link-clickable? false}
 
    :seed-select
    {:space 1.45
@@ -98,7 +98,8 @@
     :cam-offset 0.05
     :rot-speed 2
     :scroll-speed 0.15
-    :falloff [1.0 0.25 0.1875]}
+    :falloff [1.0 0.25 0.1875]
+    :seed-order [:box :hex2 :pent2 :tri2 :hex3 :oct3 :pent3 :oct2]}
 
    :editor
    {:inset 11
@@ -240,8 +241,7 @@
      :controller :selector}
     {:match ["objects" "submit"]
      :controller :submit-form}
-    {:match ["thanks" :id]
-     :bindings {:id {:validate [(v/uuid4)]}}
+    {:match ["thanks"]
      :controller :submit-confirm}
     #_{:match ["gallery" :page]
        :bindings {:page {:coerce utils/parse-int :validate [(v/number) (v/pos)]}}
@@ -348,7 +348,8 @@
 (def ^:export staging
   (deep-merge
    barbican
-   {:home {:credits {:title "Hello World" :author "David Bruno" :date "2014-07-26"}}}))
+   {:home {:credits {:title "Hello World" :author "David Bruno" :date "2014-07-26"}}
+    :thanks {:link-clickable? true}}))
 
 (defn set-config!
   [sym] (set! app (js/eval (aget js/window sym))))
