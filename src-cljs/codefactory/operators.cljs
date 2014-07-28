@@ -44,7 +44,7 @@
     (let [off (nth spec 3)
           w (.-innerWidth js/window)
           x (mm/sub w off (mm/madd w 0.5 (get-in config/app [:editor :toolbar-op-width]) 0.5))]
-      (async/publish bus :update-toolbar x))))
+      (async/publish bus :update-toolbar-pos x))))
 
 (defn highlight-selected-preset
   [id specs]
@@ -102,7 +102,7 @@
      (dom/create! "div" (dom/by-id "tools-right"))
      :delete :delete "empty"
      icon-size op-width bus)
-    {:width width :offset offset :specs specs}))
+    {:width width :offset offset :curr-offset offset :specs specs}))
 
 (defn remove-op-triggers
   [bus coll]

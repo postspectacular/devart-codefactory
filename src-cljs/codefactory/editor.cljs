@@ -87,7 +87,7 @@
         (when size
           (resize-canvas local)
           (async/publish bus :render-scene nil)
-          (async/publish bus :update-toolbar (-> @local :tools :offset))
+          (async/publish bus :update-toolbar-pos (-> @local :tools :offset))
           (recur))))))
 
 (defn handle-arcball
@@ -146,7 +146,7 @@
                            (let [[offset p _ target] state
                                  delta (g/- (:p data) p)
                                  offset' (mm/madd (:x delta) 2 offset)]
-                             (async/publish bus :update-toolbar offset')
+                             (async/publish bus :update-toolbar-pos offset')
                              [offset p delta target])
                            state)
              :gesture-end (when state
@@ -163,16 +163,34 @@
 
 (defn handle-toolbar-update
   [bus local toolbar]
-  (let [ch (async/subscribe bus :update-toolbar)]
+  (let [update (async/subscribe bus :update-toolbar)
+        pos (async/subscribe bus :update-toolbar-pos)]
     (go
       (loop []
-        (let [[_ offset] (<! ch)
+        (<! update)
+        (let [{:keys [offset curr-offset]} (:tools @local)
+              curr-offset (m/mix curr-offset offset 0.15)]
+          (swap! local assoc-in [:tools :curr-offset] curr-offset)
+          (dom/set-style! toolbar (clj->js {:marginLeft (->px curr-offset)}))
+          (if (> (m/abs-diff curr-offset offset) 0.5)
+            (when-not (:toolbar-frame @local)
+              (swap!
+               local assoc
+               :toolbar-frame (anim/animframe-provider #(async/publish bus :update-toolbar nil)))))
+          (swap! local dissoc :toolbar-frame))
+        (recur)))
+
+    (go
+      (loop []
+        (let [[_ offset] (<! pos)
               {max :toolbar-margin-left
                right :toolbar-margin-right} (:editor config/app)
-               min (- (.-innerWidth js/window) (-> @local :tools :width) right)
+               {:keys [width]} (:tools @local)
+               min (- (.-innerWidth js/window) width right)
                offset (m/clamp offset min max)]
           (swap! local assoc-in [:tools :offset] offset)
-          (dom/set-style! toolbar (clj->js {:marginLeft (->px offset)})))
+          (when-not (:toolbar-frame @local)
+            (async/publish bus :update-toolbar nil)))
         (recur)))))
 
 (defn handle-buttons
@@ -466,7 +484,7 @@
           (handle-view-update    (:camera-update subs) arcball bus local)
           (handle-buttons        bus local (config/timeout :editor))
 
-          (async/publish bus :update-toolbar (-> config/app :editor :toolbar-margin-left))
+          (async/publish bus :update-toolbar-pos (-> config/app :editor :toolbar-margin-left))
           (go (<! (timeout 800)) (resize-canvas local))
 
           (recur))))
