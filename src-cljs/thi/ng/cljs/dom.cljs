@@ -58,7 +58,8 @@
     (loop [attribs attribs]
       (when attribs
         (.removeAttribute el (name (first attribs)))
-        (recur (next attribs))))))
+        (recur (next attribs)))))
+  el)
 
 (defn set-style!
   [el opts]

@@ -32,7 +32,8 @@
     (set! (.-value (aget form "author")) "")
     (-> (config/dom-component :submit-button)
         (dom/set-attribs! {:value "SUBMIT"})
-        (dom/remove-attribs! ["disabled"]))))
+        (dom/remove-attribs! ["disabled"])
+        (dom/remove-class! "disabled"))))
 
 (defn handle-init
   [bus local]
@@ -66,8 +67,9 @@
                title  (.-value (aget form "title"))
                author (.-value (aget form "author"))
                {:keys [tree seed]} @local]
-           (dom/set-attribs!
-            bt {:value "PLEASE WAIT..." :disabled true})
+           (-> bt
+               (dom/set-attribs! {:value "PLEASE WAIT..." :disabled true})
+               (dom/add-class! "disabled"))
            (submit-model
             bus {:tree (pr-str tree)
                  :seed seed

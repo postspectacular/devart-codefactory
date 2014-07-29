@@ -174,7 +174,7 @@
       (loop []
         (<! update)
         (let [{:keys [offset curr-offset]} (:tools @local)
-              curr-offset (m/mix curr-offset offset 0.15)]
+              curr-offset (m/mix curr-offset offset 0.2)]
           (swap! local assoc-in [:tools :curr-offset] curr-offset)
           (dom/set-style! toolbar (clj->js {:marginLeft (->px curr-offset)}))
           (if (> (m/abs-diff curr-offset offset) 0.5)
@@ -483,7 +483,7 @@
                  :show-axes?  false
                  :axis-hint-shown? false})
                (init-tree (:tree @local) (:seed-id params))
-               (assoc-in [:tools :curr-offset t-offset])))
+               (assoc-in [:tools :curr-offset] t-offset)))
           (viz/init local bus)
           (resize-canvas local)
           (render-scene local)

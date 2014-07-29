@@ -4,6 +4,7 @@
   (:require
    [codefactory.color :as col]
    [thi.ng.cljs.log :refer [debug info warn]]
+   [thi.ng.cljs.detect :as detect]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.geom.webgl.core :as gl]
    [thi.ng.geom.webgl.buffers :as buf]
@@ -116,7 +117,8 @@ void main() {
 (defn init-webgl
   [canvas config]
   (try
-    (let [aa? (not (dom/match-media (str "(max-width: " (:min-aa-res config) "px)")))
+    (let [aa? (and (not detect/mobile?)
+                   (not (dom/match-media (str "(max-width: " (:min-aa-res config) "px)"))))
           gl (gl/gl-context canvas {:antialias aa?})]
       (-> {:canvas canvas :gl gl}
           (init-shaders (:shader-preset-ids config))))

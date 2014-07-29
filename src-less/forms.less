@@ -72,8 +72,10 @@ input[type="text"], input[type="password"], input[type="submit"], input[type="bu
     border: 2px solid @col-form;
 }
 
-input[type="submit"], input[type="button"] { cursor: pointer; }
-input[disabled="true"] {
-    color: @op-col-disabled;
-    border: 2px solid @op-col-disabled;
+input[type="submit"], input[type="button"] {
+    cursor: pointer;
+    &.disabled {
+        color: @op-col-disabled;
+        border: 2px solid @op-col-disabled;
+    }
 }
