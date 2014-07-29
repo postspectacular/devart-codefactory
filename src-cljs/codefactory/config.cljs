@@ -113,6 +113,7 @@
     :min-label-width 50
     :height 245
     :min-size 28
+    :zoom-delta 75
     :map-bg "#222223"
     :map-selection "#ffff00"
     :map-color-offset 0
@@ -359,7 +360,7 @@
   (deep-merge
    barbican
    {:home {:credits {:title "Hello World" :author "David Bruno" :date "2014-07-26"}}
-    ;;:thanks {:link-clickable? true}
+    :thanks {:link-clickable? true}
     }))
 
 (defn set-config!

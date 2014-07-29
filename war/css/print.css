@@ -4,10 +4,10 @@
     text-align: left;
 }
 
-#loader, #upgrade-browser, #home, #selector, #submit-form,
-.section-label, #toolbar, #edit-treemap, .buttonbar, .noprint
+#loader, #upgrade-browser, #object-loader, #home, #selector, #submit-form,
+#toolbar, #edit-treemap, .section-label, .buttonbar, .noprint, .tooltip, .tools-extra
 {
-    display: none;
+    display: none !important;
 }
 
 .flex-container { display: block; }

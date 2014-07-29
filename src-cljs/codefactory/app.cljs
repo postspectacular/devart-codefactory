@@ -39,9 +39,7 @@
       :ctrl-id           new-id
       :last-route-change (utils/now)})
     (async/publish bus init-id [state params])
-    (go
-      (<! (timeout delay))
-      (async/publish bus release-id nil))))
+    (js/setTimeout #(async/publish bus release-id nil) delay)))
 
 (defn listen-route-change
   [bus]

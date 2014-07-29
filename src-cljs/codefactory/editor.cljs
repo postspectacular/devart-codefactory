@@ -33,6 +33,10 @@
     (async/publish bus :broadcast-tree [tree seed-id history])
     (route/set-route! "objects" "submit")))
 
+(defn relaunch-selector
+  [bus local]
+  (route/set-route! "select" (:seed-id @local)))
+
 (defn render-scene
   [local]
   (when (:active? @local)
@@ -64,11 +68,12 @@
 (defn resize-canvas
   [local]
   (let [{:keys [gl canvas arcball]} @local
-        [w h] (dom/size (dom/parent canvas))
-        view-rect (r/rect 0 0 w h)]
+        [w h]     (dom/size (dom/parent canvas))
+        view-rect (r/rect 0 0 w h)
+        icon-size (get-in config/app [:editor :toolbar-icon-size 0])]
     (dom/set-attribs! canvas {:width w :height h})
     (dom/set-style! (config/dom-component :preview-label)
-                    #js {:width (->px (- w 62))})
+                    #js {:width (->px (- w icon-size 30))})
     (dom/set-style! (config/dom-component :toolbar-label)
                     #js {:width (->px (- w 20)) :top (->px (- h 19))})
     (swap!
@@ -206,7 +211,7 @@
            (submit-model bus local)
 
            (= cancel ch)
-           (route/set-route! "select" (:seed-id @local))
+           (relaunch-selector bus local)
 
            (>= (- (utils/now) (:last-action @local)) module-timeout)
            (route/set-route! "home")

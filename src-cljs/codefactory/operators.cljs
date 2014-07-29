@@ -139,7 +139,7 @@
              (swap! editor assoc-in (cons :tree path)
                     (listener n (get-in (:tree @editor) (conj path :args))))
              (set-val! n)
-             (debug :tree (:tree @editor))
+             ;;(debug :tree (:tree @editor))
              (swap! editor tree/update-meshes false)
              (async/publish bus :render-scene nil)))]]))))
 
@@ -159,7 +159,7 @@
      {:orig-edit-node orig
       :ctrl-active? true
       :ctrl-listeners listeners})
-    (debug :tree (:tree @editor))
+    ;;(debug :tree (:tree @editor))
     (swap! editor tree/update-meshes true)
     (async/publish bus :render-scene nil)))
 
@@ -189,7 +189,7 @@
 
 (defn same-op?
   [op orig]
-  (debug :same-op (= (config/op-aliases op) (:op orig)) op (dissoc orig :out))
+  ;;(debug :same-op (= (config/op-aliases op) (:op orig)) op (dissoc orig :out))
   (= (config/op-aliases op) (:op orig)))
 
 (defn inject-orig-args

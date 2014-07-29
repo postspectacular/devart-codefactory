@@ -183,7 +183,6 @@
             (loop []
               (let [delay (- module-timeout (- (utils/now) (:last-click @local)))
                     [e ch] (alts! [continue cancel select (timeout delay)])]
-                (debug :timeout)
                 (cond
                  (or (= continue ch) (center-click? select ch canvas e 120))
                  (start-editor local)

@@ -58,21 +58,27 @@
   [bus local]
   (let [bt   (config/dom-component :submit-button)
         [ch] (async/event-channel bt "click")]
-    (go
-      (loop []
-        (<! ch)
-        (let [form   (aget (.-forms js/document) "submit-art-form")
-              title  (.-value (aget form "title"))
-              author (.-value (aget form "author"))
-              {:keys [tree seed]} @local]
-          (dom/set-attribs!
-           bt {:value "PLEASE WAIT..." :disabled true})
-          (submit-model
-           bus {:tree (pr-str tree)
-                :seed seed
-                :title title
-                :author author})
-          (recur))))))
+    (dom/add-listeners
+     [[bt "click"
+       (fn [e]
+         (.preventDefault e)
+         (let [form   (aget (.-forms js/document) "submit-art-form")
+               title  (.-value (aget form "title"))
+               author (.-value (aget form "author"))
+               {:keys [tree seed]} @local]
+           (dom/set-attribs!
+            bt {:value "PLEASE WAIT..." :disabled true})
+           (submit-model
+            bus {:tree (pr-str tree)
+                 :seed seed
+                 :title title
+                 :author author})))]])))
+
+(defn handle-cancel
+  [bus local]
+  (dom/add-listeners
+   [[(config/dom-component :submit-cancel) "click"
+     #(route/set-route! "objects" "edit" (:seed @local))]]))
 
 (defn handle-success
   [bus]
@@ -85,20 +91,11 @@
           (route/set-route! "thanks")
           (recur))))))
 
-(defn handle-cancel
-  [bus local]
-  (let [[ch] (async/event-channel (config/dom-component :submit-cancel) "click")]
-    (go
-      (loop []
-        (<! ch)
-        (route/set-route! "objects" "edit" (:seed @local))
-        (recur)))))
-
 (defn init
   [bus]
   (let [local (atom {})]
     (handle-init    bus local)
     (handle-tree    bus local)
     (handle-submit  bus local)
-    (handle-success bus)
-    (handle-cancel  bus local)))
+    (handle-cancel  bus local)
+    (handle-success bus)))
