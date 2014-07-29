@@ -11,8 +11,8 @@
    [thi.ng.cljs.dom :as dom]
    [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
 
-(defn init-buttons
-  [bus]
+(defn init-fullscreen-button
+  []
   (let [tools (dom/query nil "#home .tools-extra")
         icons (:icons config/app)
         size (-> config/app :editor :toolbar-icon-size)]
@@ -20,6 +20,13 @@
      tools nil size (-> icons :fullscreen :paths) nil
      (fn [] (dom/request-fullscreen))
      "fs-toggle")))
+
+(defn init-button-bar
+  []
+  ;; TODO enable gallery button
+  (dom/add-listeners
+   [[(config/dom-component :home-continue) "click"
+     #(route/set-route! "select")]]))
 
 (defn show-credits
   [{:keys [title author date]}]
@@ -30,26 +37,15 @@
 
 (defn init
   [bus]
-  (let [chan-i  (async/subscribe bus :init-home)
-        chan-r  (async/subscribe bus :release-home)
-        [click] (async/event-channel (config/dom-component :home-continue) "click")]
+  (let [init (async/subscribe bus :init-home)]
 
-    (init-buttons bus)
+    (init-fullscreen-button)
+    (init-button-bar)
 
-    ;; TODO enable gallery button
     (go
       (loop []
-        (let [[_ [state]] (<! chan-i)]
-          (debug :init-home)
-          (async/publish bus :broadcast-tree nil)
-          (when-let [credits (-> config/app :home :credits)]
-            (show-credits credits))
-          (go
-            (let [_ (<! click)]
-              (route/set-route! "select")))
-          (recur))))
-    (go
-      (loop []
-        (let [[_ [state]] (<! chan-r)]
-          (debug :release-home)
-          (recur))))))
+        (<! init)
+        (async/publish bus :broadcast-tree nil)
+        (when-let [credits (-> config/app :home :credits)]
+          (show-credits credits))
+        (recur)))))

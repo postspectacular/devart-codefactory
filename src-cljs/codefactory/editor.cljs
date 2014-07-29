@@ -221,11 +221,66 @@
         (swap! local assoc :last-action (utils/now))
         (recur)))))
 
+(def tooltip-element (memoize #(dom/by-id (str (name %) "-tip"))))
+
+(defn handle-tooltip-display
+  [bus]
+  (let [show     (async/subscribe bus :show-tooltip)
+        hide     (async/subscribe bus :hide-tooltip)
+        tooltips (-> config/app :editor :tooltips)
+        tip-body (memoize #(dom/query % ".tooltip-content"))]
+    (go
+      (loop []
+        (let [[_ [el id]] (<! show)
+              tip (tooltip-element id)
+              {:keys [offset content auto?]} (tooltips id)
+              [x y] (g/+ (vec2 (dom/offset el)) offset)]
+          (dom/set-text! (tip-body tip) content)
+          (-> tip
+              (dom/set-style! (clj->js {:display "block" :left (->px x) :top (->px y)}))
+              (dom/remove-class! "hidden"))
+          (when auto?
+            (js/setTimeout
+             #(async/publish bus :hide-tooltip id)
+             (config/timeout :tooltip)))
+          (recur))))
+    (go
+      (loop []
+        (let [[_ id] (<! hide)]
+          (dom/set-style! (tooltip-element id) #js {:display "none"})
+          (recur))))))
+
+(defn handle-tooltips
+  [bus]
+  (let [tooltips (-> config/app :editor :tooltips)
+        tips     (->> tooltips
+                      (filter (comp not :auto? val))
+                      keys
+                      (mapv #(-> % name dom/by-id (dom/query "svg"))))
+        channels (fn [ev] (set (map #(first (async/event-channel % ev)) tips)))
+        on       (channels "mouseenter")
+        off      (channels "mouseleave")
+        touch    (channels "touchstart")
+        all      (vec (concat on off touch))]
+    (go
+      (loop [state {}]
+        (let [[e ch] (alts! all)
+              el (.-target e)
+              id (-> el dom/parent (dom/get-attribs ["id"]) first)
+              kid (keyword id)
+              show? (or (on ch) (and (touch ch) (not (state kid))))]
+          (when id
+            (if show?
+              (async/publish bus :show-tooltip [el kid])
+              (async/publish bus :hide-tooltip kid)))
+          (async/publish bus :user-action nil)
+          (recur (assoc state kid show?)))))))
+
 (defn hide-tooltips
   []
-  (->> (get-in config/app [:editor :tooltips])
+  (->> (-> config/app :editor :tooltips)
        keys
-       (map #(-> % name (str "-tip") dom/by-id (dom/add-class! "hidden")))
+       (map #(-> % tooltip-element (dom/add-class! "hidden")))
        (dorun)))
 
 (defn handle-release
@@ -233,15 +288,15 @@
   (let [ch (async/subscribe bus :release-editor)]
     (go
       (loop []
-        (let [_ (<! ch)
-              {:keys [subs events tools gl display-meshes]} @local]
+        (<! ch)
+        (let [{:keys [subs events tools gl display-meshes]} @local]
           (debug :release-editor display-meshes)
-          (webgl/delete-meshes gl (vals display-meshes))
           (swap! local assoc :active? false)
           (async/unsubscribe-and-close-many bus subs)
           (dorun (map async/destroy-event-channel events))
           (ops/disable-presets (:specs tools))
           (hide-tooltips)
+          (webgl/delete-meshes gl (vals display-meshes))
           (recur))))))
 
 (defn handle-tree-broadcast
@@ -299,65 +354,11 @@
                     (do
                       (arcball/set-rotation ball (g/mix start target (min phase 1.0)))
                       (swap! local assoc-in [:view :phase] (m/mix phase 1.0 0.1))
-                      ;;(render-scene local)
                       (if (>= phase 0.9995)
                         (end-view-tween local)
                         (recur)))
                     (end-view-tween local))))))
           (recur))))))
-
-(defn handle-tooltip-display
-  [bus]
-  (let [show     (async/subscribe bus :show-tooltip)
-        hide     (async/subscribe bus :hide-tooltip)
-        tooltips (get-in config/app [:editor :tooltips])]
-    (go
-      (loop []
-        (let [[_ [el kid]] (<! show)
-              id (name kid)
-              tip (dom/by-id (str id "-tip"))
-              {:keys [offset content auto?]} (tooltips kid)
-              [x y] (g/+ (vec2 (dom/offset el)) offset)]
-          (dom/set-text! (dom/query tip ".tooltip-content") content)
-          (-> tip
-              (dom/set-style! (clj->js {:display "block" :left (->px x) :top (->px y)}))
-              (dom/remove-class! "hidden"))
-          (when auto?
-            (go (<! (timeout (config/timeout :tooltip)))
-                (async/publish bus :hide-tooltip kid)))
-          (recur))))
-    (go
-      (loop []
-        (let [[_ id] (<! hide)
-              tip (dom/by-id (str (name id) "-tip"))]
-          (dom/set-style! tip #js {:display "none"})
-          (recur))))))
-
-(defn handle-tooltips
-  [bus]
-  (let [tooltips (get-in config/app [:editor :tooltips])
-        tips     (->> tooltips
-                      (filter (comp not :auto? val))
-                      keys
-                      (mapv #(-> % name dom/by-id (dom/query "svg"))))
-        channels (fn [ev] (set (map #(first (async/event-channel % ev)) tips)))
-        on       (channels "mouseenter")
-        off      (channels "mouseleave")
-        touch    (channels "touchstart")
-        all      (vec (concat on off touch))]
-    (go
-      (loop [state {}]
-        (let [[e ch] (alts! all)
-              el (.-target e)
-              id (-> el dom/parent (dom/get-attribs ["id"]) first)
-              kid (keyword id)
-              show? (or (on ch) (and (touch ch) (not (state kid))))]
-          (when id
-            (if show?
-              (async/publish bus :show-tooltip [el kid])
-              (async/publish bus :hide-tooltip kid)))
-          (async/publish bus :user-action nil)
-          (recur (assoc state kid show?)))))))
 
 (defn render-loop
   [bus local]
@@ -385,8 +386,8 @@
     (arcball/make-arcball :init view :dist dist)))
 
 (defn init-tree
-  [state local seed]
-  (-> (if-let [tree (:tree @local)]
+  [state tree seed]
+  (-> (if tree
         (tree/recompute-tree-with-seed state tree seed)
         (tree/init-tree-with-seed state seed))
       (tree/update-meshes false)))
@@ -395,33 +396,32 @@
   [bus local]
   (let [tools (dom/query nil "#editor .tools-extra")
         icons (:icons config/app)
-        size (-> config/app :editor :toolbar-icon-size)
-        zoom (fn [delta]
+        {size :toolbar-icon-size delta :zoom-delta} (:editor config/app)
+        zoom (fn [dir]
                (fn []
-                 (arcball/zoom-delta (:arcball @local) delta)
-                 (async/publish bus :render-scene nil)))]
+                 (arcball/zoom-delta (:arcball @local) (* dir delta))
+                 (async/publish bus :render-scene nil)))
+        paths #(-> icons % :paths)]
     (common/icon-button
-     tools nil size (-> icons :fullscreen :paths) nil
+     tools nil size (paths :fullscreen) nil
      (fn [] (dom/request-fullscreen))
      "fs-toggle")
     (common/icon-button
-     tools "axis-toggle" size (-> icons :axis :paths) nil
+     tools "axis-toggle" size (paths :axis) nil
      (fn []
        (swap! local update-in [:show-axes?] not)
        (async/publish bus :render-scene nil)))
     (common/icon-button
-     tools "zoom-in" size (-> icons :zoom-in :paths) nil
-     (zoom -50))
+     tools "zoom-in" size (paths :zoom-in) nil (zoom -1))
     (common/icon-button
-     tools "zoom-out" size (-> icons :zoom-out :paths) nil
-     (zoom 50))))
+     tools "zoom-out" size (paths :zoom-out) nil (zoom 1))))
 
 (defn init
   [bus]
-  (let [canvas     (config/dom-component :edit-canvas)
-        toolbar    (config/dom-component :tools)
-        init       (async/subscribe bus :init-editor)
-        local      (atom {:tools (ops/init-op-triggers bus toolbar)})]
+  (let [canvas  (config/dom-component :edit-canvas)
+        toolbar (config/dom-component :tools)
+        init    (async/subscribe bus :init-editor)
+        local   (atom {:tools (ops/init-op-triggers bus toolbar)})]
 
     (go
       (loop []
@@ -430,50 +430,53 @@
                         bus [:window-resize
                              :user-action
                              :camera-update])
-              c-specs  [(async/event-channel canvas "mousedown" gest/mouse-gesture-start)
-                        (async/event-channel canvas "mousemove" gest/mouse-gesture-move)
-                        (async/event-channel js/window "mouseup" gest/gesture-end)
-                        (async/event-channel js/window (dom/wheel-event-type)
-                                             gest/mousewheel-proxy)
-                        (async/event-channel canvas "touchstart" gest/touch-gesture-start)
-                        (async/event-channel canvas "touchmove" gest/touch-gesture-move)
-                        (async/event-channel js/window "touchend" gest/gesture-end)]
-              t-specs  [(async/event-channel toolbar "mousedown" gest/mouse-gesture-start)
-                        (async/event-channel toolbar "mousemove" gest/mouse-gesture-move)
-                        (async/event-channel js/window "mouseup" gest/gesture-end)
-                        (async/event-channel toolbar "touchstart" gest/touch-gesture-start)
-                        (async/event-channel toolbar "touchmove" gest/touch-gesture-move)
-                        (async/event-channel js/window "touchend" gest/gesture-end)]
+              c-specs (mapv
+                       #(apply async/event-channel %)
+                       [[canvas "mousedown" gest/mouse-gesture-start]
+                        [canvas "mousemove" gest/mouse-gesture-move]
+                        [js/window "mouseup" gest/gesture-end]
+                        [js/window (dom/wheel-event-type) gest/mousewheel-proxy]
+                        [canvas "touchstart" gest/touch-gesture-start]
+                        [canvas "touchmove" gest/touch-gesture-move]
+                        [js/window "touchend" gest/gesture-end]])
+              t-specs  (mapv
+                        #(apply async/event-channel %)
+                        [[toolbar "mousedown" gest/mouse-gesture-start]
+                         [toolbar "mousemove" gest/mouse-gesture-move]
+                         [js/window "mouseup" gest/gesture-end]
+                         [toolbar "touchstart" gest/touch-gesture-start]
+                         [toolbar "touchmove" gest/touch-gesture-move]
+                         [js/window "touchend" gest/gesture-end]])
               c-events (mapv first c-specs)
               t-events (mapv first t-specs)
               arcball  (init-arcball params)
-              now      (utils/now)
               glconf   (:webgl config/app)
-              aconf    (:axis glconf)]
+              aconf    (:axis glconf)
+              now      (utils/now)
+              state    (webgl/init-webgl canvas glconf)
+              axes     (webgl/axis-meshes (:gl state) (:radius aconf) (:length aconf))]
           (debug :init-editor params)
           (reset!
            local
-           (-> (webgl/init-webgl canvas glconf)
+           (-> state
                (merge
                 {:bg-col      (:bg-col glconf)
                  :subs        subs
                  :events      (concat c-specs t-specs)
                  :arcball     arcball
-                 :last-action now
-                 :start-time  now
                  :selection   nil
                  :sel-type    nil
+                 :last-action now
+                 :start-time  now
                  :sel-time    now
                  :time        now
                  :active?     true
                  :history     (or (:history @local) [])
                  :tools       (:tools @local)
+                 :axes        axes
                  :show-axes?  false
                  :axis-hint-shown? false})
-               (init-tree local (:seed-id params))))
-          (swap!
-           local assoc
-           :axes (webgl/axis-meshes (:gl @local) (:radius aconf) (:length aconf)))
+               (init-tree (:tree @local) (:seed-id params))))
           (viz/init local bus)
           (resize-canvas local)
           (render-scene local)
@@ -486,7 +489,7 @@
           (handle-buttons        bus local (config/timeout :editor))
 
           (async/publish bus :update-toolbar-pos (-> config/app :editor :toolbar-margin-left))
-          (go (<! (timeout 800)) (resize-canvas local))
+          (js/setTimeout #(resize-canvas local) 800)
 
           (recur))))
 

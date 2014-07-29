@@ -88,7 +88,7 @@
               (webgl/render-meshes gl xray [mesh] shared-unis {:alpha alpha}))
             (recur (inc i) (+ x space)))))
       (swap! state assoc :camx camx)
-      (anim/animframe-provider (fn [& _] (render-scene state))))))
+      (anim/animframe-provider #(render-scene state)))))
 
 (defn resize-canvas
   [state]
@@ -159,7 +159,6 @@
               sel (or (seed->index seed-ids (:seed-id params)) 0)
               resize (async/subscribe bus :window-resize)
               now (utils/now)]
-          (debug :init-selector)
           (swap!
            local merge
            {:subs {:window-resize resize}
@@ -198,12 +197,10 @@
     ;; release
     (go
       (loop []
-        (let [[_ [state]] (<! release)
-              {:keys [resize]} @local]
-          (debug :release-selector)
-          (swap! local assoc :active? false)
-          (async/unsubscribe-and-close-many bus (:subs @local))
-          (recur))))
+        (<! release)
+        (swap! local assoc :active? false)
+        (async/unsubscribe-and-close-many bus (:subs @local))
+        (recur)))
 
     ;; selection toggles
     (go

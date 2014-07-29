@@ -75,7 +75,6 @@
   [parent path op x y w h ox oy bus sel]
   (let [el (dom/create! "div" parent)
         id (node-id path)
-        cls (str "op-" (name op))
         x' (+ x ox)
         y' (+ y oy)]
 
@@ -87,14 +86,14 @@
             :width  (->px w)
             :height (->px h)}))
 
-    (dom/add-class! el cls)
+    (dom/add-class! el (ops/op-class op))
     (if sel
       (if (= path sel)
         (dom/add-class! el "selected")
         (dom/add-class! el "deselected")))
     ;;(if (and sel (not= path sel)) (dom/add-class! el "deselected"))
 
-    (dom/add-listeners [[el "click" (fn [] (async/publish bus :node-toggle id))]])
+    (dom/add-listeners [[el "click" #(async/publish bus :node-toggle id)]])
 
     [id {:el el :x x :y y :w w :h h :path path}]))
 
@@ -134,9 +133,9 @@
 
 (defn map-focus-rect
   [[x y w h] viz-width viz-height map-width map-height]
-  (let [x (m/map-interval x 0 viz-width 1 (- map-width 2))
+  (let [x (m/map-interval x 0 viz-width  1 (- map-width 2))
         y (m/map-interval y 0 viz-height 1 (- map-height 2))
-        w (m/map-interval w 0 viz-width 1 (- map-width 2))
+        w (m/map-interval w 0 viz-width  1 (- map-width 2))
         h (m/map-interval h 0 viz-height 1 (- map-height 2))]
     [x y w h]))
 
@@ -150,11 +149,11 @@
       (loop [path     max-nodes-path
              num-sibs (tree/num-children-at tree max-nodes-path)
              width    min-size]
-        (let [width (mm/madd width num-sibs gap (dec num-sibs))]
+        (let [width'  (mm/madd width num-sibs gap (dec num-sibs))]
           (if (seq path)
             (let [path' (pop path)]
-              (recur path' (tree/num-children-at tree path') width))
-            width)))
+              (recur path' (tree/num-children-at tree path') width'))
+            width')))
       width)))
 
 (defn reposition-branch
@@ -179,7 +178,7 @@
         min (- (viewport-width) width)
         scroll (assoc scroll :x (m/clamp (:x scroll) min 0))
         offset (scroll-offset scroll viz)]
-    (debug :repos-scroll scroll)
+    ;;(debug :repos-scroll scroll)
     (swap! local assoc :scroll scroll)
     ((reposition-branch nodes tree gap offset) [] margin width)))
 

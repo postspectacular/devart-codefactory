@@ -15,6 +15,9 @@
    [thi.ng.geom.core.quaternion :as q]
    [clojure.string :as str]))
 
+(defn op-class
+  [op] (str "op-" (name op)))
+
 (defn init-op-separator
   [parent [w h]]
   (let [el  (dom/create! "div" parent)
@@ -34,7 +37,7 @@
                        (str/replace label " " "<br/>")
                        (or handler (fn [] (async/publish bus :op-triggered id))))]
     (-> el
-        (dom/add-class! (str "op-" (name op)))
+        (dom/add-class! (op-class op))
         (dom/add-class! "disabled"))
     [width spec]))
 
