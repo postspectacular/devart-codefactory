@@ -228,7 +228,7 @@
         layout (generate-branch bus viz tree tree-depth scroll selection)]
     (dom/set-html! viz "")
     (dom/set-attribs! viz {:class (str "depth" tree-depth)})
-    (debug :new-width width' :scroll scroll)
+    ;;(debug :new-width width' :scroll scroll)
     (swap!
      local assoc
      :width       width'
@@ -272,7 +272,7 @@
 (def map-op-color
   (memoize
    (fn [op]
-     (debug :col-op op)
+     ;;(debug :col-op op)
      (col/gray-offset-hex
       (config/operator-color op)
       (-> config/app :editor :map-color-offset)))))
@@ -482,7 +482,6 @@
                (orig-tree-node tree selection @local)
                editor local bus)
               (async/publish bus :regenerate-scene nil)
-              (debug :axis-hint (select-keys @editor [:axis-hint-shown? :tree-depth]))
               (when (and (not (:axis-hint-shown? @editor))
                          (== 1 (:tree-depth @editor)))
                 (swap! editor assoc :axis-hint-shown? true)
