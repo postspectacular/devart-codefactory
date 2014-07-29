@@ -35,7 +35,7 @@
                        parent id icon-size
                        (-> config/app :operators op :paths)
                        (str/replace label " " "<br/>")
-                       (or handler (fn [] (async/publish bus :op-triggered id))))]
+                       (or handler #(async/publish bus :op-triggered id)))]
     (-> el
         (dom/add-class! (op-class op))
         (dom/add-class! "disabled"))

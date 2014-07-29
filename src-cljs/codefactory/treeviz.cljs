@@ -566,9 +566,7 @@
           (recur
            (case e
              :drag-start (let [scroll (:scroll @local)
-                               target (loop [el (:target data)]
-                                        (if-let [id (first (dom/get-attribs el ["id"]))]
-                                          id (recur (dom/parent el))))
+                               target (common/next-parent-id (:target data))
                                state [scroll (:p data) (vec2) target]]
                            (swap! local assoc :scroll-active? true)
                            (async/publish bus :user-action nil)
@@ -584,7 +582,8 @@
              :gesture-end (when state
                             (let [[_ p delta target] state
                                   dist (g/mag delta)]
-                              (when (and (:touch? data) (< dist 20))
+                              (when (and (:touch? data) (< dist 20)
+                                         (= "node" (subs target 0 4)))
                                 (async/publish bus :node-toggle target))
                               (swap! local assoc :scroll-active? false)
                               (async/publish bus :user-action nil)
@@ -615,16 +614,20 @@
                         :op-triggered :undo-triggered
                         :window-resize :regenerate-scene
                         :release-editor])
-        m-specs   [(async/event-channel canvas "mousedown" gest/mouse-gesture-start)
-                   (async/event-channel canvas "mousemove" gest/mouse-gesture-move)
-                   (async/event-channel canvas "mouseup" gest/gesture-end)
-                   (async/event-channel canvas "touchmove" gest/touch-gesture-move)]
-        v-specs   [(async/event-channel viz "mousedown" gest/mouse-gesture-start)
-                   (async/event-channel viz "mousemove" gest/mouse-gesture-move)
-                   (async/event-channel js/window "mouseup" gest/gesture-end)
-                   (async/event-channel viz "touchstart" gest/touch-gesture-start)
-                   (async/event-channel viz "touchmove" gest/touch-gesture-move)
-                   (async/event-channel js/window "touchend" gest/gesture-end)]
+        m-specs   (mapv
+                   #(apply async/event-channel %)
+                   [[canvas "mousedown" gest/mouse-gesture-start]
+                    [canvas "mousemove" gest/mouse-gesture-move]
+                    [canvas "mouseup" gest/gesture-end]
+                    [canvas "touchmove" gest/touch-gesture-move]])
+        v-specs   (mapv
+                   #(apply async/event-channel %)
+                   [[viz "mousedown" gest/mouse-gesture-start]
+                    [viz "mousemove" gest/mouse-gesture-move]
+                    [js/window "mouseup" gest/gesture-end]
+                    [viz "touchstart" gest/touch-gesture-start]
+                    [viz "touchmove" gest/touch-gesture-move]
+                    [js/window "touchend" gest/gesture-end]])
         m-events  (mapv first m-specs)
         v-events  (mapv first v-specs)
         local   (atom

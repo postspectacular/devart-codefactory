@@ -91,10 +91,10 @@
                     )
         config     (config/set-config! "__APP_CONFIG__")
         state      (atom {:bus bus :ctrl-id :loader})
-        [w h]      (:min-window-size config/app)
+        [w h :as min-size] (:min-window-size config/app)
         satisfied? (and detect/webgl?
                         (or detect/chrome? detect/firefox?)
-                        (and (detect/min-window-size w h)))
+                        (or (not min-size) (detect/min-window-size w h)))
         ;;satisfied? false
         ]
     ;;(debug :detect detect/webgl? detect/chrome? detect/firefox?)

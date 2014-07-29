@@ -142,9 +142,7 @@
           (recur
            (case e
              :drag-start (let [offset (get-in @local [:tools :offset] 0)
-                               target (loop [el (:target data)]
-                                        (if-let [id (first (dom/get-attribs el ["id"]))]
-                                          id (recur (dom/parent el))))]
+                               target (common/next-parent-id (:target data))]
                            (swap! local assoc-in [:tools :active?] true)
                            [offset (:p data) (vec2) (keyword target)])
              :drag-move  (if state
@@ -174,7 +172,7 @@
       (loop []
         (<! update)
         (let [{:keys [offset curr-offset]} (:tools @local)
-              curr-offset (m/mix curr-offset offset 0.2)]
+              curr-offset (m/mix curr-offset offset (-> config/app :editor :toolbar-speed))]
           (swap! local assoc-in [:tools :curr-offset] curr-offset)
           (dom/set-style! toolbar (clj->js {:marginLeft (->px curr-offset)}))
           (if (> (m/abs-diff curr-offset offset) 0.5)

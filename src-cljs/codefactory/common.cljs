@@ -26,3 +26,11 @@
             (dom/set-style! (clj->js (:style p))))
         (recur (next paths))))
     spec))
+
+(defn next-parent-id
+  [el]
+  (loop [el el]
+    (if-let [id (first (dom/get-attribs el ["id"]))]
+      id
+      (if-let [el (dom/parent el)]
+        (recur el)))))

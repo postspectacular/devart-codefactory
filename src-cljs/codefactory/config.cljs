@@ -120,6 +120,7 @@
     :map-label-font "14px \"Abel\",sans-serif"
     :map-label-col "#999"
     :map-label-size 18
+    :toolbar-speed 0.25
     :toolbar-icon-size [32 32]
     :toolbar-op-width 60
     :toolbar-sep-size [15 60]
