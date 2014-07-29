@@ -41,25 +41,6 @@
           (dom/remove-class! "deselected"))
       (recur (next nodes)))))
 
-(defn remove-node-event-handlers
-  [bus nodes]
-  (->> nodes
-       vals
-       (map
-        (fn [{:keys [el handler channel]}]
-          (.removeEventListener el "click" handler)
-          (async/unsubscribe bus :node-toggle channel)
-          (close! channel)))
-       dorun))
-
-(defn node-event-handler
-  [ch bus id]
-  (go
-    (loop []
-      (when (<! ch)
-        (async/publish bus :node-toggle id)
-        (recur)))))
-
 (defn set-node-label
   [el path op depth width min-width]
   (cond
@@ -96,8 +77,7 @@
         id (node-id path)
         cls (str "op-" (name op))
         x' (+ x ox)
-        y' (+ y oy)
-        [ch handler] (async/event-channel el "click")]
+        y' (+ y oy)]
 
     (doto el
       (dom/set-attribs! {:id id})
@@ -114,9 +94,9 @@
         (dom/add-class! el "deselected")))
     ;;(if (and sel (not= path sel)) (dom/add-class! el "deselected"))
 
-    (node-event-handler ch bus id)
+    (dom/add-listeners [[el "click" (fn [] (async/publish bus :node-toggle id))]])
 
-    [id {:el el :x x :y y :w w :h h :path path :channel ch :handler handler}]))
+    [id {:el el :x x :y y :w w :h h :path path}]))
 
 (defn cell-size
   [total gap num]
@@ -249,7 +229,6 @@
         layout (generate-branch bus viz tree tree-depth scroll selection)]
     (dom/set-html! viz "")
     (dom/set-attribs! viz {:class (str "depth" tree-depth)})
-    (remove-node-event-handlers bus nodes)
     (debug :new-width width' :scroll scroll)
     (swap!
      local assoc
@@ -620,7 +599,7 @@
     (let [_ (<! ch)
           {:keys [viz canvas op-triggers nodes subs ctrls]} @local]
       (debug :tedit-release)
-      (remove-node-event-handlers bus nodes)
+      (dom/set-html! viz "")
       (ops/release-op-controls local)
       (dorun (map async/destroy-event-channel (:events @local)))
       (async/unsubscribe-and-close-many bus subs)
