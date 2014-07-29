@@ -459,7 +459,8 @@
               aconf    (:axis glconf)
               now      (utils/now)
               state    (webgl/init-webgl canvas glconf)
-              axes     (webgl/axis-meshes (:gl state) (:radius aconf) (:length aconf))]
+              axes     (webgl/axis-meshes (:gl state) (:radius aconf) (:length aconf))
+              t-offset (-> config/app :editor :toolbar-margin-left)]
           (debug :init-editor params)
           (reset!
            local
@@ -481,7 +482,8 @@
                  :axes        axes
                  :show-axes?  false
                  :axis-hint-shown? false})
-               (init-tree (:tree @local) (:seed-id params))))
+               (init-tree (:tree @local) (:seed-id params))
+               (assoc-in [:tools :curr-offset t-offset])))
           (viz/init local bus)
           (resize-canvas local)
           (render-scene local)
@@ -493,7 +495,7 @@
           (handle-view-update    (:camera-update subs) arcball bus local)
           (handle-buttons        bus local (config/timeout :editor))
 
-          (async/publish bus :update-toolbar-pos (-> config/app :editor :toolbar-margin-left))
+          (async/publish bus :update-toolbar-pos t-offset)
           (js/setTimeout #(resize-canvas local) 800)
 
           (recur))))
