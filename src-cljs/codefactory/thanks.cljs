@@ -17,6 +17,8 @@
         [cancel] (async/event-channel (config/dom-component :thanks-cancel) "click")
         local    (atom {:active? true})]
 
+    (dom/set-html! (config/dom-component :thanks-msg) (-> config/app :thanks :body))
+    
     (go
       (loop []
         (<! init)

@@ -77,7 +77,7 @@
     :object-loader true}
 
    :min-window-size [480 600]
-   
+
    :webgl
    {:min-aa-res 480
     :bg-col [0.2 0.2 0.211 1]
@@ -88,7 +88,9 @@
 
    :home {:credits nil}
 
-   :thanks {:link-clickable? false}
+   :thanks
+   {:link-clickable? true
+    :body "To view visit <a href=\"devartcodefactory.com\">devartcodefactory.com</a> and see which piece is selected each day to be 3D printed and displayed at the Barbican."}
 
    :seed-select
    {:space 1.45
@@ -298,6 +300,7 @@
     :submit-button    "bt-submit"
     :submit-cancel    "submit-cancel"
     :thanks-wrapper   "art-url-wrapper"
+    :thanks-msg       "thanks-body"
     :object-url       "art-url"
     :object-error     "object-error"
     :object-loader    "object-load-progress"
@@ -332,10 +335,17 @@
   (deep-merge
    app
    {:timeouts {:editor (* 2 60 1000)}
+    
     :api {:inject {:location "barbican"}}
-    :editor {:tooltips {:preview-label {:content "Touch the shape to rotate. Pinch to zoom."}
-                        :viz-label {:content "A visualization of your code. Tap any of the boxes to select them for modification. Tap again to deselect. Drag to scroll."}
-                        :axis-label {:content "Tap here to display the XYZ axes for better orientation."}}}}))
+    
+    :thanks
+    {:link-clickable? false
+     :body "To view visit devartcodefactory.com and see which piece is selected each day to be 3D printed and displayed here at the Barbican."}
+    
+    :editor
+    {:tooltips {:preview-label {:content "Touch the shape to rotate. Pinch to zoom."}
+                :viz-label     {:content "A visualization of your code. Tap any of the boxes to select them for modification. Tap again to deselect. Drag to scroll."}
+                :axis-label    {:content "Tap here to display the XYZ axes for better orientation."}}}}))
 
 (def ^:export workshop
   (deep-merge
@@ -349,7 +359,8 @@
   (deep-merge
    barbican
    {:home {:credits {:title "Hello World" :author "David Bruno" :date "2014-07-26"}}
-    :thanks {:link-clickable? true}}))
+    ;;:thanks {:link-clickable? true}
+    }))
 
 (defn set-config!
   [sym] (set! app (js/eval (aget js/window sym))))
