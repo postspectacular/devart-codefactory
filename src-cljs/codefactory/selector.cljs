@@ -141,10 +141,9 @@
         canvas     (config/dom-component :seed-canvas)
         glconf     (:webgl config/app)
         mconf      (:seed-select config/app)
-        seeds      (:seeds config/app)
         seed-ids   (:seed-order mconf)
         local      (-> (webgl/init-webgl canvas glconf)
-                       (init-meshes seeds seed-ids)
+                       (init-meshes config/seeds seed-ids)
                        (assoc :module-config mconf
                               :bg-col (:bg-col glconf))
                        atom)

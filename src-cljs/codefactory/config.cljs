@@ -84,8 +84,6 @@
     :shader-preset-ids [:xray-soft :lambert-default]
     :axis {:radius 0.005 :length 2}}
 
-   :seeds seeds
-
    :home {:credits nil}
 
    :thanks
