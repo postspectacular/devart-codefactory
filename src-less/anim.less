@@ -19,33 +19,36 @@
     .transition(replace("$transform-origin 800ms tx, $transform 800ms tx, visibility 800ms tx, opacity 800ms tx","tx",@tx,"gi"));
 }
 
-.modules>section.present {
+.modules>section.current {
     display: block;
     z-index: 1;
     opacity: 1;
 }
 
-.modules>section.past, .modules>section.future {
+.modules>section.prev, .modules>section.next {
     display: block;
     opacity: 0;
 }
 
-.modules>section[data-transition=rotate].past {
+/*
+.modules>section[data-transition=rotate].prev {
     .transform("translate3d(-100%,0,0) rotateY(-90deg) translate3d(-100%,0,0)");
 }
 
-.modules>section[data-transition=rotate].future {
+.modules>section[data-transition=rotate].next {
     .transform("translate3d(100%,0,0) rotateY(90deg) translate3d(100%,0,0)");
 }
+*/
 
-.modules>section[data-transition=concave].past {
+.modules>section.prev {
     .transform("translate3d(-100%,0,0) rotateY(90deg) translate3d(-100%,0,0)");
 }
 
-.modules>section[data-transition=concave].future {
+.modules>section.next {
     .transform("translate3d(100%,0,0) rotateY(-90deg) translate3d(100%,0,0)");
 }
 
+/*
 .roll {
     overflow: hidden;
     vertical-align: top;
@@ -163,7 +166,7 @@
 .slideUp {
     .animation-name(slideUp);
 }
-
+*/
 .flash-keyframes(border-flash; border-color; @border-col; @border-col-flash);
 
 .flash {

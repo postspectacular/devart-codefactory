@@ -23,9 +23,9 @@
   (when-not (= a b)
     (let [ea (dom/by-id (name a))
           eb (dom/by-id (name b))
-          dir (if (pos? (config/transition a b)) "future" "past")]
+          dir (if (pos? (config/transition a b)) "next" "prev")]
       (dom/set-class! ea dir)
-      (dom/set-class! eb "present"))))
+      (dom/set-class! eb "current"))))
 
 (defn transition-controllers
   [state {new-id :controller params :params :as route}]
