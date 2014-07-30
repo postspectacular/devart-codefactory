@@ -42,13 +42,15 @@
       (recur (next nodes)))))
 
 (defn set-node-label
-  [el path op depth width min-width]
+  [el path op depth width min-width intro?]
   (cond
    (= :leaf op)
    (if (empty? path)
-     (-> el
-         (dom/set-html! (-> config/app :editor :root-label))
-         (dom/add-class! "op-root flash"))
+     (if intro?
+       (dom/add-class! el "op-root")
+       (-> el
+           (dom/set-html! (-> config/app :editor :root-label))
+           (dom/add-class! "op-root flash")))
      (dom/set-html!
       el
       (if (== 2 depth)
@@ -72,7 +74,7 @@
      (dom/set-html! el (str "<span>" (-> config/app :operators op :label) "</span>")))))
 
 (defn make-node
-  [parent path op x y w h ox oy bus sel]
+  [parent path op x y w h ox oy bus sel event?]
   (let [el (dom/create! "div" parent)
         id (node-id path)
         x' (+ x ox)
@@ -93,7 +95,8 @@
         (dom/add-class! el "deselected")))
     ;;(if (and sel (not= path sel)) (dom/add-class! el "deselected"))
 
-    (dom/add-listeners [[el "click" #(async/publish bus :node-toggle id)]])
+    (if event?
+      (dom/add-listeners [[el "click" #(async/publish bus :node-toggle id)]]))
 
     [id {:el el :x x :y y :w w :h h :path path}]))
 
@@ -193,9 +196,10 @@
     (reposition-viz editor local (vec2 x' 0))))
 
 (defn generate-branch
-  [bus viz tree depth scroll sel]
+  [bus viz tree depth scroll sel intro?]
   (let [{:keys [gap min-label-width]} (:editor config/app)
-        [offx offy] (scroll-offset scroll viz)]
+        [offx offy] (scroll-offset scroll viz)
+        event? (not intro?)]
     (fn gen-branch*
       [acc path x y w h]
       (let [node (tree/node-at tree path)
@@ -205,9 +209,9 @@
             op   (config/translate-mg-op (tree/node-operator node))
             [x y w h] (if (and (== 1 depth) (empty? path))
                         [x (- y 4) (- w 4) (- h 4)] [x y w h])
-            node (make-node viz path op x (- y h) w h offx offy bus sel)
+            node (make-node viz path op x (- y h) w h offx offy bus sel event?)
             acc  (conj acc node)]
-        (set-node-label (-> node second :el) path op depth w min-label-width)
+        (set-node-label (-> node second :el) path op depth w min-label-width intro?)
         (if (pos? nc)
           (loop [acc acc, i 0]
             (if (< i nc)
@@ -220,15 +224,15 @@
   [editor local bus]
   (tree/update-stats editor)
   (let [{:keys [viz nodes width scroll]} @local
-        {:keys [tree tree-depth selection]} @editor
+        {:keys [tree tree-depth selection intro-active?]} @editor
         {:keys [gap margin height]} (:editor config/app)
         width' (compute-required-width editor)
         scroll (if (< width' (m/abs (:x scroll))) (vec2) scroll)
         node-height (cell-size height gap tree-depth)
-        layout (generate-branch bus viz tree tree-depth scroll selection)]
-    (dom/set-html! viz "")
-    (dom/set-attribs! viz {:class (str "depth" tree-depth)})
-    ;;(debug :new-width width' :scroll scroll)
+        layout (generate-branch bus viz tree tree-depth scroll selection intro-active?)]
+    (-> viz
+        (dom/set-html! "")
+        (dom/set-attribs! {:class (str "depth" tree-depth)}))
     (swap!
      local assoc
      :width       width'

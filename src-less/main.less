@@ -10,7 +10,7 @@ body {
     background-color: @col-bg;
     color: @col-text;
     font-family: @app-font, sans-serif;
-    font-size: 14px;
+    font-size: @app-font-size;
     height: 100%;
     min-height: 100%;
     margin: 0;
@@ -376,4 +376,7 @@ svg.cancel {
 
 .tooltip-content {
     padding: 9px 14px;
+    font-size: @font-size-body;
+
+    div { margin-top: 0.5em; }
 }

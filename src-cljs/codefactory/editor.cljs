@@ -17,6 +17,7 @@
    [thi.ng.cljs.utils :as utils :refer [->px]]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.gestures :as gest]
+   [thi.ng.cljs.detect :as detect]
    [thi.ng.geom.webgl.core :as gl]
    [thi.ng.geom.webgl.animator :as anim]
    [thi.ng.geom.webgl.buffers :as buf]
@@ -226,8 +227,18 @@
 
 (def tooltip-element (memoize #(dom/by-id (str (name %) "-tip"))))
 
+(defn add-tooltip-buttons
+  [el bus local]
+  (when (:intro-active? @local)
+    (let [div (dom/create! "div" el)
+          skip (dom/create! "input" div {:type "button" :value "skip"})
+          next (dom/create! "input" div {:type "button" :value "next"})]
+      (dom/add-listeners
+       [[skip "click" #(async/publish bus :intro-done nil)]
+        [next "click" #(async/publish bus :intro-next nil)]]))))
+
 (defn handle-tooltip-display
-  [bus]
+  [bus local]
   (let [show     (async/subscribe bus :show-tooltip)
         hide     (async/subscribe bus :hide-tooltip)
         tooltips (-> config/app :editor :tooltips)
@@ -236,9 +247,13 @@
       (loop []
         (let [[_ [el id]] (<! show)
               tip (tooltip-element id)
-              {:keys [offset content auto?]} (tooltips id)
-              [x y] (g/+ (vec2 (dom/offset el)) offset)]
-          (dom/set-text! (tip-body tip) content)
+              {:keys [offset intro-offset content auto?]} (tooltips id)
+              body (tip-body tip)
+              intro? (:intro-active? @local)
+              [x y] (g/+ (vec2 (dom/offset el))
+                         (if intro? (or intro-offset offset) offset))]
+          (dom/set-html! body content)
+          (add-tooltip-buttons body bus local)
           (-> tip
               (dom/set-style! (clj->js {:display "block" :left (->px x) :top (->px y)}))
               (dom/remove-class! "hidden"))
@@ -254,7 +269,7 @@
           (recur))))))
 
 (defn handle-tooltips
-  [bus]
+  [bus local]
   (let [tooltips (-> config/app :editor :tooltips)
         tips     (->> tooltips
                       (filter (comp not :auto? val))
@@ -272,7 +287,7 @@
               id (-> el dom/parent (dom/get-attribs ["id"]) first)
               kid (keyword id)
               show? (or (on ch) (and (touch ch) (not (state kid))))]
-          (when id
+          (when (and id (not (:intro-active? @local)))
             (if show?
               (async/publish bus :show-tooltip [el kid])
               (async/publish bus :hide-tooltip kid)))
@@ -285,6 +300,38 @@
        keys
        (map #(-> % tooltip-element (dom/add-class! "hidden")))
        (dorun)))
+
+(defn handle-intro
+  [bus local]
+  (let [next (async/subscribe bus :intro-next)
+        done (async/subscribe bus :intro-done)
+        tips (-> config/app :editor :intro)]
+    (go
+      (loop []
+        (<! next)
+        (let [id  (:intro-id @local)
+              id' (inc id)]
+          (when (>= id 0)
+            (async/publish bus :hide-tooltip (tips id)))
+          (if (< id' (count tips))
+            (let [kid (tips id')
+                  el  (-> kid name dom/by-id (dom/query "svg"))]
+              (swap! local assoc-in [:intro-id] id')
+              (async/publish bus :show-tooltip [el kid]))
+            (async/publish bus :intro-done nil)))
+        (async/publish bus :user-action nil)
+        (recur)))
+
+    (go
+      (loop []
+        (<! done)
+        (let [id  (:intro-id @local)]
+          (when (>= id 0)
+            (async/publish bus :hide-tooltip (tips id)))
+          (swap! local assoc :intro-active? false)
+          ;; TODO reset camera
+          (async/publish bus :regenerate-scene nil))
+        (recur)))))
 
 (defn handle-release
   [bus local]
@@ -372,12 +419,13 @@
                     (swap!
                      local assoc
                      :render-frame
-                     (if (or (:selection @local)
+                     (if (or (and (:selection @local) (not detect/mobile?))
                              (:view-tween? @local))
                        (anim/animframe-provider render*))))]
     (go
       (loop []
         (let [_ (<! ch)]
+          (debug :render)
           (when-not (:render-frame @local)
             (swap! local assoc :render-frame (anim/animframe-provider render-fn)))
           (recur))))))
@@ -458,7 +506,8 @@
               now      (utils/now)
               state    (webgl/init-webgl canvas glconf)
               axes     (webgl/axis-meshes (:gl state) (:radius aconf) (:length aconf))
-              t-offset (-> config/app :editor :toolbar-margin-left)]
+              t-offset (-> config/app :editor :toolbar-margin-left)
+              intro?   (not (:tree @local))]
           (debug :init-editor params)
           (reset!
            local
@@ -479,6 +528,8 @@
                  :tools       (:tools @local)
                  :axes        axes
                  :show-axes?  false
+                 :intro-active? intro?
+                 :intro-id -1
                  :axis-hint-shown? false})
                (init-tree (:tree @local) (:seed-id params))
                (assoc-in [:tools :curr-offset] t-offset)))
@@ -493,16 +544,21 @@
           (handle-view-update    (:camera-update subs) arcball bus local)
           (handle-buttons        bus local (config/timeout :editor))
 
-          (async/publish bus :update-toolbar-pos t-offset)
-          (js/setTimeout #(resize-canvas local) 800)
+          (async/publish bus :update-toolbar-pos t-offset)          
+          (js/setTimeout
+           (fn []
+             (resize-canvas local)
+             (if intro? (async/publish bus :intro-next nil)))
+           850)
 
           (recur))))
 
-    (render-loop bus local)
-    (handle-release bus local)
-    (handle-tree-broadcast bus local)
-    (handle-tree-backup bus local)
-    (handle-toolbar-update bus local toolbar)
-    (handle-tooltips bus)
-    (handle-tooltip-display bus)
-    (init-extra-tools bus local)))
+    (render-loop            bus local)
+    (handle-release         bus local)
+    (handle-tree-broadcast  bus local)
+    (handle-tree-backup     bus local)
+    (handle-toolbar-update  bus local toolbar)
+    (handle-tooltips        bus local)
+    (handle-tooltip-display bus local)
+    (handle-intro           bus local)
+    (init-extra-tools       bus local)))

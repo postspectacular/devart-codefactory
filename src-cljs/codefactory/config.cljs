@@ -126,20 +126,24 @@
     :toolbar-margin-right 55
     :tooltips {:preview-label {:offset [-5 24]
                                :content "Drag the shape to rotate. Use touchpad or mouse wheel to zoom."}
-               :toolbar-label {:offset [12 -50]
+               :toolbar-label {:offset [12 -86]
+                               :intro-offset [12 -102]
                                :content "These are the tools to modify your shape. Drag to scroll left/right to reveal more tools. The slider below varies the amount of change for some tools. If you made a mistake, use \"Undo\" to go back."}
-               :viz-label     {:offset [12 -32]
+               :viz-label     {:offset [12 -50]
+                               :intro-offset [12 -68]
                                :content "A visualization of your code. Click any of the boxes to select them for modification. Drag to scroll."}
-               :map-label     {:offset [-262 -32]
+               :map-label     {:offset [-262 -50]
+                               :intro-offset [-262 -68]
                                :content "A zoomed out map of your code structure. The yellow rectangle marks the region visible on the left. Drag to scroll."}
-               :axis-label    {:offset [-262 -12]
+               :axis-label    {:offset [-262 -18]
                                :auto? true
                                :content "Click here to display the XYZ axes for better orientation."}}
     :root-label "<h1>Tap here to begin</h1>"
     :ftu-label-sel "<span>Apply a code operation<br/>to modify</span>"
     :ftu-label "<span>Tap to select</span>"
     :leaf-label "<span>+</span>"
-    :map-labels ["CODE OVERVIEW"]}
+    :map-labels ["CODE OVERVIEW"]
+    :intro [:preview-label :toolbar-label :viz-label :map-label]}
 
    :icons
    {:fullscreen {:paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0.2,0.4 L0.2,0.2 L0.4,0.2 M0.2,0.2 L0.4,0.4 M0.8,0.4 L0.8,0.2 L0.6,0.2 M0.8,0.2 L0.6,0.4 M0.8,0.6 L0.8,0.8 L0.6,0.8 M0.8,0.8 L0.6,0.6 M0.4,0.8 L0.2,0.8 L0.2,0.6 M0.2,0.8 L0.4,0.6"}]}
