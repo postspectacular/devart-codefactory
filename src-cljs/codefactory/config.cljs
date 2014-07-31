@@ -126,15 +126,15 @@
     :toolbar-margin-right 55
     :tooltips {:preview-label {:offset [-5 24]
                                :content "Drag the shape to rotate. Use touchpad or mouse wheel to zoom."}
-               :toolbar-label {:offset [12 -86]
-                               :intro-offset [12 -102]
-                               :content "These are the tools to modify your shape. Drag to scroll left/right to reveal more tools. The slider below varies the amount of change for some tools. If you made a mistake, use \"Undo\" to go back."}
-               :viz-label     {:offset [12 -50]
-                               :intro-offset [12 -68]
-                               :content "A visualization of your code. Click any of the boxes to select them for modification. Drag to scroll."}
+               :toolbar-label {:offset [12 -96]
+                               :intro-offset [12 -114]
+                               :content "These are the code blocks to modify your shape. Drag to scroll left/right to reveal more tools. The slider below varies the amount of change for some tools. Use \"Empty\" to remove shapes. If you made a mistake, use \"Undo\" to go back."}
+               :viz-label     {:offset [12 -72]
+                               :intro-offset [12 -90]
+                               :content "A visualization of your code. Each code block creates one or more new shapes. Click any of the boxes to select them for modification. Click again to deselect. Drag to scroll."}
                :map-label     {:offset [-262 -50]
                                :intro-offset [-262 -68]
-                               :content "A zoomed out map of your code structure. The yellow rectangle marks the region visible on the left. Drag to scroll."}
+                               :content "A zoomed out map of your code structure. The yellow rectangle marks the code region visible on the left. Drag to scroll."}
                :axis-label    {:offset [-262 -18]
                                :auto? true
                                :content "Click here to display the XYZ axes for better orientation."}}
@@ -348,7 +348,7 @@
     
     :editor
     {:tooltips {:preview-label {:content "Touch the shape to rotate. Pinch to zoom."}
-                :viz-label     {:content "A visualization of your code. Tap any of the boxes to select them for modification. Tap again to deselect. Drag to scroll."}
+                :viz-label     {:content "A visualization of your code. Each code block creates one or more new shapes. Tap any of the boxes to select them for modification. Tap again to deselect. Drag to scroll."}
                 :axis-label    {:content "Tap here to display the XYZ axes for better orientation."}}}}))
 
 (def ^:export workshop

@@ -544,7 +544,7 @@
           (handle-view-update    (:camera-update subs) arcball bus local)
           (handle-buttons        bus local (config/timeout :editor))
 
-          (async/publish bus :update-toolbar-pos t-offset)          
+          (async/publish bus :update-toolbar-pos t-offset)
           (js/setTimeout
            (fn []
              (resize-canvas local)
