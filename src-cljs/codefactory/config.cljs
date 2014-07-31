@@ -74,6 +74,7 @@
     :editor true
     :submit true
     :thanks true
+    :about true
     :object-loader true}
 
    :min-window-size [480 600]
@@ -231,9 +232,7 @@
     ]
 
    :routes
-   [{:match ["home"]
-     :controller :home
-     :hash "home"}
+   [{:match ["home"] :controller :home :hash "home"}
     {:match ["objects" :id]
      :bindings {:id {:validate [(v/uuid4)]}}
      :controller :object-loader}
@@ -243,12 +242,10 @@
     {:match ["select" :seed-id]
      :bindings {:seed-id {:validate [(v/member-of (set (map name (keys seeds))))]}}
      :controller :selector}
-    {:match ["select"]
-     :controller :selector}
-    {:match ["objects" "submit"]
-     :controller :submit-form}
-    {:match ["thanks"]
-     :controller :submit-confirm}
+    {:match ["select"] :controller :selector}
+    {:match ["objects" "submit"] :controller :submit-form}
+    {:match ["thanks"] :controller :submit-confirm}
+    {:match ["about"] :controller :about}
     #_{:match ["gallery" :page]
        :bindings {:page {:coerce utils/parse-int :validate [(v/number) (v/pos)]}}
        :controller :gallery}
@@ -280,6 +277,8 @@
     [:submit-form :submit-confirm] -1
     [:submit-confirm :home] 1
     [:selector :home] 1
+    [:about :home] 1
+    [:home :about] -1
     [:login :home] -1
     }
 
@@ -303,8 +302,9 @@
     :toolbar-label    "toolbar-label"
     :submit-button    "bt-submit"
     :submit-cancel    "submit-cancel"
-    :thanks-wrapper   "art-url-wrapper"
     :thanks-msg       "thanks-body"
+    :about-cancel     "about-cancel"
+    :object-url-wrapper "art-url-wrapper"
     :object-url       "art-url"
     :object-error     "object-error"
     :object-loader    "object-load-progress"
@@ -314,6 +314,7 @@
    {:selector (* 30 1000)
     :editor   (* 7 24 60 60 1000)
     :thanks   (* 60 1000)
+    :about    (* 2 60 1000)
     :controller 900
     :tooltip  3000}
 
@@ -339,13 +340,13 @@
   (deep-merge
    app
    {:timeouts {:editor (* 2 60 1000)}
-    
+
     :api {:inject {:location "barbican"}}
-    
+
     :thanks
     {:link-clickable? false
      :body "To view visit devartcodefactory.com and see which piece is selected each day to be 3D printed and displayed here at the Barbican."}
-    
+
     :editor
     {:tooltips {:preview-label {:content "Touch the shape to rotate. Pinch to zoom."}
                 :viz-label     {:content "A visualization of your code. Each code block creates one or more new shapes. Tap any of the boxes to select them for modification. Tap again to deselect. Drag to scroll."}

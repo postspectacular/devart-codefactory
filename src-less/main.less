@@ -73,11 +73,11 @@ a:hover { color: lighten(@op-col-sd,10); }
 }
 
 .flex-item {
-    .flexbox(1 100%);
+    .flexbox(1 1 100%);
 }
 
 svg.gallery {
-    fill:   @col-bt-gallery;
+    fill:   none;
     stroke: @col-bt-gallery;
 }
 
@@ -89,6 +89,11 @@ svg.continue {
 svg.cancel {
     fill: @col-bt-cancel;
     stroke: @col-bt-cancel;
+}
+
+svg.generic {
+    fill: none;
+    stroke: @col-text;
 }
 
 .buttonbar {
@@ -143,6 +148,15 @@ svg.cancel {
     }
 }
 
+.header {
+    height: (@icon-size + 2 * @margin);
+    .flexbox(1 auto);
+    padding: @margin;
+    text-align: center;
+
+    h2 { margin: (@margin / 2); }
+}
+
 #home {
     background-image: url('../img/renders/20140701.jpg');
     background-repeat: no-repeat;
@@ -151,7 +165,9 @@ svg.cancel {
 
     .flex-content>div { max-width: 95% !important; }
 
-    div.credits {
+    .header { padding: @margin (@icon-size + 2 * @margin) 0 @margin; }
+
+    .credits {
         width: 50%;
         max-width: 50%;
         margin: auto;
@@ -170,13 +186,17 @@ svg.cancel {
 
     .wrapper {
         .flex(column nowrap);
-        height: 90%;
+        //height: 90%;
         text-shadow: black 0 0 8px;
-    }
 
-    .header { .flexbox(4 0 auto); }
-    .credits { .flexbox(1 0 auto); }
-    .main-title { .flexbox(12 0 auto); }
+        >div { .flexbox(1 33%); }
+    }
+}
+
+#bt-info { float: left; margin-right: 10px; }
+
+#about .body-wrapper {
+    div { margin: auto; }
 }
 
 #seed-overlay {
@@ -213,8 +233,8 @@ svg.cancel {
     cursor: -webkit-grab;
 }
 
-#thanks-wrapper, #upgrade-wrapper {
-
+.body-wrapper {
+    overflow: scroll;
     >div {
         max-width: 70% !important;
         font-size: @font-size-body;

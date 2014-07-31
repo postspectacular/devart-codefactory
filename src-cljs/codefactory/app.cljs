@@ -9,6 +9,7 @@
    [codefactory.object-loader :as obj]
    [codefactory.submit :as submit]
    [codefactory.thanks :as thanks]
+   [codefactory.about :as about]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
@@ -81,6 +82,7 @@
     (when (:object-loader modules) (obj/init bus))
     (when (:submit modules)        (submit/init bus))
     (when (:thanks modules)        (thanks/init bus))
+    (when (:about modules)         (about/init bus))
     (init-router bus state routes default-route)))
 
 (defn start

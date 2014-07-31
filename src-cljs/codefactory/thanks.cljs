@@ -36,7 +36,7 @@
       (loop []
         (<! release)
         (swap! local assoc :active? false :url nil)
-        (dom/add-class! (config/dom-component :thanks-wrapper) "hidden")
+        (dom/add-class! (config/dom-component :object-url-wrapper) "hidden")
         (recur)))
 
     (go
@@ -52,5 +52,5 @@
           (if (-> config/app :thanks :link-clickable?)
             (dom/set-html! el (str "<a href=\"" url "\">" url "</a>"))
             (dom/set-html! el url))
-          (dom/remove-class! (config/dom-component :thanks-wrapper) "hidden")
+          (dom/remove-class! (config/dom-component :object-url-wrapper) "hidden")
           (recur))))))
