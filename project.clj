@@ -8,7 +8,7 @@
 
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/data.json "0.2.5"]
-                 [org.clojure/core.async "0.1.301.0-deb34a-alpha"]
+                 [org.clojure/core.async "0.1.303.0-886421-alpha"]
 
                  [ring/ring-core "1.2.2"]
                  [compojure "1.1.8"]
@@ -46,7 +46,7 @@
                  ;; CLJS
                  [thi.ng/geom-webgl "0.3.0-SNAPSHOT"]]
 
-  :profiles {:dev {:dependencies [[org.clojure/clojurescript "0.0-2246"]]
+  :profiles {:dev {:dependencies [[org.clojure/clojurescript "0.0-2277"]]
                    :plugins [[lein-cljsbuild "1.0.3"]
                              ;;[lein-cooper "0.0.1"]
                              ]}}
