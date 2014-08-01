@@ -369,7 +369,8 @@
 (def ^:export staging
   (deep-merge
    barbican
-   {:home {:credits {:title "Hello World" :author "David Bruno" :date "2014-07-26"}}
+   {:home {:credits {:title "Untitled" :author "Anonymous" :date "2014-07-26"}}
+    :about {:links-clickable? false}
     :thanks {:link-clickable? true}
     }))
 
