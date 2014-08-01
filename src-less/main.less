@@ -46,9 +46,9 @@ h2 { font-size: 180%; }
     z-index: 100;
 }
 
-a:link { color: @op-col-sd; }
-a:visited { color: @col-text; }
-a:hover { color: lighten(@op-col-sd,10); }
+a:link { color: @op-col-sd; text-decoration: none; }
+a:visited { color: @col-text; text-decoration: none; }
+a:hover { color: @col-sel; }
 
 .flex-container {
     .flex(column nowrap);
@@ -199,6 +199,12 @@ svg.generic {
     div { margin: auto; text-align: center; }
 
     div.tool { cursor: default !important; }
+
+    h2 {
+        padding-bottom: 5px;
+        margin-bottom: 0px;
+        border-bottom: 1px solid white;
+    }
 
     h3 {
         text-transform: uppercase;

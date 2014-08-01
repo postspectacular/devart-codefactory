@@ -370,7 +370,7 @@
   (deep-merge
    barbican
    {:home {:credits {:title "Untitled" :author "Anonymous" :date "2014-07-26"}}
-    :about {:links-clickable? false}
+    :about {:links-clickable? true}
     :thanks {:link-clickable? true}
     }))
 
