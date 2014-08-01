@@ -14,7 +14,9 @@
                  :height h
                  :viewBox "-0.05 -0.05 1.1 1.1"
                  :preserveAspectRatio "none"})
-        [spec] (dom/add-listeners [[el "click" handler]])
+        [spec] (if handler
+                 (dom/add-listeners [[el "click" handler]])
+                 [[el]])
         attrs  {:class (apply str "tool " classes)}]
     (dom/set-attribs! el (if id (assoc attrs :id (name id)) attrs))
     (when label

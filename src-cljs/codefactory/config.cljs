@@ -87,6 +87,10 @@
 
    :home {:credits nil}
 
+   :about
+   {:icon-size [64 64]
+    :links-clickable? true}
+   
    :thanks
    {:link-clickable? true
     :body "To view visit <a href=\"devartcodefactory.com\">devartcodefactory.com</a> and see which piece is selected each day to be 3D printed and displayed at the Barbican."}
@@ -277,8 +281,8 @@
     [:submit-form :submit-confirm] -1
     [:submit-confirm :home] 1
     [:selector :home] 1
-    [:about :home] 1
-    [:home :about] -1
+    [:about :home] -1
+    [:home :about] 1
     [:login :home] -1
     }
 
@@ -303,7 +307,7 @@
     :submit-button    "bt-submit"
     :submit-cancel    "submit-cancel"
     :thanks-msg       "thanks-body"
-    :about-cancel     "about-cancel"
+    :about-continue   "about-continue"
     :object-url-wrapper "art-url-wrapper"
     :object-url       "art-url"
     :object-error     "object-error"
@@ -314,7 +318,7 @@
    {:selector (* 30 1000)
     :editor   (* 7 24 60 60 1000)
     :thanks   (* 60 1000)
-    :about    (* 2 60 1000)
+    :about    (* 3 60 1000)
     :controller 900
     :tooltip  3000}
 
@@ -343,6 +347,8 @@
 
     :api {:inject {:location "barbican"}}
 
+    :about {:links-clickable? false}
+    
     :thanks
     {:link-clickable? false
      :body "To view visit devartcodefactory.com and see which piece is selected each day to be 3D printed and displayed here at the Barbican."}

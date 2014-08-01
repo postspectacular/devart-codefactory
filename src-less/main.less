@@ -196,7 +196,14 @@ svg.generic {
 #bt-info { float: left; margin-right: 10px; }
 
 #about .body-wrapper {
-    div { margin: auto; }
+    div { margin: auto; text-align: center; }
+
+    div.tool { cursor: default !important; }
+
+    h3 {
+        text-transform: uppercase;
+        margin: 0;
+    }
 }
 
 #seed-overlay {
@@ -234,7 +241,7 @@ svg.generic {
 }
 
 .body-wrapper {
-    overflow: scroll;
+    overflow: auto;
     >div {
         max-width: 70% !important;
         font-size: @font-size-body;

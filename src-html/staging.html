@@ -107,7 +107,7 @@
         </div>
       </section>
 
-      <section id="about" class="next">
+      <section id="about" class="prev">
         <div class="flex-container">
           <div class="header flex-item">
             <h2>Co(de)Factory</h2>
@@ -115,16 +115,77 @@
           </div>
           <div class="body-wrapper flex-item">
             <div>
-              <p>Co(de)factory is an installation that allows anybody to create art and become an artist. It empowers people by giving them the tools to create 3D forms, and offers the chance to have their digital piece fabricated in 3D and showcased in the Digital Revolutions exhibition at the Barbican.</p>
-              <p>For this piece, Karsten Schmidt has created a visual programming interface with simple design tools, which people can use to transform a single shape in countless ways to construct more complex objects. The interface is accessible to anybody online with a modern web browser (Google Chrome or Mozilla Firefox), and all finished pieces can be uploaded to the online gallery of this website. Any existing object can be further edited, thus forming a chain of co-authorship.</p>
-              <p>The installation also includes a next generation, open-source 3D printer (an Ilios HD model) that will print select pieces, live in the gallery. Each day, the Barbican will curate the on-site showcase by choosing one piece from the online gallery to be printed and displayed. Day by day, piece by piece, the physical collection of art will grow.</p>
+              <p>Co(de)factory is an installation and online design tool that allows anybody to create art and become an artist. It empowers people by giving them tools to create complex 3D forms, and offers the chance to have their digital piece fabricated in 3D and showcased in the Digital Revolutions exhibition at the Barbican.</p>
+              <p>For this piece, Karsten Schmidt has created a visual programming interface with simple design tools, which people can use to transform a single shape in countless ways to construct more complex objects. The interface is accessible to anybody online with a modern web browser (Google Chrome or Mozilla Firefox), and all finished pieces can be uploaded to the upcoming online gallery (launching soon) of this website. Any existing object can then be edited further, thus forming a chain of related pieces and their co-authorships.</p>
+              <p>The installation also includes a next generation, open-source 3D printer (an OS-RC Ilios HD model) that will print select pieces, live in the gallery. Each day, the Barbican will curate the on-site showcase by choosing one piece from the online gallery to be printed and displayed. Day by day, piece by piece, the physical collection of art will grow.</p>
+            </div>
+            <div class="tools">
+              <h2>Code operations</h2>
+              <p>Any object, physical or virtual, is the result of a process. Co(de)Factory provides a minimal set of 8 simple geometric operations (processes), which can be combined in countless ways to explore basic programming concepts and construct new forms from a single start shape. At each step on the way to the final outcome, <em>"Input, Process, Output"</em>, a fundamental concept of programming, is used to define an ever more detailed description of the 3D form. Because the created code is independent from the actual shapes, users can also experiment with switching between different start shapes and observe their different results.</p>
+              <div data-op="sd">
+                <h3>split</h3>
+                <p>This operation splits a shape into smaller shapes in a given direction (along the X, Y or Z axis). This operation is useful to create a grid of smaller shapes to which other operations can be applied later.</p>
+              </div>
+              <div data-op="inset">
+                <h3>inset</h3>
+                <p>This operation moves the corners of a shape towards their center in a given direction (along the X, Y or Z axis) and results in 5 new shapes: the four walls and the enclosed core. The inset amount (wall thickness) can be controlled via the operation's slider. In combination with "Empty", this operation allows for the easy creation of hollow shapes (by later removing their core).</p>
+              </div>
+              <div data-op="reflect">
+                <h3>mirror</h3>
+                <p>A mirror produces a reflection. This operation reflects/flips a shape on one of its six sides. It outputs both the new shape, but also the original, in order to allow further operations to be applied. When the shape is not a cube, repeated application of this operation results in curves or even rings.</p>
+              </div>
+              <div data-op="scale">
+                <h3>scale</h3>
+                <p>The Scale operation is used to adjust the size of one of a shape's six sides. This can be used to create bevels, cones or as preparation step for the "Mirror" operation. The scale factor can be adjusted via the control slider.</p>
+              </div>
+              <div data-op="stretch">
+                <h3>stretch</h3>
+                <p>With this operation a shape can be made longer (or shorter) along a given direction. The are six ways this tool can be applied, one for each side of the shape. The stretch amount can be adjusted via the control slider.</p>
+              </div>
+              <div data-op="tilt">
+                <h3>tilt</h3>
+                <p>Tilting or skewing a shape allows for the creation of rhombic or diamond shapes, which in turn are useful starting points for building larger curved elements.</p>
+              </div>
+              <div data-op="shift">
+                <h3>shift</h3>
+                <p>This operation splits a shape in half and shifts the center by a given length to form a symmetric chevron. Again, the shift amount can be adjusted via the control slider.</p>
+              </div>
+              <div data-op="delete">
+                <h3>empty</h3>
+                <p>Last, but not least, this operation turns a selected shape into empty space and is therefore one of the most important operations to create complex forms.</p>
+              </div>
+            </div>
+            <div>
+              <h2>Open Source</h2>
+              <p>All components of this project are completely open source and available on GitHub:</p>
+              <p>
+                <a href="https://github.com/postspectacular/devart-codefactory">github.com/postspectacular/devart-codefactory</a>
+              </p>
+              <p>Furthermore, the following projects &amp; technologies were crucial to this project and deserve special mention:</p>
+              <p><a href="http://clojure.org/">Clojure / ClojureScript</a></p>
+              <p><a href="https://github.com/clojure/core.async">core.async</a></p>
+              <p><a href="http://thi.ng">thi.ng components</a></p>
+              <p><a href="https://khronos.org/webgl">WebGL</a></p>
+              <p><a href="http://luxrender.net">Luxrender</a></p>
+              <p><a href="https://developers.google.com/closure">Google Closure</a></p>
+              <p><a href="https://cloud.google.com/">Google Cloud</a></p>
+            </div>
+            <div>
+              <h2>Contact</h2>
+              <p>Karsten Schmidt<br/><a href="http://postspectacular.com">postspectacular.com</a><br/><a href="https://twitter.com/toxi">@toxi</a>
+              </p>
+            </div>
+            <div>
+              <h2>Credits</h2>
+              <p>Commissioned by Google & Barbican.</p>
+              <p>Made in collaboration with<br/>Google Creative Lab (London)</p>
             </div>
           </div>
           <div class="flex-item buttonbar">
             <div class="inner">
-              <div id="about-cancel" class="flex-item center">
-                <svg width="50%" height="50" viewbox="0 0 1 1" class="cancel">
-                  <g><path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
+              <div id="about-continue" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="continue">
+                  <g><path fill="none" d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
                 </svg>
               </div>
             </div>
