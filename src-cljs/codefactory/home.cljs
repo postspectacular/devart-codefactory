@@ -44,8 +44,8 @@
 
     (go
       (loop []
-        (<! init)
-        (async/publish bus :broadcast-tree nil)
-        (when-let [credits (-> config/app :home :credits)]
-          (show-credits credits))
+        (let [[_ [state]] (<! init)]
+          (async/publish bus :broadcast-tree nil)
+          (when-let [credits (:credits @state)]
+            (show-credits credits)))
         (recur)))))

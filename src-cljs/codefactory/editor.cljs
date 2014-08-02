@@ -425,7 +425,6 @@
     (go
       (loop []
         (let [_ (<! ch)]
-          (debug :render)
           (when-not (:render-frame @local)
             (swap! local assoc :render-frame (anim/animframe-provider render-fn)))
           (recur))))))

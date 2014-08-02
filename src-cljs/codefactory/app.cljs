@@ -11,6 +11,7 @@
    [codefactory.thanks :as thanks]
    [codefactory.about :as about]
    [thi.ng.cljs.async :as async]
+   [thi.ng.cljs.io :as io]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
    [thi.ng.cljs.utils :as utils]
@@ -85,27 +86,70 @@
     (when (:about modules)         (about/init bus))
     (init-router bus state routes default-route)))
 
+(defn init-fallback
+  [bus state]
+  (init-router
+   bus state
+   (:routes-unsupported config/app)
+   (:default-route-unsupported config/app)))
+
+(defn load-featured-image
+  [bus url]
+  (debug :load-bg url)
+  (let [img (js/Image.)]
+    (set! (.-onload img)
+          (fn []
+            (dom/set-style!
+             (dom/by-id "home")
+             #js {:background-image (str "url(" url ")")})
+            (async/publish bus :app-ready nil)))
+    (set! (.-src img) url)))
+
+(defn load-credits
+  [bus state]
+  (io/request
+   :uri (config/api-route :credits)
+   :method :get
+   :edn? true
+   :success (fn [_ body]
+              ;;(info :success-credits body)
+              (let [{:keys [title author id created preview-uri]} (-> body :body :object)
+                    preview-uri (or preview-uri (-> config/app :home :default-bg))]
+                (swap!
+                 state assoc :credits
+                 {:title title
+                  :author author
+                  :id id
+                  :date (utils/format-date (js/Date. created))})
+                (load-featured-image bus preview-uri)))
+   :error   (fn [_ body]
+              ;;(warn :error-credits body)
+              (load-featured-image bus (-> config/app :home :default-bg)))))
+
+(defn check-requirements
+  []
+  (let [[w h :as min-size] (:min-window-size config/app)
+        satisfied? (and detect/webgl?
+                        (or detect/chrome? detect/firefox?)
+                        (or (not min-size) (detect/min-window-size w h)))]
+    ;; (debug :detect detect/webgl? detect/chrome? detect/firefox?)
+    ;; false
+    satisfied?))
+
 (defn start
   []
+  (config/set-config! "__APP_CONFIG__")
   (let [bus        (async/pub-sub
                     ;;(fn [e] (debug :bus (first e)) (first e))
                     first
                     )
-        config     (config/set-config! "__APP_CONFIG__")
-        state      (atom {:bus bus :ctrl-id :loader})
-        [w h :as min-size] (:min-window-size config/app)
-        satisfied? (and detect/webgl?
-                        (or detect/chrome? detect/firefox?)
-                        (or (not min-size) (detect/min-window-size w h)))
-        ;;satisfied? false
-        ]
-    ;;(debug :detect detect/webgl? detect/chrome? detect/firefox?)
-    (if satisfied?
-      (init-modules bus state)
-      (init-router
-       bus state
-       (:routes-unsupported config)
-       (:default-route-unsupported config)))
-    state))
+        state      (atom {:bus bus :ctrl-id :loader})]
+
+    (load-credits bus state)
+    (go
+      (<! (async/subscribe bus :app-ready))
+      (if (check-requirements)
+        (init-modules bus state)
+        (init-fallback bus state)))))
 
 (.addEventListener js/window "load" start)

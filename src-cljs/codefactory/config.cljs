@@ -85,7 +85,9 @@
     :shader-preset-ids [:xray-soft :lambert-default]
     :axis {:radius 0.005 :length 2}}
 
-   :home {:credits nil}
+   :home
+   {:default-bg "/img/renders/20140701.jpg"
+    :credits nil}
 
    :about
    {:icon-size [64 64]
@@ -326,7 +328,8 @@
    {:prefix api-prefix
     :routes
     (->> {:get-object "objects/"
-          :submit-object "objects"}
+          :submit-object "objects"
+          :credits "jobs/current"}
          (reduce-kv
           (fn [acc k v] (assoc acc k (str api-prefix v)))
           {}))}
@@ -335,7 +338,7 @@
 (def ^:export app default-config)
 
 (def ^:export maintenance
-  (-> default-config
+  (-> app
       (assoc :modules nil
              :routes [(get-in app [:routes 0])]
              :routes-unsupported [(get-in app [:routes 0])])))
@@ -369,8 +372,7 @@
 (def ^:export staging
   (deep-merge
    barbican
-   {:home {:credits {:title "Untitled" :author "Anonymous" :date "2014-07-26"}}
-    :about {:links-clickable? true}
+   {:about {:links-clickable? true}
     :thanks {:link-clickable? true}
     }))
 
