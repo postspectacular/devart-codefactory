@@ -54,21 +54,33 @@ module.exports = function(grunt) {
         }
       }
     },
-    copy: {
-      applystage: {
-        files: [{expand: true, cwd: 'war/staging/css/', src: ['*.css'], dest: 'war/css/'},
-                {expand: true, cwd: 'war/staging/img/', src: ['**'], dest: 'war/img/'},
-                {expand: true, cwd: 'war/staging/js/', src: ['app.js'], dest: 'war/js/'}]
-      }
-    },
     watch: {
       dev: {
         files: ['src-less/*.less','src-html/*.html'],
         tasks: ['less:dev','htmlmin:dev']
       },
+
       prod: {
         files: ['src-less/*.less','src-html/*.html'],
         tasks: ['less:prod','htmlmin:prod']
+      }
+    },
+    replace: {
+      dist: {
+        options: {
+          patterns: [
+            {
+              match: 'timestamp',
+              replacement: '<%= new Date().getTime() %>'
+            }
+          ]
+        },
+        files: [
+          {src: ['war/index.html'], dest: 'war/index.html'},
+          {src: ['war/barbican/index.html'], dest: 'war/barbican/index.html'},
+          {src: ['war/workshop/index.html'], dest: 'war/workshop/index.html'},
+          {src: ['war/staging/index.html'], dest: 'war/staging/index.html'},
+        ]
       }
     }
   });
@@ -78,7 +90,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-less');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-htmlmin');
-  grunt.loadNpmTasks('grunt-contrib-copy');
+  //grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-replace');
 
   // Default task.
   grunt.registerTask('default', ['less:dev','htmlmin:dev','watch:dev']);
