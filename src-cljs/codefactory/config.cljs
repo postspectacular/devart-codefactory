@@ -318,7 +318,7 @@
    {:selector (* 30 1000)
     :editor   (* 7 24 60 60 1000)
     :thanks   (* 60 1000)
-    :about    (* 3 60 1000)
+    :about    (* 5 60 1000)
     :controller 900
     :tooltip  3000}
 
