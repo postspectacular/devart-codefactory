@@ -1,4 +1,6 @@
-(ns thi.ng.cljs.utils)
+(ns thi.ng.cljs.utils
+  (:require
+   [goog.string.format]))
 
 (defn deep-merge-with
   "Like merge-with, but merges maps recursively, applying the given fn
@@ -40,3 +42,7 @@
   (fn [x] (.toFixed (js/Number. x) prec)))
 
 (defn ->px [x] (str x "px"))
+
+(defn format-date
+  [d]
+  (goog.string/format "%d-%02d-%02d" (.getFullYear d) (.getMonth d) (.getDate d)))
