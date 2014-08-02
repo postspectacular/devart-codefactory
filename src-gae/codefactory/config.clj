@@ -61,15 +61,18 @@
            "location" [(v/optional (v/max-length 16))]
            "parent"   [(v/optional (v/uuid4))]}
 
-          :get-object {:id [(v/uuid4)]}
+          :get-object {:id [(v/required) (v/uuid4)]}
 
           :query-objects
           {"limit" [(v/optional (v/number (fn [_ v] (util/parse-int v 25))))
                     (v/optional (v/in-range 1 query-result-limit))]
-           "offset" [(v/optional (v/number (fn [_ v] (util/parse-int v 0))))]}}}
+           "offset" [(v/optional (v/number (fn [_ v] (util/parse-int v 0))))]}
+
+          :new-job {"object-id" [(v/required) (v/uuid4)]}}}
 
    :db
    {:query-result-limit query-result-limit
+    :public-job-keys :*
     :public-codetree-keys [:id :parent-id :tree :seed
                            :title :author :created
                            :short-uri :preview-uri :stl-uri]}

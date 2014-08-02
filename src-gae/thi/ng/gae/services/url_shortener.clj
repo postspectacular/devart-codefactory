@@ -13,6 +13,7 @@
                  (.setDoOutput true)
                  (.setRequestMethod "POST")
                  (.addRequestProperty "Content-Type" "application/json"))]
+      (prn :shorten-url long-url)
       (with-open [out (io/writer (.getOutputStream conn))]
         (json/write {:longUrl long-url} out))
       (prn :shortener-response-code (.getResponseCode conn))

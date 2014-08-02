@@ -15,9 +15,10 @@
    [simple-time.core :as time]
    [clojure.data.json :as json]
    [clojure.java.io :as io]
-   [clojure.edn :as edn])
+   [clojure.edn :as edn]
+   [clojure.pprint :refer [pprint]])
   (:import
-   [codefactory.model CodeTree]))
+   [codefactory.model CodeTree PrintJob]))
 
 (def mime-types
   {:edn "application/edn"
@@ -74,13 +75,68 @@
 
 (defn public-entity
   [e key-id]
-  (select-keys e (get-in config/app [:db key-id])))
+  (let [keys (get-in config/app [:db key-id])]
+    (if (= :* keys) (into {} e) (select-keys e keys))))
+
+(defn api-route
+  [& args] (apply str "/api/1.0" (interpose \/ args)))
+
+(defn server-url
+  [{:keys [scheme server-name server-port]} & more]
+  (let [base (str (name scheme) "://" server-name)
+        base (if (or (== 80 server-port)
+                     (== 443 server-port))
+               base
+               (str base ":" server-port))]
+    (apply str base (interpose \/ more))))
+
+(defn new-entity-request
+  [req validate-id handler]
+  (if (valid-api-accept? req)
+    (let [[params err] (validate-params (:params req) :api validate-id)]
+      (if (nil? err)
+        (try
+          (handler req params)
+          (catch Exception e
+            (.printStackTrace e)
+            (api-response req "Error saving entity" 500)))
+        (api-response req err 400)))
+    (invalid-api-response)))
 
 (def api-v1-handlers
   (routes
 
+   (GET "/jobs/current" [:as req]
+        (if (valid-api-accept? req)
+          (let [[job] (ds/query PrintJob
+                                :filter [:or
+                                         [:= :status "printing"]
+                                         [:= :status "complete"]]
+                                :sort [[:started :desc]])
+                object (if job (ds/retrieve CodeTree (:object-id job)))]
+            (if job
+              (api-response
+               req
+               {:job (public-entity job :public-job-keys)
+                :object (public-entity object :public-codetree-keys)}
+               200)
+              (api-response req {:reason "No print jobs"} 404)))
+          (invalid-api-response)))
+
+   (POST "/jobs" [:as req]
+         (new-entity-request
+          req :new-job
+          (fn [req {:strs [object-id]}]
+            (let [job (model/make-print-job
+                       {:id (str (java.util.UUID/randomUUID))
+                        :object-id object-id
+                        :status "complete" ;; FIXME "created"
+                        :created (time/datetime->epoch (time/utc-now))})]
+              (prn :created-job job)
+              (ds/save! job)
+              (api-response req (public-entity job :public-job-keys) 201)))))
+
    (GET "/objects" [:as req]
-        (prn :params (:query-params req))
         (if (valid-api-accept? req)
           (let [[params err] (validate-params (:query-params req) :api :query-objects)]
             (if (nil? err)
@@ -94,35 +150,26 @@
               (api-response req err 400)))
           (invalid-api-response)))
 
-   (POST "/objects" {:keys [params] :as req}
-         (prn :api params)
-         (if (valid-api-accept? req)
-           (let [[params err] (validate-params params :api :new-object)]
-             (if (nil? err)
-               (try
-                 (let [{:strs [tree seed author title parent location]} params
-                       id (str (java.util.UUID/randomUUID))
-                       long-url (str "http://devartcodefactory.com/#/objects/" id)
-                       short-url (shortener/short-url long-url (-> config/app :google :api-key))
-                       entity (model/make-code-tree
-                               {:id id
-                                :parent-id parent
-                                :tree (edn/read-string tree)
-                                :seed seed
-                                :author author
-                                :author-location location
-                                :title title
-                                :short-uri short-url
-                                :created (time/datetime->epoch (time/utc-now))})]
-                   (prn :created-entity (:id entity))
-                   (ds/save! entity)
-                   (api-response req (public-entity entity :public-codetree-keys) 201))
-                 (catch Exception e
-                   (.printStackTrace e)
-                   {:status 500
-                    :body "Error saving tree"}))
-               (api-response req err 400)))
-           (invalid-api-response)))
+   (POST "/objects" [:as req]
+         (new-entity-request
+          req :new-object
+          (fn [req {:strs [tree seed author title parent location]}]
+            (let [id (str (java.util.UUID/randomUUID))
+                  long-url (server-url req "/#/objects" id)
+                  short-url (shortener/short-url long-url (-> config/app :google :api-key))
+                  entity (model/make-code-tree
+                          {:id id
+                           :parent-id parent
+                           :tree (edn/read-string tree)
+                           :seed seed
+                           :author author
+                           :author-location location
+                           :title title
+                           :short-uri short-url
+                           :created (time/datetime->epoch (time/utc-now))})]
+              (prn :created-entity entity)
+              (ds/save! entity)
+              (api-response req (public-entity entity :public-codetree-keys) 201)))))
 
    (GET "/objects/:id" [id :as req]
         (if (valid-api-accept? req)
@@ -137,7 +184,7 @@
 
 (defroutes handlers
   (context "/api/1.0" [] api-v1-handlers)
-  (route/not-found "That's a 404"))
+  (route/not-found "That's a 404 (Resource not found)"))
 
 (def app
   (-> handlers

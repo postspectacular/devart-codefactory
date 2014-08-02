@@ -17,5 +17,19 @@
    stl-created
    video-created
    preview-created
-   parent-id]
+   parent-id
+   job-id]
+  :key :id)
+
+(defentity PrintJob
+  [id
+   object-id
+   status
+   created
+   started
+   user]
+  :key :id)
+
+(defentity PrintLog
+  [id type date message]
   :key :id)
