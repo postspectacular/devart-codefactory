@@ -103,17 +103,22 @@
         (api-response req err 400)))
     (invalid-api-response)))
 
+(defn get-current-job
+  []
+  (let [[job] (ds/query
+               PrintJob
+               :filter [:or [:= :status "printing"] [:= :status "complete"]]
+               :sort [[:created :desc]] ;; FIXME :started
+               :limit 1)
+        object (if job (ds/retrieve CodeTree (:object-id job)))]
+    [job object]))
+
 (def api-v1-handlers
   (routes
 
    (GET "/jobs/current" [:as req]
         (if (valid-api-accept? req)
-          (let [[job] (ds/query PrintJob
-                                :filter [:or
-                                         [:= :status "printing"]
-                                         [:= :status "complete"]]
-                                :sort [[:started :desc]])
-                object (if job (ds/retrieve CodeTree (:object-id job)))]
+          (let [[job object] (get-current-job)]
             (if job
               (api-response
                req
