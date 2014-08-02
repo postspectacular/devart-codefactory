@@ -45,4 +45,4 @@
 
 (defn format-date
   [d]
-  (goog.string/format "%d-%02d-%02d" (.getFullYear d) (.getMonth d) (.getDate d)))
+  (goog.string/format "%d-%02d-%02d" (.getFullYear d) (inc (.getMonth d)) (.getDate d)))
