@@ -26,6 +26,11 @@
   [type f xs]
   (->> xs (map f) (into-array type)))
 
+(defn is-array*
+  [t] (let [t (type (t []))] (fn [x] (instance? t x))))
+
+(def byte-array? (is-array* byte-array))
+
 (defn str-contains?
   [^String str ^String x] (not (neg? (.indexOf str x))))
 
