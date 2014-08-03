@@ -4,7 +4,7 @@
    [java.io ByteArrayInputStream File FileInputStream InputStream PrintWriter]
    [javax.servlet.http HttpServlet HttpServletRequest HttpServletResponse])
   (:require
-   [codefactory.handler :refer [app]]
+   [codefactory.handlers :refer [app]]
    [thi.ng.gae.streams :as streams]))
 
 (set! *warn-on-reflection* true)

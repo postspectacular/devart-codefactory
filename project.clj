@@ -74,4 +74,5 @@
                  :optimizations :advanced}
                 :jar false}]}
 
-  :aot [thi.ng.gae.servlet])
+  :aot :all ;;[thi.ng.gae.servlet]
+  )
