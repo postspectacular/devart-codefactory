@@ -26,7 +26,7 @@
   (gae-entity [_]))
 
 (defprotocol PEntityKeyLookup
-  (entity-key [this] [this parent]))
+  (entity-key [this]))
 
 (extend-protocol PEntityKeyLookup
   Key
@@ -36,16 +36,27 @@
 
 (defn generate-key
   [kind id & [parent]]
-  (let [id (if (number? id) (long id) (str id))
-        pk (when (satisfies? PEntityKeyLookup parent)
-             (entity-key parent))
-        k (KeyFactory/createKey ^Key pk kind id)]
-    ;;(prn :gen-key k :args [kind id parent pk])
-    k))
+  (if (instance? Key id)
+    id
+    (let [id (if (number? id) (long id) (str id))
+          pk (when parent (entity-key parent))
+          k  (if pk
+               (KeyFactory/createKey ^Key pk kind id)
+               (KeyFactory/createKey kind id))]
+      ;; (prn :gen-key k :args [kind id parent pk])
+      k)))
+
+(def resolve-entity-ctor
+  (memoize
+   (fn [ns kind]
+     (->> (util/->kebab-case kind)
+          (str "make-")
+          (symbol ns)))))
 
 (defn as-gae-entity
   [e]
-  (let [e* (Entity. ^Key (entity-key e))
+  (let [key (entity-key e)
+        e* (Entity. ^Key key)
         clj-props (clj-properties e)]
     (doseq [[k v] e]
       (.setProperty e* (name k) (if (clj-props k) (Text. (pr-str v)) v)))
@@ -55,22 +66,22 @@
   ([type e]
      (let [[ns kind] (util/class-name-vec type)]
        (as-entity ns kind e)))
-  ([ns kind e]
-     (let [ctor      (->> (util/->kebab-case kind)
-                          (str "make-")
-                          (symbol ns))
+  ([ns kind ^Entity e]
+     (let [ctor      (resolve-entity-ctor ns kind)
+           ctor      (find-var ctor)
            key       (.getKey e)
            parent    (.getParent e)
-           e'        ((find-var ctor) {} :key key :parent parent)
+           e'        (ctor {} :key key :parent parent)
            clj-props (clj-properties e')]
        (->> e
             (.getProperties)
             (reduce
              (fn [e' [k v]]
-               (let [k (keyword k)]
-                 (assoc e' k (if (clj-props k)
-                               (edn/read-string (.getValue ^Text v))
-                               v))))
+               (let [k (keyword k)
+                     v (if (clj-props k)
+                         (edn/read-string (.getValue ^Text v))
+                         v)]
+                 (assoc e' k v)))
              e')))))
 
 (defn retrieve
@@ -84,12 +95,10 @@
     (catch EntityNotFoundException _)))
 
 (defn save!
-  [e]
-  (.put (datastore-service) ^Entity (gae-entity e))
-  e)
+  [e] (.put (datastore-service) ^Entity (gae-entity e)) e)
 
 (defmacro defentity
-  [name props & {:keys [key parent]}]
+  [name props & {:keys [key]}]
   (let [kind      (str name)
         kind*     (util/->kebab-case kind)
         props     (vec props)
@@ -117,11 +126,9 @@
          (let [e#   (if (map? ~'args)
                       (~map->name ~'args)
                       (apply ~->name ~'args))
-               kn#  (if (fn? ~key)
-                      (~key e#)
-                      (or ~'k (~key e#)))
-               key# (generate-key ~kind kn# (or ~'p ~parent))]
-           (vary-meta e# merge {:key key#}))))))
+               kn#  (if ~key (~key e#) ~'k)
+               key# (generate-key ~kind kn# ~'p)]
+           (vary-meta e# assoc :key key#))))))
 
 (def ^:private filter-ops
   {:=  Query$FilterOperator/EQUAL
