@@ -1,4 +1,5 @@
 (ns thi.ng.gae.services.storage
+  (:refer-clojure :exclude [get])
   (:require
    [clojure.java.io :as io]
    [thi.ng.gae.streams :as streams])
@@ -29,6 +30,13 @@
 
 (defn ^GcsService get-service
   [& [opts]] (GcsServiceFactory/createGcsService (retry-options opts)))
+
+(defn get
+  [service bucket key]
+  (let [key-path (GcsFilename. bucket key)]
+    (-> service
+        (.openPrefetchingReadChannel key-path 0 0x4000)
+        (Channels/newInputStream))))
 
 (defn put!
   [service bucket key data & [opts]]
