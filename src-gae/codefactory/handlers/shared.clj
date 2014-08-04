@@ -17,4 +17,4 @@
 (defn storage-url
   [path]
   (let [{:keys [scheme bucket]} (:storage config/app)]
-    (str (name scheme) bucket path)))
+    (str (name scheme) "://" bucket path)))
