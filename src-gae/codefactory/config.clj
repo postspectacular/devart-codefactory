@@ -11,7 +11,8 @@
    :png  "image/png"
    :jpg  "image/jpeg"
    :text "text/plain"
-   :stl  "application/sla"})
+   :stl  "application/sla"
+   :binary "application/octet-stream"})
 
 (def api-mime-types
   (vals (select-keys mime-types [:edn :json])))
