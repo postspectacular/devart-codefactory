@@ -13,3 +13,8 @@
                base
                (str base ":" server-port))]
     (apply str base (interpose \/ more))))
+
+(defn storage-url
+  [path]
+  (let [{:keys [scheme bucket]} (:storage config/app)]
+    (str (name scheme) bucket path)))

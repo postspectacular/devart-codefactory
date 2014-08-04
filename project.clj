@@ -42,6 +42,7 @@
                  [com.google.appengine/appengine-remote-api "1.9.5"]
                  [com.google.appengine/appengine-api-stubs "1.9.5"]
                  [com.google.appengine/appengine-testing "1.9.5"]
+                 [com.google.appengine.tools/appengine-gcs-client "0.4"]
 
                  ;; CLJS
                  [thi.ng/geom-webgl "0.3.0-SNAPSHOT"]]

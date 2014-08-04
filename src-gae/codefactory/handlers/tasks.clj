@@ -9,6 +9,7 @@
    [thi.ng.morphogen.core :as mg]
    [thi.ng.gae.services.datastore :as ds]
    [thi.ng.gae.services.taskqueue :as task]
+   [thi.ng.gae.services.storage :as store]
    [thi.ng.gae.util :as util]
    [thi.ng.validate.core :as v]
    [compojure.core :refer [routes GET POST]]
@@ -16,7 +17,8 @@
    [simple-time.core :as time]
    [clojure.java.io :as io])
   (:import
-   [java.io ByteArrayOutputStream]))
+   [java.io ByteArrayOutputStream]
+   [codefactory.model CodeTree PrintJob]))
 
 (defn build-stl
   [tree seed-id]
@@ -26,7 +28,7 @@
                    (mg/walk tree)
                    (mg/union-mesh)
                    (g/tessellate))]
-      (with-open [out (ByteArrayOutputStream. 0x10000)]
+      (with-open [out (ByteArrayOutputStream. 0x4000)]
         (mio/write-stl out mesh)
         (.toByteArray out)))
     (prn :error "invalid seed id" seed-id)))
@@ -35,6 +37,23 @@
   (routes
    (POST "/process-object" [:as req]
          (let [{:keys [id tree seed]} (task/get-edn-payload req)
-               stl (build-stl tree seed)]
-           (prn :stl (if stl (alength stl)))
+               stl-bytes (build-stl tree seed)
+               base-path (str "objects/" id "/")
+               stl-path  (str base-path id ".stl")]
+           (when stl-bytes
+             (prn :stl-path stl-path (alength stl-bytes))
+             (try
+               (let [obj (ds/retrieve CodeTree id)
+                     obj (assoc obj
+                           :stl-uri (shared/storage-url stl-path)
+                           :stl-created (time/datetime->epoch (time/utc-now)))]
+                 (prn :update-obj obj)
+                 (store/put!
+                  (store/get-service)
+                  (-> config/app :storage :bucket)
+                  stl-path stl-bytes
+                  {:acl :public-read :mime (:stl config/mime-types)})
+                 (ds/save! obj))
+               (catch Exception e
+                 (prn :warn (.getMessage e)))))
            (resp/response "ok")))))

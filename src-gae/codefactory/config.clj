@@ -16,7 +16,8 @@
    :json "application/json"
    :png  "image/png"
    :jpg  "image/jpeg"
-   :text "text/plain"})
+   :text "text/plain"
+   :stl  "application/sla"})
 
 (def api-mime-types
   (vals (select-keys mime-types [:edn :json])))
@@ -98,5 +99,8 @@
     :public-codetree-keys [:id :parent-id :tree :seed
                            :title :author :created
                            :short-uri :preview-uri :stl-uri]}
+
+   :storage {:scheme :https
+             :bucket "media.devartcodefactory.com"}
 
    :google {:api-key ""}})
