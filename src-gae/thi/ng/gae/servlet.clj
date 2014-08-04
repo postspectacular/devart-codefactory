@@ -1,8 +1,11 @@
 (ns thi.ng.gae.servlet
   (:gen-class :extends javax.servlet.http.HttpServlet)
   (:import
-   [java.io ByteArrayInputStream File FileInputStream InputStream PrintWriter]
-   [javax.servlet.http HttpServlet HttpServletRequest HttpServletResponse])
+   [java.io
+    ByteArrayInputStream File FileInputStream
+    InputStream OutputStream PrintWriter]
+   [javax.servlet.http
+    HttpServlet HttpServletRequest HttpServletResponse])
   (:require
    [codefactory.handlers :refer [app]]
    [thi.ng.gae.streams :as streams]))
@@ -28,7 +31,7 @@
 
   java.io.InputStream
   (set-response-body [_ response]
-    (with-open [^PrintWriter out (.getOutputStream ^HttpServletResponse response)
+    (with-open [^OutputStream out (.getOutputStream ^HttpServletResponse response)
                 ^InputStream in _]
       (streams/copy-stream in out)
       (.flush out)))
@@ -44,9 +47,10 @@
 (extend
     (class (byte-array 0))
   PServletResponseBody
-  {:set-response-body (fn [_ response]
-                        (with-open [in (ByteArrayInputStream. ^"[B" _)]
-                          (set-response-body in response)))})
+  {:set-response-body
+   (fn [_ response]
+     (with-open [in (ByteArrayInputStream. ^"[B" _)]
+       (set-response-body in response)))})
 
 (defn- set-response-headers
   [headers ^HttpServletResponse response]
