@@ -5,6 +5,7 @@
   <servlet>
     <servlet-name>app</servlet-name>
     <servlet-class>thi.ng.gae.servlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
   </servlet>
 
   <servlet-mapping>
