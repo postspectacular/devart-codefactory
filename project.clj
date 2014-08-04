@@ -18,6 +18,7 @@
 
                  [thi.ng/geom-core "0.3.0-SNAPSHOT"]
                  [thi.ng/geom-types "0.3.0-SNAPSHOT"]
+                 [thi.ng/luxor "0.3.0-SNAPSHOT"]
                  [thi.ng/morphogen "0.1.0-SNAPSHOT"]
                  [thi.ng/macromath "0.2.1"]
                  [thi.ng/validate "0.1.0-SNAPSHOT"]

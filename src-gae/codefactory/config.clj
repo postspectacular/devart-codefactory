@@ -1,15 +1,9 @@
 (ns codefactory.config
   (:require
    [codefactory.validate :as cv]
+   [codefactory.geom :as geom]
    [thi.ng.validate.core :as v]
-   [thi.ng.gae.util :as util]
-   [thi.ng.geom.core :as g]
-   [thi.ng.geom.types.utils :as tu]
-   [thi.ng.geom.core.vector :refer [vec3 V3Y V3Z]]
-   [thi.ng.geom.aabb :as a]
-   [thi.ng.geom.cuboid :as cub]
-   [thi.ng.morphogen.core :as mg]
-   [thi.ng.common.math.core :refer [HALF_PI]]))
+   [thi.ng.gae.util :as util]))
 
 (def mime-types
   {:edn  "application/edn"
@@ -25,29 +19,6 @@
 (def api-prefix "/api/1.0")
 
 (def query-result-limit 50)
-
-(def seeds
-  (->>
-   {:box   {:seed (a/aabb 1)}
-    :pent3 {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 5 5 0.25)) (- HALF_PI))}
-    :hex3  {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 6 12 0.25)) (- HALF_PI))}
-    :oct3  {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 8 8 0.25)) (- HALF_PI))}
-    :pent2 {:seed (cub/cuboid (mg/circle-lattice-seg 5 1 0.5))}
-    :hex2  {:seed (cub/cuboid (mg/circle-lattice-seg 6 1 0.5))}
-    :oct2  {:seed (cub/cuboid (mg/circle-lattice-seg 8 1 0.5))}
-    :tri2  {:seed (cub/cuboid (mg/circle-lattice-seg 3 1 0.4))}}
-   (reduce-kv
-    (fn [acc k v]
-      (assoc
-          acc k
-          (update-in
-           v [:seed]
-           #(->> [%]
-                 (tu/fit-all-into-bounds (a/aabb 1))
-                 first
-                 g/center
-                 mg/seed-box))))
-    {})))
 
 (def app
   {:author       "Karsten Schmidt"
@@ -81,6 +52,7 @@
                        (v/max-length 16 (fn [_ v] (subs v 0 16)))]
            "author"   [(v/min-length 3 (constantly "Anonymous"))
                        (v/max-length 16 (fn [_ v] (subs v 0 16)))]
+           "seed"     [(v/member-of (set (map name (keys geom/seeds))))]
            "location" [(v/optional (v/max-length 16))]
            "parent"   [(v/optional (v/uuid4))]}
 

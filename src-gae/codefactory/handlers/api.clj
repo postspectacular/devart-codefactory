@@ -7,6 +7,7 @@
    [thi.ng.gae.services.datastore :as ds]
    [thi.ng.gae.services.url-shortener :as shortener]
    [thi.ng.gae.services.taskqueue :as task]
+   [thi.ng.gae.services.storage :as store]
    [thi.ng.gae.util :as util]
    [thi.ng.validate.core :as v]
    [compojure.core :refer [routes GET POST]]
@@ -165,4 +166,19 @@
                  req (model/public-entity entity :public-codetree-keys) 200)
                 (api-response req {:reason (str "Unknown ID: " id)} 404))
               (api-response req err 400)))
-          (invalid-api-response)))))
+          (invalid-api-response)))
+
+   (GET ["/objects/:id/:type" :type #"(stl|lux)"] [id type :as req]
+        (let [[params err] (validate-params {:id id} :get-object)]
+          (if (nil? err)
+            (if-let [entity (ds/retrieve CodeTree id)]
+              (let [path (str "objects/" id "/" id)
+                    path (condp = type
+                           "stl" (str path ".stl")
+                           "lux" (str path "-lux.zip"))]
+                (-> (store/get-service)
+                    (store/get (-> config/app :storage :bucket) path)
+                    (resp/response)
+                    (resp/content-type (:binary config/mime-types))))
+              (api-response req {:reason (str "Unknown ID: " id)} 404))
+            (api-response req err 400))))))
