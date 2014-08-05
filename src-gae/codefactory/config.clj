@@ -6,12 +6,12 @@
    [thi.ng.gae.util :as util]))
 
 (def mime-types
-  {:edn  "application/edn"
-   :json "application/json"
-   :png  "image/png"
-   :jpg  "image/jpeg"
-   :text "text/plain"
-   :stl  "application/sla"
+  {:edn    "application/edn"
+   :json   "application/json"
+   :png    "image/png"
+   :jpg    "image/jpeg"
+   :text   "text/plain"
+   :stl    "application/sla"
    :binary "application/octet-stream"})
 
 (def api-mime-types
@@ -29,7 +29,6 @@
               :js     ["/js/app.js"]
               :js-ie9 ["https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"
                        "https://oss.maxcdn.com/respond/1.4.2/respond.min.js"]}
-   :tracking ["UA-51939449-1" "devartcodefactory.com"]
    :video {:aspect 1.777777
            :width 1280
            :height 720
@@ -57,14 +56,16 @@
            "location" [(v/optional (v/max-length 16))]
            "parent"   [(v/optional (v/uuid4))]}
 
-          :get-object {:id [(v/required) (v/uuid4)]}
+          :get-object
+          {:id [(v/required) (v/uuid4)]}
 
           :query-objects
           {"limit" [(v/optional (v/number (fn [_ v] (util/parse-int v 25))))
                     (v/optional (v/in-range 1 query-result-limit))]
            "offset" [(v/optional (v/number (fn [_ v] (util/parse-int v 0))))]}
 
-          :new-job {"object-id" [(v/required) (v/uuid4)]}}}
+          :new-job
+          {"object-id" [(v/required) (v/uuid4)]}}}
 
    :db
    {:query-result-limit query-result-limit
@@ -76,4 +77,5 @@
    :storage {:scheme :https
              :bucket "media.devartcodefactory.com"}
 
-   :google {:api-key ""}})
+   :google {:api-key ""
+            :tracking ["UA-51939449-1" "devartcodefactory.com"]}})
