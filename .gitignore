@@ -6,3 +6,4 @@ bower_components
 war-dev
 backup
 appengine-gcs-client
+.DS_Store
