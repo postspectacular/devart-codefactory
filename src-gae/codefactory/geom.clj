@@ -1,44 +1,42 @@
 (ns codefactory.geom
   (:require
    [thi.ng.geom.core :as g]
+   [thi.ng.geom.core.utils :as gu]
    [thi.ng.geom.types.utils :as tu]
-   [thi.ng.geom.core.vector :refer [vec3 V3Y V3Z]]
+   [thi.ng.geom.core.vector :refer [vec2 vec3 V3X]]
+   [thi.ng.geom.core.matrix :as mat :refer [M44 M32]]
    [thi.ng.geom.aabb :as a]
    [thi.ng.geom.cuboid :as cub]
    [thi.ng.geom.mesh.io :as mio]
    [thi.ng.luxor.core :as lux]
    [thi.ng.luxor.io :as luxio]
    [thi.ng.morphogen.core :as mg]
-   [thi.ng.common.math.core :refer [HALF_PI]])
+   [thi.ng.common.math.core :refer [HALF_PI]]
+   [clojure.java.io :as io])
   (:import
    [java.io ByteArrayOutputStream]))
 
-(def seeds
-  (->>
-   {:box   {:seed (a/aabb 1)}
-    :pent3 {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 5 5 0.25)) (- HALF_PI))}
-    :hex3  {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 6 12 0.25)) (- HALF_PI))}
-    :oct3  {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 8 8 0.25)) (- HALF_PI))}
-    :pent2 {:seed (cub/cuboid (mg/circle-lattice-seg 5 1 0.5))}
-    :hex2  {:seed (cub/cuboid (mg/circle-lattice-seg 6 1 0.5))}
-    :oct2  {:seed (cub/cuboid (mg/circle-lattice-seg 8 1 0.5))}
-    :tri2  {:seed (cub/cuboid (mg/circle-lattice-seg 3 1 0.4))}}
-   (reduce-kv
-    (fn [acc k v]
-      (assoc
-          acc k
-          (update-in
-           v [:seed]
-           #(->> [%]
-                 (tu/fit-all-into-bounds (a/aabb 1))
-                 (first)
-                 (g/center)
-                 (mg/seed-box)))))
-    {})))
+(def norm-box (a/aabb (vec3 -0.5) 1))
 
 (defn normalize-mesh
   [mesh]
-  (first (tu/fit-all-into-bounds (a/aabb 1) [mesh])))
+  (first (tu/fit-all-into-bounds norm-box [mesh])))
+
+(def seeds
+  (let [c     #(cub/cuboid (apply mg/circle-lattice-seg %))
+        s     #(g/rotate-z (cub/cuboid (apply mg/sphere-lat %)) (- HALF_PI))
+        seeds {:box   {:seed (a/aabb 1)}
+               :pent3 {:seed (s [5 5 0.25])}
+               :hex3  {:seed (s [6 12 0.25])}
+               :oct3  {:seed (s [8 8 0.25])}
+               :pent2 {:seed (c [5 1 0.5])}
+               :hex2  {:seed (c [6 1 0.5])}
+               :oct2  {:seed (c [8 1 0.5])}
+               :tri2  {:seed (c [3 1 0.4])}}]
+    (reduce-kv
+     (fn [acc k _]
+       (update-in acc [k :seed] #(-> % normalize-mesh mg/seed-box)))
+     seeds seeds)))
 
 (defn generate-mesh
   [tree seed-id]
@@ -48,7 +46,6 @@
         (mg/walk tree)
         (mg/union-mesh)
         (normalize-mesh)
-        (g/center)
         (g/tessellate))
     (prn :error "invalid seed id" seed-id)))
 
