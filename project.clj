@@ -10,10 +10,10 @@
                  [org.clojure/data.json "0.2.5"]
                  [org.clojure/core.async "0.1.303.0-886421-alpha"]
 
-                 [ring/ring-core "1.2.2"]
+                 [ring/ring-core "1.3.0"]
                  [compojure "1.1.8"]
                  [hiccup "1.0.5"]
-                 [camel-snake-kebab "0.1.5"]
+                 [camel-snake-kebab "0.2.1"]
                  [simple-time "0.1.1"]
 
                  [thi.ng/geom-core "0.3.0-SNAPSHOT"]
@@ -37,19 +37,19 @@
                  [commons-el "1.0"]
 
                  ;; GAE standard libs
-                 [com.google.appengine/appengine-api-1.0-sdk "1.9.5"]
-                 [com.google.appengine/appengine-api-labs "1.9.5"]
-                 [com.google.appengine/appengine-tools-sdk "1.9.5"]
-                 [com.google.appengine/appengine-remote-api "1.9.5"]
-                 [com.google.appengine/appengine-api-stubs "1.9.5"]
-                 [com.google.appengine/appengine-testing "1.9.5"]
+                 [com.google.appengine/appengine-api-1.0-sdk "1.9.8"]
+                 [com.google.appengine/appengine-api-labs "1.9.8"]
+                 [com.google.appengine/appengine-tools-sdk "1.9.8"]
+                 [com.google.appengine/appengine-remote-api "1.9.8"]
+                 [com.google.appengine/appengine-api-stubs "1.9.8"]
+                 [com.google.appengine/appengine-testing "1.9.8"]
                  [com.google.appengine.tools/appengine-gcs-client "0.4" :exclusions [commons-logging]]
                  ;;[com.google.apis/google-api-services-compute "v1-rev29-1.19.0" :exclusions [commons-logging]]
 
                  ;; CLJS
                  [thi.ng/geom-webgl "0.3.0-SNAPSHOT"]]
 
-  :profiles {:dev {:dependencies [[org.clojure/clojurescript "0.0-2277"]]
+  :profiles {:dev {:dependencies [[org.clojure/clojurescript "0.0-2280"]]
                    :plugins [[lein-cljsbuild "1.0.3"]
                              ;;[lein-cooper "0.0.1"]
                              ]}}
