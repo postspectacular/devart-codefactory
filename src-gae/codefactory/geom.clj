@@ -1,5 +1,6 @@
 (ns codefactory.geom
   (:require
+   [codefactory.geom.viewfinder :as vf]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.utils :as gu]
    [thi.ng.geom.types.utils :as tu]
@@ -11,7 +12,7 @@
    [thi.ng.luxor.core :as lux]
    [thi.ng.luxor.io :as luxio]
    [thi.ng.morphogen.core :as mg]
-   [thi.ng.common.math.core :refer [HALF_PI]]
+   [thi.ng.common.math.core :as m :refer [HALF_PI SIXTH_PI]]
    [clojure.java.io :as io])
   (:import
    [java.io ByteArrayOutputStream]))
@@ -67,105 +68,19 @@
      (catch Exception e
        (prn :warn-infinity (.getMessage e))))))
 
-(comment
-  (let [h 0.8
-        d 0.584
-        eye (g/* (vec3 -0.05 0.85 2) 1 h d)
-        target (vec3 0)
-        up (gu/ortho-normal (g/- eye target) V3X)]
-    (format "LookAt %1.5f %1.5f %1.5f  %1.5f %1.5f %1.5f  %1.5f %1.5f %1.5f"
-            (:x eye) (:y eye) (:z eye)
-            (:x target) (:y target) (:z target)
-            (:x up) (:y up) (:z up))))
-
-(require
- '[thi.ng.geom.core :as g]
- '[thi.ng.geom.core.utils :as gu]
- '[thi.ng.geom.types.utils :as tu]
- '[thi.ng.geom.core.vector :refer [vec2 vec3 V3X]]
- '[thi.ng.geom.core.matrix :as mat :refer [M44 M32]]
- '[thi.ng.common.math.core :as m])
-
-(defn project
-  [pp m v p vp]
-  (let [p' (g/transform-vector m pp)
-        [x y _ w] (g/transform-vector (g/* p v) (conj p' 1))]
-    ;;(prn x y w)
-    (g/transform-vector vp (g/div (vec2 x y) w))))
-
-(defn make-view
-  [width height]
-  (let [w2 (/ width 2.0) h2 (/ height 2.0)]
-    (-> mat/M32
-        (g/translate w2 h2)
-        (g/* (g/scale mat/M32 w2 (- h2))))))
-
-(defn make-cam
-  [ex ey ez ty]
-  (let [e (vec3 ex ey ez)
-        t (vec3 ex ty 0)]
-    (mat/look-at e t (gu/ortho-normal (g/- e t) V3X))))
-
-(defn scene-bounds
-  [model view proj vp w h d]
-  (let [w' (- w)
-        h' (- h)
-        d' (- d)
-        [[l] [_ b] [r] [_ t]]
-        (mapv
-         #(project % model view proj vp)
-         [(vec3 w' h d')
-          (vec3 w' h' d)
-          (vec3 w h d)
-          (vec3 w h d')])]
-    [l (- 1 r) t (- 1 b)]))
-
-(defn scene-borders-diff
-  [[l r t b]]
-  [(- l r) (- t b)])
-
-(defn compute-view
-  [ex ey ez ty model proj vp w h d]
-  (let [view    (make-cam ex ey ez ty)
-        borders (scene-bounds model view proj vp w h d)
-        diff    (mapv (fn [x] (- x 0.2)) borders)
-        a-diff  (mapv (fn [x] (* x x)) diff)
-        err     (reduce + a-diff)]
-    [borders diff a-diff err]))
-
-(defn refine-view
-  [ex ey ez ty model proj vp w h d]
-  (let [[borders diff a-diff err] (compute-view ex ey ez ty model proj vp w h d)
-        [l r t b] borders
-        [dl dr dt db] diff
-        zoom? (every? (fn [x] (> x 0.001)) a-diff)]
-    (prn diff a-diff err)
-    (if zoom?
-      (do (prn :zoom err) (recur ex (* ey 0.95) (* ez 0.95) (* ty 0.95) model proj vp w h d))
-      (let [[_ _ _ e1] (compute-view ex (+ ey 0.01) ez ty model proj vp w h d)
-            [_ _ _ e2] (compute-view ex (- ey 0.01) ez ty model proj vp w h d)
-            [_ _ _ e3] (compute-view ex ey ez (+ ty 0.01) model proj vp w h d)
-            [_ _ _ e4] (compute-view ex ey ez (- ty 0.01) model proj vp w h d)
-            [emin y] (first (sort-by first [[e1 (+ ey 0.01)] [e2 (- ey 0.01)] [e3 (+ ty 0.01)] [e4 (- ty 0.01)]]))]
-        (if (< emin (* err 0.9999))
-          (if (or (= emin e1) (= emin e2))
-            (recur ex y ez ty model proj vp w h d)
-            (recur ex ey ez y model proj vp w h d))
-          [ex ey ez ty])))))
-
-(def m (g/rotate-y M44 m/SIXTH_PI))
-(def p (mat/perspective 60 1.33333 0.1 10))
-(def vp (make-view 1 1))
-
 (defn generate-lux-scene
   [mesh]
-  (let [bounds (g/bounds mesh)
-        h      (g/height bounds)
-        d      (g/depth bounds)
-        z      (inc (max h d))
-        eye    (g/* (vec3 -0.05 0.85 2) 1 h d)
-        target (vec3 -0.08 0 0)
-        up     (gu/ortho-normal (g/- eye target) V3X)]
+  (let [bounds        (g/bounds mesh)
+        fov           60
+        aspect        1.33333
+        model         (g/rotate-y M44 SIXTH_PI)
+        proj          (mat/perspective fov aspect 0.1 10)
+        vp            (vf/viewport-transform 1 1)
+        [ex ey ez ty] (vf/optimize-view 0 0.85 2 model proj vp bounds)
+        eye           (vec3 ex ey ez)
+        target        (vec3 ex ty 0)
+        up            (gu/ortho-normal (g/- eye target) V3X)]
+    (prn :cam eye :-> target)
     (-> (lux/lux-scene)
         (lux/configure-meshes-as-byte-arrays)
         (lux/renderer-sppm)
@@ -177,7 +92,7 @@
         (lux/tonemap-linear
          {:iso 200 :exposure 0.75 :f-stop 5.6 :gamma 2.2})
         (lux/camera
-         {:eye eye :target target :up up :fov 60
+         {:eye eye :target target :up up :fov fov
           :focal-point (g/mix eye target 0.8) :lens-radius 0.035})
         (lux/light-groups
          {:top {:gain 1} :sides {:gain 0.125}})
@@ -196,7 +111,7 @@
         (lux/stl-mesh
          :bg {:mesh @infinity-curve :tx {:rx -90} :material :dark})
         (lux/stl-mesh
-         :model {:mesh mesh :material :white :tx {:ry 30}})
+         :model {:mesh mesh :material :white :tx {:matrix model}})
         (luxio/serialize-scene "codefactory" false))))
 
 (defn lux->zip-bytes
