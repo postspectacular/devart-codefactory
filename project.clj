@@ -10,7 +10,7 @@
                  [org.clojure/data.json "0.2.5"]
                  [org.clojure/core.async "0.1.303.0-886421-alpha"]
 
-                 [ring/ring-core "1.3.0"]
+                 [ring/ring-core "1.2.2"]
                  [compojure "1.1.8"]
                  [hiccup "1.0.5"]
                  [camel-snake-kebab "0.1.5"]
