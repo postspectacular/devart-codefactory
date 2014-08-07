@@ -39,7 +39,7 @@
     ))
 
 (defn compute-view
-  [mesh ex ey ez ty model proj vtx margin]
+  [mesh model proj vtx ex ey ez ty margin]
   (let [view    (look-at ex ey ez ty)
         borders (scene-bounds mesh model view proj vtx)
         diff    (mapv (fn [x] (- x margin)) borders)]
@@ -48,10 +48,10 @@
 (defn compute-view*
   [mesh model proj vtx margin]
   (fn [ex ey ez ty]
-    (compute-view mesh ex ey ez ty model proj vtx margin)))
+    (compute-view mesh model proj vtx ex ey ez ty margin)))
 
 (defn optimize-x
-  [ex ey ez ty view err]
+  [view ex ey ez ty err]
   (let [delta (* err 0.5)
         x1 (- ex delta)
         x2 (+ ex delta)
@@ -63,11 +63,11 @@
         derr (- err emin)]
     ;;(prn :x err derr d1 d2)
     (if (> derr 0.001)
-      (recur ex' ey ez ty view emin)
+      (recur view ex' ey ez ty emin)
       ex')))
 
 (defn optimize-y
-  [ex ey ez ty view err]
+  [view ex ey ez ty err]
   (let [delta (* err 0.5)
         y1 (- ty delta)
         y2 (+ ty delta)
@@ -79,24 +79,24 @@
         derr (- err emin)]
     ;;(prn :y err derr d1 d2)
     (if (> derr 0.001)
-      (recur ex ey ez ty' view emin)
+      (recur view ex ey ez ty' emin)
       ty')))
 
 (defn optimize-zoom
-  [ex ey ez ty view]
+  [ view ex ey ez ty]
   (let [ey' (* ey 0.95)
         ez' (* ez 0.95)
         diff (view ex ey' ez' ty)]
     ;;(prn :zoom diff)
     (if (and (some (fn [x] (> x 0.05)) diff) (every? (fn [x] (> x -0.05)) diff))
-      (recur ex ey' ez' ty view)
+      (recur view ex ey' ez' ty)
       [ex ey ez ty])))
 
 (defn optimize-view
   [view [ex ey ez ty] iter]
-  (let [ty (optimize-y ex ey ez ty view 1)
-        [_ ey ez] (optimize-zoom ex ey ez ty view)
-        ex (optimize-x ex ey ez ty view 1)
+  (let [ty (optimize-y view ex ey ez ty 1)
+        [_ ey ez] (optimize-zoom view ex ey ez ty)
+        ex (optimize-x view ex ey ez ty 1)
         state [ex ey ez ty]]
     (if (pos? iter)
       (recur view state (dec iter))
