@@ -39,8 +39,9 @@
                   {:acl :public-read :mime (:stl config/mime-types)})
                  (store/put!
                   service bucket
-                  lux-path (-> (geom/generate-lux-scene mesh) (geom/lux->zip-bytes)))
+                  lux-path (-> (geom/generate-lux-scene mesh (-> config/app :lux))
+                               (geom/lux->zip-bytes)))
                  (ds/save! obj))
                (catch Exception e
-                 (prn :warn (.getMessage e)))))
+                 (.printStackTrace e))))
            (resp/response "ok")))))
