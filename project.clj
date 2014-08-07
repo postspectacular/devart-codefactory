@@ -13,7 +13,7 @@
                  [ring/ring-core "1.3.0"]
                  [compojure "1.1.8"]
                  [hiccup "1.0.5"]
-                 [camel-snake-kebab "0.2.1"]
+                 [camel-snake-kebab "0.1.5"]
                  [simple-time "0.1.1"]
 
                  [thi.ng/geom-core "0.3.0-SNAPSHOT"]
@@ -44,7 +44,7 @@
                  [com.google.appengine/appengine-api-stubs "1.9.8"]
                  [com.google.appengine/appengine-testing "1.9.8"]
                  [com.google.appengine.tools/appengine-gcs-client "0.4" :exclusions [commons-logging]]
-                 ;;[com.google.apis/google-api-services-compute "v1-rev29-1.19.0" :exclusions [commons-logging]]
+                 ;;[com.google.apis/google-api-services-compute "v1-rev29-1.18.0-rc" :exclusions [commons-logging]]
 
                  ;; CLJS
                  [thi.ng/geom-webgl "0.3.0-SNAPSHOT"]]
