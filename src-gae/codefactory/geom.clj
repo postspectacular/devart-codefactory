@@ -69,14 +69,13 @@
        (prn :warn-infinity (.getMessage e))))))
 
 (defn generate-lux-scene
-  [mesh]
-  (let [bounds        (g/bounds mesh)
-        fov           60
-        aspect        1.33333
-        model         (g/rotate-y M44 SIXTH_PI)
+  [mesh {:keys [width height fov margin halt-spp]}]
+  (let [aspect        (double (/ width height))
         proj          (mat/perspective fov aspect 0.1 10)
-        vp            (vf/viewport-transform 1 1)
-        [ex ey ez ty] (vf/optimize-view 0 0.85 2 model proj vp bounds)
+        model         (vf/optimize-rotation mesh)
+        vtx           (vf/viewport-transform 1 1)
+        compute-view  (vf/compute-view* mesh model proj vtx margin)
+        [ex ey ez ty] (vf/optimize-view compute-view [0 0.85 2 0] 2)
         eye           (vec3 ex ey ez)
         target        (vec3 ex ty 0)
         up            (gu/ortho-normal (g/- eye target) V3X)]
@@ -88,7 +87,7 @@
         (lux/integrator-sppm {})
         (lux/filter-mitchell {})
         (lux/film
-         {:width 480 :height 360 :halt-spp 100 :display-interval 6})
+         {:width width :height height :halt-spp halt-spp :display-interval 6})
         (lux/tonemap-linear
          {:iso 200 :exposure 0.75 :f-stop 5.6 :gamma 2.2})
         (lux/camera
