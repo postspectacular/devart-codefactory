@@ -41,8 +41,8 @@
     (let [id (if (number? id) (long id) (str id))
           pk (when parent (entity-key parent))
           k  (if pk
-               (KeyFactory/createKey ^Key pk kind id)
-               (KeyFactory/createKey kind id))]
+               (KeyFactory/createKey ^Key pk ^String kind id)
+               (KeyFactory/createKey ^String kind id))]
       ;; (prn :gen-key k :args [kind id parent pk])
       k)))
 
@@ -126,7 +126,7 @@
          (let [e#   (if (map? ~'args)
                       (~map->name ~'args)
                       (apply ~->name ~'args))
-               kn#  (if ~key (~key e#) ~'k)
+               kn#  (if (fn? ~key) (~key e#) (or ~'k (~key e#)))
                key# (generate-key ~kind kn# ~'p)]
            (vary-meta e# assoc :key key#))))))
 
