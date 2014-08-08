@@ -45,3 +45,15 @@
     (prn :chan-opts opts)
     (.createOrReplace service key-path opts (ByteBuffer/wrap data))
     (prn :written key-path (alength data) "bytes")))
+
+(defn get-meta
+  [service bucket key]
+  (let [key-path (GcsFilename. bucket key)
+        meta     (.getMetadata service key-path)
+        opts     (.getOptions meta)]
+    {:path          key-path
+     :length        (.getLength meta)
+     :last-modified (.getLastModified meta)
+     :mime-type     (.getMimeType opts)
+     :acl           (.getAcl opts)
+     :options       opts}))

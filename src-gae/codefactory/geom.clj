@@ -1,9 +1,9 @@
 (ns codefactory.geom
   (:require
+   [codefactory.geom.projection :as proj]
    [codefactory.geom.viewfinder :as vf]
    [codefactory.geom.previewrender-svg :as render]
    [thi.ng.geom.core :as g]
-   [thi.ng.geom.core.utils :as gu]
    [thi.ng.geom.types.utils :as tu]
    [thi.ng.geom.core.vector :refer [vec2 vec3 V3X]]
    [thi.ng.geom.core.matrix :as mat :refer [M44 M32]]
@@ -70,16 +70,13 @@
        (prn :warn-infinity (.getMessage e))))))
 
 (defn generate-lux-scene
-  [mesh {:keys [width height fov margin halt-spp]}]
-  (let [aspect        (double (/ width height))
-        proj          (mat/perspective fov aspect 0.1 10)
-        model         (vf/optimize-rotation mesh)
-        vtx           (vf/viewport-transform 1 1)
-        compute-view  (vf/compute-view* mesh model proj vtx margin)
-        [ex ey ez ty] (vf/optimize-view compute-view [0 0.85 2 0] 2)
-        eye           (vec3 ex ey ez)
-        target        (vec3 ex ty 0)
-        up            (gu/ortho-normal (g/- eye target) V3X)]
+  [mesh {:keys [width height initial-view fov margin halt-spp]}]
+  (let [aspect          (double (/ width height))
+        proj            (mat/perspective fov aspect 0.1 10)
+        model           (vf/optimized-rotation mesh)
+        compute-view    (vf/compute-view-fn mesh model proj margin)
+        view            (vf/optimize-view compute-view initial-view 2)
+        [eye target up] (apply proj/look-at-vectors view)]
     (prn :cam eye :-> target)
     (-> (lux/lux-scene)
         (lux/configure-meshes-as-byte-arrays)
@@ -97,15 +94,13 @@
         (lux/light-groups
          {:top {:gain 1} :sides {:gain 0.125}})
         (lux/area-light
-         :top {:p [0 3 0] :n [0 -1 0] :size 2 :group :top})
+         :top {:p [0 3 0.33] :n [0 -1 -0.1] :size 1 :group :top})
         (lux/area-light
          :left {:p [-3 0.5 0] :n [1 -0.1 0] :size 0.5 :group :sides})
         (lux/area-light
          :right {:p [3 0.5 0] :n [-1 -0.1 0] :size 0.5 :group :sides})
         (lux/material-matte
          :dark {:diffuse [0.01 0.01 0.0105]})
-        ;;(lux/material-mirror :mirror {})
-        ;;(lux/material-mix :dark-mirror :dark :mirror 0.2)
         (lux/material-matte
          :white {:diffuse [0.8 0.8 0.8]})
         (lux/stl-mesh
@@ -121,13 +116,12 @@
     (.toByteArray out)))
 
 (defn render-preview
-  [mesh {:keys [width height fov margin attribs]}]
+  [mesh {:keys [width height initial-view fov margin attribs]}]
   (let [aspect        (double (/ width height))
         proj          (mat/perspective fov aspect 0.1 10)
-        model         (vf/optimize-rotation mesh)
-        vtx           (vf/viewport-transform 1 1)
-        compute-view  (vf/compute-view* mesh model proj vtx margin)
-        view          (apply vf/look-at (vf/optimize-view compute-view [0 0.85 2 0] 2))]
+        model         (vf/optimized-rotation mesh)
+        compute-view  (vf/compute-view-fn mesh model proj margin)
+        view          (apply proj/look-at (vf/optimize-view compute-view initial-view 2))]
     (-> mesh
         (render/render-mesh model view proj width height attribs)
         (render/svg->bytes))))

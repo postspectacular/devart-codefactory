@@ -32,12 +32,14 @@
                        "https://oss.maxcdn.com/respond/1.4.2/respond.min.js"]}
    :lux {:width 480
          :height 360
+         :initial-view [0 0.85 2 0]
          :fov 60
          :margin 0.2
          :halt-spp 100}
 
    :preview {:width 480
              :height 360
+             :initial-view [0 0.85 2 0]
              :fov 45
              :margin 0.2
              :attribs {:style  "background:#333336;"
