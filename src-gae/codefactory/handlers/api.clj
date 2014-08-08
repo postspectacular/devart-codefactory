@@ -168,14 +168,15 @@
               (api-response req err 400)))
           (invalid-api-response)))
 
-   (GET ["/objects/:id/:type" :type #"(stl|lux)"] [id type :as req]
+   (GET ["/objects/:id/:type" :type #"(stl|preview|lux)"] [id type :as req]
         (let [[params err] (validate-params {:id id} :get-object)]
           (if (nil? err)
             (if-let [entity (ds/retrieve CodeTree id)]
               (let [path (str "objects/" id "/" id)
                     path (condp = type
-                           "stl" (str path ".stl")
-                           "lux" (str path "-lux.zip"))]
+                           "stl"     (str path ".stl")
+                           "preview" (str path ".svg")
+                           "lux"     (str path "-lux.zip"))]
                 (-> (store/get-service)
                     (store/get (-> config/app :storage :bucket) path)
                     (resp/response)

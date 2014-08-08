@@ -1,6 +1,7 @@
 (ns codefactory.geom
   (:require
    [codefactory.geom.viewfinder :as vf]
+   [codefactory.geom.previewrender-svg :as render]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.utils :as gu]
    [thi.ng.geom.types.utils :as tu]
@@ -118,3 +119,15 @@
   (with-open [out (ByteArrayOutputStream. 0x20000)]
     (luxio/export-archived-scene scene out)
     (.toByteArray out)))
+
+(defn render-preview
+  [mesh {:keys [width height fov margin attribs]}]
+  (let [aspect        (double (/ width height))
+        proj          (mat/perspective fov aspect 0.1 10)
+        model         (vf/optimize-rotation mesh)
+        vtx           (vf/viewport-transform 1 1)
+        compute-view  (vf/compute-view* mesh model proj vtx margin)
+        view          (apply vf/look-at (vf/optimize-view compute-view [0 0.85 2 0] 2))]
+    (-> mesh
+        (render/render-mesh model view proj width height attribs)
+        (render/svg->bytes))))

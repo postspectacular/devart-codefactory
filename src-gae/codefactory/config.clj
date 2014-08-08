@@ -10,6 +10,7 @@
    :json   "application/json"
    :png    "image/png"
    :jpg    "image/jpeg"
+   :svg    "image/svg+xml"
    :text   "text/plain"
    :stl    "application/sla"
    :binary "application/octet-stream"})
@@ -34,7 +35,16 @@
          :fov 60
          :margin 0.2
          :halt-spp 100}
-   
+
+   :preview {:width 480
+             :height 360
+             :fov 45
+             :margin 0.2
+             :attribs {:style  "background:#333336;"
+                       :fill   "rgba(255,255,255,0.1)" ;; "none"
+                       :stroke "white"
+                       :stroke-width 0.25}}
+
    :video {:aspect 1.777777
            :width 1280
            :height 720

@@ -26,17 +26,23 @@
              (try
                (let [base-path (str "objects/" id "/")
                      stl-path  (str base-path id ".stl")
+                     svg-path  (str base-path id ".svg")
                      lux-path  (str base-path id "-lux.zip")
                      obj       (ds/retrieve CodeTree id)
                      obj       (assoc obj
                                  :stl-uri (shared/storage-url (str "/" stl-path))
-                                 :stl-created (time/datetime->epoch (time/utc-now)))
+                                 :stl-created (time/datetime->epoch (time/utc-now))
+                                 :preview-uri (shared/storage-url (str "/" svg-path)))
                      service   (store/get-service)
                      bucket    (-> config/app :storage :bucket)]
                  (store/put!
                   service bucket
                   stl-path (geom/mesh->stl-bytes mesh)
                   {:acl :public-read :mime (:stl config/mime-types)})
+                 (store/put!
+                  service bucket
+                  svg-path (geom/render-preview mesh (-> config/app :preview))
+                  {:acl :public-read :mime (:svg config/mime-types)})
                  (store/put!
                   service bucket
                   lux-path (-> (geom/generate-lux-scene mesh (-> config/app :lux))
