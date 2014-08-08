@@ -90,14 +90,13 @@
   (let [doc (.-documentElement js/document)]
     (cond
      (.-requestFullscreen doc) (.requestFullscreen doc)
-     (.-mozRequestFullscreen doc) (.mozRequestFullscreen doc)
+     (.-mozRequestFullScreen doc) (.mozRequestFullScreen doc)
      (.-webkitRequestFullscreen doc) (.webkitRequestFullscreen doc)
      (.-msRequestFullscreen doc) (.msRequestFullscreen doc)
      :default nil)))
 
 (defn match-media
-  [q]
-  (.-matches (.matchMedia js/window q)))
+  [q] (.-matches (.matchMedia js/window q)))
 
 (defn parent
   [el] (.-parentElement el))
