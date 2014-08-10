@@ -42,10 +42,10 @@
              :initial-view [0 0.85 2 0]
              :fov 45
              :margin 0.2
-             :attribs {:style  "background:#333336;"
-                       :fill   "rgba(255,255,255,0.1)" ;; "none"
-                       :stroke "white"
-                       :stroke-width 0.25}}
+             :attribs {}
+             :shader  {:fill         "#999999"
+                       :stroke       "white"
+                       :stroke-width 0.5}}
 
    :video {:aspect 1.777777
            :width 1280

@@ -1,10 +1,8 @@
 (ns codefactory.geom.viewfinder
   (:require
-   [codefactory.geom.projection :as proj]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.types.utils :as tu]
-   [thi.ng.geom.core.vector :refer [vec2 vec3 V3X]]
-   [thi.ng.geom.core.matrix :as mat :refer [M44 M32]]
+   [thi.ng.geom.core.matrix :as mat :refer [M44]]
    [thi.ng.geom.rect :as r]
    [thi.ng.common.math.core :as m]
    [clojure.java.io :as io])
@@ -12,25 +10,25 @@
    [java.io ByteArrayOutputStream]))
 
 (defn scene-bounds
-  [mesh model view proj vtx]
+  [mesh model view proj screen]
   (let [mvp    (g/* proj (g/* view model))
-        points (map (fn [p] (proj/project-point p mvp vtx)) (g/vertices mesh))
+        points (mapv (fn [p] (mat/project-point p mvp screen)) (g/vertices mesh))
         b      (tu/bounding-rect points)]
     [(r/left b) (- 1 (r/right b)) (r/bottom b) (- 1 (r/top b))]
     ))
 
 (defn compute-view
-  [mesh model proj vtx ex ey ez ty margin]
-  (let [view    (proj/look-at ex ey ez ty)
-        borders (scene-bounds mesh model view proj vtx)
+  [mesh model proj screen ex ey ez ty margin]
+  (let [view    (apply mat/look-at (mat/look-at-vectors ex ey ez ex ty 0))
+        borders (scene-bounds mesh model view proj screen)
         diff    (mapv (fn [x] (- x margin)) borders)]
     diff))
 
 (defn compute-view-fn
   [mesh model proj margin]
-  (let [vtx (proj/viewport-transform 1 1)]
+  (let [screen (mat/viewport-transform 1 1)]
     (fn [ex ey ez ty]
-      (compute-view mesh model proj vtx ex ey ez ty margin))))
+      (compute-view mesh model proj screen ex ey ez ty margin))))
 
 (defn optimize-x
   [view ex ey ez ty err]

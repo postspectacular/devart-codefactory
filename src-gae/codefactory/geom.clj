@@ -1,15 +1,14 @@
 (ns codefactory.geom
   (:require
-   [codefactory.geom.projection :as proj]
    [codefactory.geom.viewfinder :as vf]
-   [codefactory.geom.previewrender-svg :as render]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.types.utils :as tu]
    [thi.ng.geom.core.vector :refer [vec2 vec3 V3X]]
-   [thi.ng.geom.core.matrix :as mat :refer [M44 M32]]
+   [thi.ng.geom.core.matrix :as mat]
    [thi.ng.geom.aabb :as a]
    [thi.ng.geom.cuboid :as cub]
    [thi.ng.geom.mesh.io :as mio]
+   [thi.ng.geom.svg.core :as svg]
    [thi.ng.luxor.core :as lux]
    [thi.ng.luxor.io :as luxio]
    [thi.ng.morphogen.core :as mg]
@@ -47,24 +46,23 @@
     (-> seed
         (mg/walk tree)
         (mg/union-mesh)
-        (normalize-mesh)
-        (g/tessellate))
+        (normalize-mesh))
     (prn :error "invalid seed id" seed-id)))
 
 (defn mesh->stl-bytes
   [mesh]
   (with-open [out (ByteArrayOutputStream. 0x10000)]
-    (mio/write-stl out mesh)
+    (mio/write-stl out (g/tessellate mesh))
     (.toByteArray out)))
 
 (def infinity-curve
   (delay
    (try
      (let [res (io/resource "infinity-curve-2.stl")]
-       (prn :resource res)
+       (prn :infinity res)
        (with-open [in (io/input-stream res)]
          (let [mesh (mio/read-stl in)]
-           (prn :infinity (count (g/faces mesh)))
+           (prn :faces (count (g/faces mesh)))
            mesh)))
      (catch Exception e
        (prn :warn-infinity (.getMessage e))))))
@@ -75,8 +73,8 @@
         proj            (mat/perspective fov aspect 0.1 10)
         model           (vf/optimized-rotation mesh)
         compute-view    (vf/compute-view-fn mesh model proj margin)
-        view            (vf/optimize-view compute-view initial-view 2)
-        [eye target up] (apply proj/look-at-vectors view)]
+        [ex ey ez ty]   (vf/optimize-view compute-view initial-view 2)
+        [eye target up] (mat/look-at-vectors ex ey ez ex ty 0)]
     (prn :cam eye :-> target)
     (-> (lux/lux-scene)
         (lux/configure-meshes-as-byte-arrays)
@@ -116,12 +114,16 @@
     (.toByteArray out)))
 
 (defn render-preview
-  [mesh {:keys [width height initial-view fov margin attribs]}]
+  [mesh {:keys [width height initial-view fov margin attribs shader]}]
   (let [aspect        (double (/ width height))
         proj          (mat/perspective fov aspect 0.1 10)
         model         (vf/optimized-rotation mesh)
         compute-view  (vf/compute-view-fn mesh model proj margin)
-        view          (apply proj/look-at (vf/optimize-view compute-view initial-view 2))]
-    (-> mesh
-        (render/render-mesh model view proj width height attribs)
-        (render/svg->bytes))))
+        [ex ey ez ty] (vf/optimize-view compute-view initial-view 2)
+        view          (apply mat/look-at (mat/look-at-vectors ex ey ez ex ty 0))
+        mvp           (->> model (g/* view) (g/* proj))
+        screen        (mat/viewport-transform width height)]
+    (->> (svg/svg
+          (assoc attribs :width width :height height)
+          (svg/mesh-hidden-lines mesh mvp screen shader))
+         (svg/serialize-as-byte-array))))

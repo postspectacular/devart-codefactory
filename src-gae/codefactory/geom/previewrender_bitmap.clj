@@ -1,6 +1,7 @@
 (ns codefactory.geom.previewrender-bitmap
   (:require
    [thi.ng.geom.core :as g]
+   [thi.ng.geom.core.matrix :as mat]
    [codefactory.geom.viewfinder :as vf])
   (:import
    [java.io ByteArrayOutputStream]
@@ -39,14 +40,14 @@
 (defn draw-mesh
   [gfx mesh mvp vtx]
   (doseq [f (g/faces mesh)]
-    (draw-triangle gfx (map (fn [p] (vf/project-point p mvp vtx)) f))))
+    (draw-triangle gfx (mapv #(mat/project-point % mvp vtx) f))))
 
 (defn render-mesh
   [mesh model view proj width height]
   (let [img (make-image width height)
         gfx (.getGraphics img)
         mvp (g/* proj (g/* view model))
-        vtx (vf/viewport-transform width height)]
+        vtx (mat/viewport-transform width height)]
     (doto gfx
       (clear-image width height)
       (.setStroke (BasicStroke. 1))
