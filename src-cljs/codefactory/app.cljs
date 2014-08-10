@@ -4,6 +4,7 @@
   (:require
    [codefactory.config :as config]
    [codefactory.home :as home]
+   [codefactory.gallery :as gallery]
    [codefactory.editor :as editor]
    [codefactory.selector :as selector]
    [codefactory.object-loader :as obj]
@@ -19,6 +20,16 @@
    [thi.ng.cljs.detect :as detect]
    [goog.events :as events]
    [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
+
+(def module-initializers
+  {:home          home/init
+   :gallery       gallery/init
+   :selector      selector/init
+   :editor        editor/init
+   :object-loader obj/init
+   :submit        submit/init
+   :thanks        thanks/init
+   :about         about/init})
 
 (defn transition-dom
   [a b]
@@ -77,13 +88,10 @@
   [bus state]
   (listen-dom bus)
   (let [{:keys [modules routes default-route]} config/app]
-    (when (:home modules)          (home/init bus))
-    (when (:selector modules)      (selector/init bus))
-    (when (:editor modules)        (editor/init bus))
-    (when (:object-loader modules) (obj/init bus))
-    (when (:submit modules)        (submit/init bus))
-    (when (:thanks modules)        (thanks/init bus))
-    (when (:about modules)         (about/init bus))
+    (doseq [[id init] module-initializers]
+      (when (modules id)
+        (debug :init-module id)
+        (init bus)))
     (init-router bus state routes default-route)))
 
 (defn init-fallback
@@ -111,20 +119,20 @@
    :uri (config/api-route :credits)
    :method :get
    :edn? true
-   :success (fn [_ body]
-              ;;(info :success-credits body)
-              (let [{:keys [title author id created preview-uri]} (-> body :body :object)
-                    preview-uri (or preview-uri (-> config/app :home :default-bg))]
-                (swap!
-                 state assoc :credits
-                 {:title title
-                  :author author
-                  :id id
-                  :date (utils/format-date (js/Date. created))})
-                (load-featured-image bus preview-uri)))
-   :error   (fn [_ body]
-              ;;(warn :error-credits body)
-              (load-featured-image bus (-> config/app :home :default-bg)))))
+   :success
+   (fn [_ body]
+     (let [{:keys [title author id created preview-uri]} (-> body :body :object)
+           preview-uri (or preview-uri (-> config/app :home :default-bg))]
+       (swap!
+        state assoc :credits
+        {:title title
+         :author author
+         :id id
+         :date (utils/format-date (js/Date. created))})
+       (load-featured-image bus preview-uri)))
+   :error
+   (fn [_ body]
+     (load-featured-image bus (-> config/app :home :default-bg)))))
 
 (defn check-requirements
   []

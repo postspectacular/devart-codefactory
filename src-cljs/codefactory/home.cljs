@@ -23,10 +23,13 @@
 
 (defn init-button-bar
   []
-  ;; TODO enable gallery button
   (dom/add-listeners
-   [[(config/dom-component :home-continue) "click"
-     #(route/set-route! "select")]]))
+   (cond->
+    [[(config/dom-component :home-continue) "click"
+      #(route/set-route! "select")]]
+    (config/module-enabled? :gallery)
+    (conj [(config/dom-component :home-gallery) "click"
+           #(route/set-route! "gallery")]))))
 
 (defn show-credits
   [{:keys [title author date]}]

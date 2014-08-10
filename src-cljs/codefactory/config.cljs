@@ -69,12 +69,13 @@
 
 (def ^:export default-config
   {:modules
-   {:home true
-    :selector true
-    :editor true
-    :submit true
-    :thanks true
-    :about true
+   {:home          true
+    :gallery       true
+    :selector      true
+    :editor        true
+    :submit        true
+    :thanks        true
+    :about         true
     :object-loader true}
 
    :min-window-size [480 600]
@@ -255,10 +256,8 @@
     #_{:match ["gallery" :page]
        :bindings {:page {:coerce utils/parse-int :validate [(v/number) (v/pos)]}}
        :controller :gallery}
-    #_{:match ["gallery"]
-       :controller :gallery}
-    #_{:match ["login"]
-       :controller :login}]
+    {:match ["gallery"] :controller :gallery}
+    #_{:match ["login"] :controller :login}]
 
    :routes-unsupported
    [{:match ["not-supported"]
@@ -290,6 +289,7 @@
 
    :dom-components
    {:home-continue    "home-continue"
+    :home-gallery     "home-gallery"
     :fullscreen       "fs-toggle"
     :seed-canvas      "seed-canvas"
     :edit-canvas      "edit-canvas"
@@ -314,6 +314,8 @@
     :object-url       "art-url"
     :object-error     "object-error"
     :object-loader    "object-load-progress"
+    :gallery-main     "gallery-items"
+    :gallery-cancel   "gallery-cancel"
     }
 
    :timeouts
@@ -329,7 +331,8 @@
     :routes
     (->> {:get-object "objects/"
           :submit-object "objects"
-          :credits "jobs/current"}
+          :credits "jobs/current"
+          :gallery "objects?offset="}
          (reduce-kv
           (fn [acc k v] (assoc acc k (str api-prefix v)))
           {}))}
@@ -346,7 +349,9 @@
 (def ^:export barbican
   (deep-merge
    app
-   {:timeouts {:editor (* 2 60 1000)}
+   {:modules {:gallery false}
+    
+    :timeouts {:editor (* 2 60 1000)}
 
     :api {:inject {:location "barbican"}}
 
@@ -372,9 +377,9 @@
 (def ^:export staging
   (deep-merge
    barbican
-   {:about {:links-clickable? true}
-    :thanks {:link-clickable? true}
-    }))
+   {:modules {:gallery true}
+    :about   {:links-clickable? true}
+    :thanks  {:link-clickable? true}}))
 
 (defn set-config!
   [sym] (set! app (js/eval (aget js/window sym))))
@@ -412,3 +417,6 @@
 
 (defn transition
   [a b] ((:dom-transitions app) [a b]))
+
+(defn module-enabled?
+  [id] (-> app :modules id))
