@@ -75,7 +75,7 @@
   [gl meshes root incl-root?]
   (let [d-meshes (select-sub-paths meshes root)
         d-meshes (if incl-root? (conj d-meshes [root (meshes root)]) d-meshes)
-        meshes (apply dissoc meshes (keys d-meshes))]
+        meshes   (apply dissoc meshes (keys d-meshes))]
     (webgl/delete-meshes gl (vals d-meshes))
     meshes))
 
@@ -92,7 +92,8 @@
             [min-w max-p] (if (< w' min-w) [w' path] [min-w max-p])]
         (loop [i 0, min-w min-w, max-p max-p]
           (if (< i n)
-            (let [[min-w max-p] (compute-densest-branch tree (conj path i) w' min-w max-p)]
+            (let [[min-w max-p] (compute-densest-branch
+                                 tree (conj path i) w' min-w max-p)]
               (recur (inc i) min-w max-p))
             [min-w max-p])))
       [min-w max-p])))
@@ -122,6 +123,20 @@
           (or (= path sel) (= :leaf (mg/classify-node-at tree path)))))
        (into {})))
 
+(defn compute-branch-meshes
+  [gl branch]
+  (->> branch
+       (reduce
+        (fn [acc [path node]]
+          (assoc!
+           acc path
+           (->> node
+                (g/faces)
+                (g/into (bm/basic-mesh))
+                (webgl/mesh-buffer gl))))
+        (transient meshes))
+       (persistent!)))
+
 (defn update-meshes
   [state incl-sel?]
   (let [{:keys [gl tree node-cache selection meshes]} state
@@ -134,17 +149,7 @@
         branch (->> path
                     (mg/compute-tree-map* root sub-tree (transient {}))
                     (persistent!))
-        meshes (->> branch
-                    (reduce
-                     (fn [acc [path node]]
-                       (assoc!
-                        acc path
-                        (->> node
-                             (g/faces)
-                             (g/into (bm/basic-mesh))
-                             (webgl/mesh-buffer gl))))
-                     (transient meshes))
-                    (persistent!))
+        meshes (compute-branch-meshes gl branch)
         node-cache (merge node-cache branch)
         selection (if-not (and incl-sel? (nil? sub-tree)) selection)]
     (debug :ct (keys node-cache) :meshes (keys meshes))
