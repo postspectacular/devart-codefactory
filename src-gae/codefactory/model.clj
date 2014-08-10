@@ -13,6 +13,7 @@
 (defentity CodeTree
   [id title author
    ^:clj tree
+   tree-depth
    seed
    author-location
    short-uri
