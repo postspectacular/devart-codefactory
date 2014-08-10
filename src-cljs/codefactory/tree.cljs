@@ -124,7 +124,7 @@
        (into {})))
 
 (defn compute-branch-meshes
-  [gl branch]
+  [gl meshes branch]
   (->> branch
        (reduce
         (fn [acc [path node]]
@@ -149,7 +149,7 @@
         branch (->> path
                     (mg/compute-tree-map* root sub-tree (transient {}))
                     (persistent!))
-        meshes (compute-branch-meshes gl branch)
+        meshes (compute-branch-meshes gl meshes branch)
         node-cache (merge node-cache branch)
         selection (if-not (and incl-sel? (nil? sub-tree)) selection)]
     (debug :ct (keys node-cache) :meshes (keys meshes))
