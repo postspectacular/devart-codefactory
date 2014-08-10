@@ -59,11 +59,8 @@
   (delay
    (try
      (let [res (io/resource "infinity-curve-2.stl")]
-       (prn :infinity res)
        (with-open [in (io/input-stream res)]
-         (let [mesh (mio/read-stl in)]
-           (prn :faces (count (g/faces mesh)))
-           mesh)))
+         (mio/read-stl in)))
      (catch Exception e
        (prn :warn-infinity (.getMessage e))))))
 
