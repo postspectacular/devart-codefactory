@@ -6,6 +6,20 @@
 @import "anim.less";
 @import "forms.less";
 
+body, div, span, p {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+
+    &::-moz-selection {
+        background: transparent;
+    }
+}
+
 body {
     background-color: @col-bg;
     color: @col-text;
@@ -16,11 +30,6 @@ body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -o-user-select: none;
-    user-select: none;
 }
 
 h1, h2 {
@@ -191,9 +200,18 @@ svg.generic {
 
         >div { .flexbox(1 33%); }
     }
+
+    .buttonbar { height: 80px; }
 }
 
 #bt-info { float: left; margin-right: 10px; }
+
+#gallery-items {
+    .flex(row wrap);
+
+    div { width: 320px; }
+    img { width: 320px; }
+}
 
 #about .body-wrapper {
     div { margin: auto; text-align: center; }
