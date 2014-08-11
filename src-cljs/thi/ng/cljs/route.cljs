@@ -8,10 +8,17 @@
 (defn get-route
   [] (-> js/window (.-location) (.-hash) (.split "/") (.slice 1)))
 
+(defn format-route
+  [id & params]
+  (apply str (interpose "/" (into ["#" (name id)] params))))
+
 (defn set-route!
   [id & params]
-  (let [hash (apply str (interpose "/" (into ["#" (name id)] params)))]
-    (set! (.-hash (.-location js/window)) hash)))
+  (set! (.-hash (.-location js/window)) (apply format-route id params)))
+
+(defn replace-route!
+  [id & params]
+  (.replace (.-location js/window) (apply format-route id params)))
 
 (defn match-route*
   [curr route]

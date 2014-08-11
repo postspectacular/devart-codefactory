@@ -30,7 +30,7 @@
               (let [tree (if (string? tree) (read-string tree) tree)
                     seed (or seed "box")]
                 (async/publish bus :broadcast-tree [tree (keyword seed)])
-                (go (<! (timeout 1000)) (route/set-route! "objects" "edit" seed))))
+                (go (<! (timeout 1000)) (route/replace-route! "objects" "edit" seed))))
    :error   (fn [status body]
               (warn :response body)
               (toggle-error true))))
@@ -40,7 +40,7 @@
   (let [init (async/subscribe bus :init-object-loader)]
 
     (dom/add-listeners
-     [["#object-restart" "click" (fn [] (route/set-route! "home"))]])
+     [["#object-restart" "click" (fn [] (route/replace-route! "home"))]])
     
     (go
       (loop []
