@@ -10,6 +10,7 @@
    [thi.ng.cljs.utils :as utils]
    [thi.ng.cljs.io :as io]
    [thi.ng.cljs.dom :as dom]
+   [hiccups.runtime :as h]
    [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
 
 (defn init-fullscreen-button
@@ -40,14 +41,18 @@
               (warn :response body))))
 
 (defn gallery-item
-  [{:keys [id title author preview-uri stl-uri]} parent]
+  [{:keys [id title author created preview-uri stl-uri]} parent]
   (let [src (str "/api/1.0/objects/" id "/preview")
         edit-uri (str "#/objects/" id)
-        item (dom/create! "div" parent)
-        link (dom/create! "a" item {:href edit-uri})
-        img  (dom/create! "img" link {:src src})
-        credits (dom/create! "div" item)]
-    (dom/set-html! credits (str title " by " author))))
+        item (dom/create! "div" parent)]
+    (dom/set-html!
+     item
+     (h/render-html
+      (list
+       [:a {:href edit-uri} [:img {:src src}]]
+       [:div.credits
+        [:span (str title " by " author)]
+        [:span (utils/format-date-time (js/Date. created))]])))))
 
 (defn build-gallery
   [objects]
@@ -75,7 +80,7 @@
     (init-fullscreen-button)
     (init-button-bar)
     (handle-refresh refresh bus local)
-    
+
     (go
       (loop []
         (let [[_ [state params]] (<! init)]
