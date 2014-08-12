@@ -119,8 +119,20 @@
         [ex ey ez ty] (vf/optimize-view compute-view initial-view 2)
         view          (apply mat/look-at (mat/look-at-vectors ex ey ez ex ty 0))
         mvp           (->> model (g/* view) (g/* proj))
-        screen        (mat/viewport-transform width height)]
+        screen        (mat/viewport-transform width height)
+        shader        (svg/shader
+                       {:fill     (svg/phong
+                                   {:model model
+                                    :view      view
+                                    :light-pos [-1 2 2]
+                                    :light-col [1 1 1]
+                                    :diffuse   [0.8 0.8 0.83]
+                                    :ambient   0.1
+                                    :specular  0.8
+                                    :shininess 4})
+                        :uniforms {:stroke "white" :stroke-width 0.5}
+                        :flags    {:solid true}})]
     (->> (svg/svg
           (assoc attribs :width width :height height)
-          (svg/mesh-hidden-lines mesh mvp screen shader))
+          (svg/mesh mesh mvp screen shader))
          (svg/serialize-as-byte-array))))
