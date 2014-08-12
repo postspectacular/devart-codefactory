@@ -5,6 +5,9 @@
    [thi.ng.cljs.utils :as utils]
    [clojure.string :as str]))
 
+(defn set-location!
+  [url] (set! (.-location js/window) url))
+
 (defn get-route
   [] (-> js/window (.-location) (.-hash) (.split "/") (.slice 1)))
 

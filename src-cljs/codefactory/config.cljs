@@ -90,6 +90,10 @@
    {:default-bg "/img/renders/20140701.jpg"
     :credits nil}
 
+   :gallery
+   {:buttons {:edit     true
+              :download true}}
+   
    :about
    {:icon-size [64 64]
     :links-clickable? true}
@@ -332,7 +336,7 @@
     (->> {:get-object "objects/"
           :submit-object "objects"
           :credits "jobs/current"
-          :gallery "objects?offset="}
+          :gallery "objects?limit=15&offset="}
          (reduce-kv
           (fn [acc k v] (assoc acc k (str api-prefix v)))
           {}))}
@@ -350,6 +354,8 @@
   (deep-merge
    app
    {:modules {:gallery false}
+
+    :gallery {:buttons {:download false}}
     
     :timeouts {:editor (* 2 60 1000)}
 

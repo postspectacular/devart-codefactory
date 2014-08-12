@@ -212,6 +212,38 @@ svg.generic {
     div { width: 320px; font-size: @app-font-size; }
     img { width: 320px; }
     span { display: block; }
+
+    .obj-preview {
+        width: 320px;
+        height: 240px;
+        background-size: cover;
+    }
+
+    .obj-overlay {
+        width: 320px;
+        height: 240px;
+        background: rgba(51,51,54,0.8);
+        .flex(column nowrap);
+        .flex-justify(center);
+        text-align: center;
+        visibility: hidden;
+
+        -webkit-animation-duration: 0.5s;
+        animation-duration: 0.5s;
+        -webkit-animation-fill-mode: both;
+        animation-fill-mode: both;
+
+        input[type=button] {
+            width: 66%;
+            margin: 10px auto;
+        }
+    }
+
+    div.loading {
+        margin: auto;
+        text-transform: uppercase;
+        img { width: 48px; }
+    }
 }
 
 #about .body-wrapper {
@@ -431,4 +463,25 @@ svg.generic {
     font-size: @font-size-body;
 
     div { margin-top: 0.5em; }
+}
+
+.fade-top {
+    position: fixed;
+    width: 100%;
+    height: 36px;
+    top: 52px;
+    left: 0px;
+    z-index: 1000;
+    background-image: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0, rgba(51, 51, 54, 1.0)),
+        color-stop(1, rgba(51, 51, 54, 0.0))
+    );
+    background-image: -o-linear-gradient(top, rgba(51, 51, 54, 0.0) 0%, rgb(51, 51, 54, 1.0) 100%);
+    background-image: -moz-linear-gradient(top, rgba(51, 51, 54, 0.0) 0%, rgb(51, 51, 54, 1.0) 100%);
+    background-image: -webkit-linear-gradient(top, rgba(51, 51, 54, 0.0) 0%, rgb(51, 51, 54, 1.0) 100%);
+    background-image: -ms-linear-gradient(top, rgba(51, 51, 54, 0.0) 0%, rgb(51, 51, 54, 1.0) 100%);
+    background-image: linear-gradient(to top, rgba(51, 51, 54, 0.0) 0%, rgb(51, 51, 54, 1.0) 100%);
 }
