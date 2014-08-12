@@ -202,14 +202,9 @@ div.tool {
     div {
         position: fixed;
         overflow: hidden;
-        display: -webkit-flex;
-        display: -moz-flex;
-        display: flex;
-        -webkit-flex-flow: column nowrap;
-        -moz-flex-flow: column nowrap;
-        flex-flow: column nowrap;
-        align-content: center;
-        justify-content: center;
+        .flex(column nowrap);
+        .flex-align(center);
+        .flex-justify(center);
         text-align: center;
         color: @col-bg;
 
