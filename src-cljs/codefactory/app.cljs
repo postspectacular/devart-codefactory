@@ -138,7 +138,7 @@
   []
   (let [[w h :as min-size] (:min-window-size config/app)
         satisfied? (and detect/webgl?
-                        (or detect/chrome? detect/firefox?)
+                        (or detect/chrome? detect/firefox? detect/safari?)
                         (or (not min-size) (detect/min-window-size w h)))]
     ;; (debug :detect detect/webgl? detect/chrome? detect/firefox?)
     ;; false
