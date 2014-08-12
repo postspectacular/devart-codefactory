@@ -172,16 +172,23 @@
         (let [[params err] (validate-params {:id id} :get-object)]
           (if (nil? err)
             (if-let [entity (ds/retrieve CodeTree id)]
-              (let [path    (str "objects/" id "/" id)
-                    path    (condp = type
-                              "stl"     (str path ".stl")
-                              "preview" (str path ".svg")
-                              "lux"     (str path "-lux.zip"))
-                    bucket  (-> config/app :storage :bucket)
-                    service (store/get-service)
-                    data    (store/get service bucket path)
-                    meta    (store/get-meta service bucket path)]
-                (-> (resp/response data)
-                    (resp/content-type (:mime-type meta))))
+              (try
+                (let [path    (str "objects/" id "/" id)
+                      ext     (condp = type
+                                "stl"     ".stl"
+                                "preview" ".svg"
+                                "lux"     "-lux.zip")
+                      path    (str path ext)
+                      fname   (str id ext)
+                      bucket  (-> config/app :storage :bucket)
+                      service (store/get-service)
+                      data    (store/get service bucket path)
+                      meta    (store/get-meta service bucket path)]
+                  (-> (resp/response data)
+                      (resp/content-type (:mime-type meta))
+                      (resp/header "Content-Disposition"
+                                   (str "attachment; filename=\"" fname "\""))))
+                (catch Exception e
+                  {:status 204}))
               (api-response req {:reason (str "Unknown ID: " id)} 404))
             (api-response req err 400))))))
