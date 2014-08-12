@@ -384,6 +384,7 @@
   (deep-merge
    barbican
    {:modules {:gallery true}
+    :gallery {:buttons {:download true}}
     :about   {:links-clickable? true}
     :thanks  {:link-clickable? true}}))
 

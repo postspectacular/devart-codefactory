@@ -87,7 +87,7 @@
   [objects bus]
   (let [parent (config/dom-component :gallery-main)]
     (dom/set-html! parent "")
-    (loop [objects objects]
+    (loop [objects (seq objects)]
       (when objects
         (gallery-item (first objects) parent bus)
         (recur (next objects))))))
