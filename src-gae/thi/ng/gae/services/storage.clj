@@ -22,11 +22,12 @@
           :then         (.build)))
 
 (defn ^GcsFileOptions file-options
-  [{:keys [acl mime] :or {acl :public-read}}]
+  [{:keys [acl mime disposition] :or {acl :public-read}}]
   (cond-> (GcsFileOptions$Builder.)
-          acl   (.acl (name acl))
-          mime  (.mimeType mime)
-          :then (.build)))
+          acl         (.acl (name acl))
+          mime        (.mimeType mime)
+          disposition (.contentDisposition disposition)
+          :then       (.build)))
 
 (defn ^GcsService get-service
   [& [opts]] (GcsServiceFactory/createGcsService (retry-options opts)))
