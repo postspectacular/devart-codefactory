@@ -62,7 +62,7 @@
      (h/render-html
       (list
        [:div.obj-preview
-        [:div.obj-overlay buttons]]
+        [:div.obj-overlay.anim buttons]]
        [:div.credits
         [:span (str title " by " author)]
         [:span (utils/format-date-time (js/Date. created))]])))

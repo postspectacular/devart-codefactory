@@ -65,6 +65,22 @@
     .anim(error-flash 800ms);
 }
 
+.anim {
+    -webkit-animation-duration: 0.5s;
+    animation-duration: 0.5s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+.anim-ease-out {
+    -webkit-animation-duration: 0.5s;
+    animation-duration: 0.5s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+    -webkit-animation-timing-function: ease-out;
+    animation-timing-function: ease-out;
+}
+
 @-webkit-keyframes fade-in {
     0% {opacity: 0;}
     100% {opacity: 1;}
@@ -86,7 +102,58 @@
     0% {opacity: 1;}
     100% {opacity: 0;}
 }
+
 .fade-out {
     -webkit-animation-name: fade-out;
     animation-name: fade-out;
+}
+
+@-webkit-keyframes rotate-right {
+    0% {
+        -webkit-transform-origin: center center;
+        -webkit-transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform-origin: center center;
+        -webkit-transform: rotate(90deg);
+    }
+}
+@keyframes rotate-right {
+    0% {
+        transform-origin: center center;
+        transform: rotate(0deg);
+    }
+    100% {
+        transform-origin: center center;
+        transform: rotate(90deg);
+    }
+}
+.rotate-right {
+    -webkit-animation-name: rotate-right;
+    animation-name: rotate-right;
+}
+
+@-webkit-keyframes rotate-left {
+    0% {
+        -webkit-transform-origin: center center;
+        -webkit-transform: rotate(90deg);
+    }
+    100% {
+        -webkit-transform-origin: center center;
+        -webkit-transform: rotate(0deg);
+    }
+}
+@keyframes rotate-left {
+    0% {
+        transform-origin: center center;
+        transform: rotate(90deg);
+    }
+    100% {
+        transform-origin: center center;
+        transform: rotate(0deg);
+    }
+}
+.rotate-left {
+    -webkit-animation-name: rotate-left;
+    animation-name: rotate-left;
 }

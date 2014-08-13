@@ -91,7 +91,7 @@
     :credits nil}
 
    :gallery
-   {:query   {:filter "approved"
+   {:query   {:filter "all"
               :limit  15}
     :buttons {:edit     true
               :download true}}
@@ -323,6 +323,8 @@
     :object-loader    "object-load-progress"
     :gallery-main     "gallery-items"
     :gallery-cancel   "gallery-cancel"
+    :nav-toggle       "nav-toggle"
+    :nav-body         "nav-body"
     }
 
    :timeouts
