@@ -82,6 +82,13 @@
         object (if job (ds/retrieve CodeTree (:object-id job)))]
     [job object]))
 
+(defn object-query-opts
+  [filter]
+  (case (keyword filter)
+    :approved   [[[:approved :desc] [:created :desc]] [:=  :approved true]]
+    :unapproved [[[:approved :desc] [:created :desc]] [:!= :approved true]]
+    [[[:created :desc]] nil]))
+
 (def handlers
   (routes
 
@@ -114,13 +121,15 @@
 
    (GET "/objects" [:as req]
         (if (valid-api-accept? req)
-          (let [[params err] (validate-params (:query-params req) :query-objects)]
+          (let [[params err] (validate-params (:params req) :query-objects)]
             (if (nil? err)
-              (let [{:strs [limit offset]} params
+              (let [{:strs [limit offset filter] :or {limit 25 offset 0}} params
+                    [sort filter] (object-query-opts filter)
                     entities (ds/query
                               CodeTree
-                              :sort [[:created :desc]]
-                              :limit limit
+                              :sort   sort
+                              :filter filter
+                              :limit  limit
                               :offset offset)
                     entities (mapv #(model/public-entity % :public-codetree-keys) entities)]
                 (api-response req entities 200))
@@ -138,6 +147,7 @@
                   entity    (model/make-code-tree
                              {:id              id
                               :parent-id       parent
+                              :approved        false
                               :tree            tree
                               :seed            seed
                               :author          author
