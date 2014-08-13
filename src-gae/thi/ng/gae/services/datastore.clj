@@ -88,7 +88,6 @@
   [type id & [parent]]
   (try
     (let [[ns kind] (util/class-name-vec type)
-          ;;_ (prn :ns ns :kind kind)
           e (.get (datastore-service)
                   (generate-key kind id parent))]
       (as-entity ns kind e))
@@ -96,6 +95,14 @@
 
 (defn save!
   [e] (.put (datastore-service) ^Entity (gae-entity e)) e)
+
+(defn delete!
+  [kind & ids]
+  (prn :info "deleting entities" kind ids)
+  (->> ids
+       (map (fn [id] (generate-key kind id)))
+       (into-array Key)
+       (.delete (datastore-service))))
 
 (defmacro defentity
   [name props & {:keys [key]}]
