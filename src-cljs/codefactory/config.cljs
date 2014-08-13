@@ -91,7 +91,9 @@
     :credits nil}
 
    :gallery
-   {:buttons {:edit     true
+   {:query   {:filter "approved"
+              :limit  15}
+    :buttons {:edit     true
               :download true}}
    
    :about
@@ -114,7 +116,8 @@
     :seed-order [:box :hex2 :pent2 :tri2 :hex3 :oct3 :pent3 :oct2]}
 
    :editor
-   {:inset 11
+   {:min-submit-depth 3
+    :inset 11
     :gap 2
     :margin 10
     :margin-bottom 70
@@ -336,7 +339,7 @@
     (->> {:get-object "objects/"
           :submit-object "objects"
           :credits "jobs/current"
-          :gallery "objects?limit=15&offset="}
+          :gallery "objects"}
          (reduce-kv
           (fn [acc k v] (assoc acc k (str api-prefix v)))
           {}))}

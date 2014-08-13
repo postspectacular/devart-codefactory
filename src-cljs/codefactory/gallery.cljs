@@ -38,7 +38,8 @@
      [:p "loading objects..."]
      [:img {:src "/img/loading.gif" :alt "loading"}]]))
   (io/request
-   :uri     (str (config/api-route :gallery) offset)
+   :uri     (config/api-route :gallery)
+   :params  (assoc (-> config/app :gallery :query) :offset offset)
    :method  :get
    :edn?    true
    :success (fn [_ {:keys [body] :as data}]
