@@ -9,6 +9,13 @@
    [cljs.reader :refer [read-string]]
    [clojure.string :as str]))
 
+(defn format-query-params
+  [params]
+  (when params
+    (->> params
+         (map (fn [[k v]] (str (name k) "=" v "&")))
+         (apply str "?"))))
+
 (defn ->request-data
   [data]
   (->> data
@@ -32,13 +39,14 @@
   (cond-> headers
           edn (assoc "Accept" "application/edn")))
 
-(defn request [& {:keys [uri method data success error headers edn?]}]
+(defn request [& {:keys [uri method params data success error headers edn?]}]
   (let [req     (goog.net.XhrIo.)
         method  (str/upper-case (name method))
         data    (->request-data data)
         success (->callback success edn?)
         error   (->callback error edn?)
-        headers (->headers headers :edn edn?)]
+        headers (->headers headers :edn edn?)
+        uri     (str uri (format-query-params params))]
     (debug :request uri :data data)
     (when success
       (ev/listen req goog.net.EventType/SUCCESS #(success req)))
