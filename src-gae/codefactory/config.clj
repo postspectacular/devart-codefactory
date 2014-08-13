@@ -88,13 +88,18 @@
            {"object-id" [(v/required) (v/uuid4)]}}
 
     :tasks {:regen-assets
-            {"since" [(v/optional (v/number (fn [_ v] (util/parse-int v 0))))]
-             "until" [(v/optional (v/number (fn [_ v] (util/parse-int v 0))))]}}}
+            {"since" [(v/optional (v/number (fn [_ v] (util/parse-long v 0))))]
+             "until" [(v/optional (v/number (fn [_ v] (util/parse-long v 0))))]}
+
+            :delete-simple-objects
+            {"since"     [(v/optional (v/number (fn [_ v] (util/parse-long v 0))))]
+             "min-depth" [(v/number (fn [_ v] (util/parse-int v 0))) (v/pos)]}}}
 
    :db
    {:query-result-limit query-result-limit
     :public-job-keys :*
-    :public-codetree-keys [:id :parent-id :tree :seed
+    :public-codetree-keys [:id :parent-id :status
+                           :tree :tree-depth :seed
                            :title :author :created
                            :short-uri :preview-uri :stl-uri]}
 
