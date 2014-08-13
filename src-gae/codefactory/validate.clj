@@ -27,6 +27,14 @@
    (nil? node) true
    :else false))
 
+(defn compute-tree-depth
+  [tree depth]
+  (if-let [children (:out tree)]
+    (reduce
+     (fn [d c] (max d (compute-tree-depth c (inc depth))))
+     depth children)
+    depth))
+
 (def valid-tree
   (v/validator
    (fn [_ v]
