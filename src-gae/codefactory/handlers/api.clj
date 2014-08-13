@@ -85,8 +85,8 @@
 (defn object-query-opts
   [filter]
   (case (keyword filter)
-    :approved   [[[:approved :desc] [:created :desc]] [:=  :approved true]]
-    :unapproved [[[:approved :desc] [:created :desc]] [:!= :approved true]]
+    :approved   [[[:status :desc] [:created :desc]] [:=  :status "approved"]]
+    :unapproved [[[:status :desc] [:created :desc]] [:!= :status "approved"]]
     [[[:created :desc]] nil]))
 
 (def handlers
@@ -147,8 +147,9 @@
                   entity    (model/make-code-tree
                              {:id              id
                               :parent-id       parent
-                              :approved        false
+                              :status          "unapproved"
                               :tree            tree
+                              :tree-depth      (cv/compute-tree-depth tree 0)
                               :seed            seed
                               :author          author
                               :author-location location

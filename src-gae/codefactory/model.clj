@@ -16,7 +16,7 @@
    tree-depth
    seed
    author-location
-   approved
+   status
    short-uri
    stl-uri
    video-uri
