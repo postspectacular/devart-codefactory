@@ -35,7 +35,15 @@
   [^String str ^String x] (not (neg? (.indexOf str x))))
 
 (defn parse-int
-  [x nf] (try (Integer/parseInt x) (catch Exception e)))
+  [^String x nf] (try (Integer/parseInt x) (catch Exception e)))
 
 (defn parse-double
-  [x nf] (try (Double/parseDouble x) (catch Exception e)))
+  [^String x nf] (try (Double/parseDouble x) (catch Exception e)))
+
+(defn parse-boolean
+  [^String x]
+  (Boolean/parseBoolean x))
+
+(defn get-filename
+  [^String path]
+  (subs path (inc (.lastIndexOf path "/"))))
