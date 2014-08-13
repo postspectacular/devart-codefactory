@@ -354,8 +354,10 @@
     (regenerate-map editor local)))
 
 (defn update-submit-button
-  [tree]
-  ((if (seq tree) dom/remove-class! dom/add-class!)
+  [depth]
+  ((if (and (number? depth) (>= depth (-> config/app :editor :min-submit-depth)))
+     dom/remove-class!
+     dom/add-class!)
    (config/dom-component :edit-continue) "hidden"))
 
 (defn handle-resize
@@ -373,7 +375,7 @@
   (go
     (loop []
       (when (<! ch)
-        (update-submit-button (:tree @editor))
+        (update-submit-button (:tree-depth @editor))
         (regenerate-viz editor local bus)
         (regenerate-map editor local)
         (async/publish bus :render-scene nil)
@@ -645,7 +647,7 @@
                   :selected-id nil
                   :height      height})]
     (debug :init-tedit)
-    (update-submit-button (:tree @editor))
+    (update-submit-button (:tree-depth @editor))
     (regenerate-viz editor local bus)
     (regenerate-map editor local)
 
