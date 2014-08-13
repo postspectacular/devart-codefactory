@@ -24,19 +24,22 @@
 (defn init-button-bar
   []
   (dom/add-listeners
-   (cond->
-    [[(config/dom-component :home-continue) "click"
-      #(route/set-route! "select")]]
-    (config/module-enabled? :gallery)
-    (conj [(config/dom-component :home-gallery) "click"
-           #(route/set-route! "gallery")]))))
+   [[(config/dom-component :home-continue) "click"
+     #(route/set-route! "select")]])
+  (when (and (config/module-enabled? :gallery)
+             (-> config/app :home :gallery-bt))
+    (let [bt (config/dom-component :home-gallery)]
+      (dom/show! bt)
+      (dom/add-listeners
+       [[bt "click"
+         #(route/set-route! "gallery")]]))))
 
 (defn show-credits
   [{:keys [title author date]}]
   (dom/set-style! (dom/query nil "#home .credits") #js {:visibility "visible"})
-  (dom/set-text! (dom/by-id "credits-title") title)
-  (dom/set-text! (dom/by-id "credits-author") author)
-  (dom/set-text! (dom/by-id "credits-date") date))
+  (dom/set-text!  (dom/by-id "credits-title") title)
+  (dom/set-text!  (dom/by-id "credits-author") author)
+  (dom/set-text!  (dom/by-id "credits-date") date))
 
 (defn init
   [bus]

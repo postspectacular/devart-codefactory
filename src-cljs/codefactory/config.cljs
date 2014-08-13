@@ -88,6 +88,7 @@
 
    :home
    {:default-bg "/img/renders/20140701.jpg"
+    :gallery-bt false
     :credits nil}
 
    :gallery
