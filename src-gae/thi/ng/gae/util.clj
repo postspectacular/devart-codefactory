@@ -37,6 +37,9 @@
 (defn parse-int
   [^String x nf] (try (Integer/parseInt x) (catch Exception e)))
 
+(defn parse-long
+  [^String x nf] (try (Long/parseLong x) (catch Exception e)))
+
 (defn parse-double
   [^String x nf] (try (Double/parseDouble x) (catch Exception e)))
 
