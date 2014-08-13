@@ -94,37 +94,75 @@
                    (resp/response (str "error: " (.getMessage e)))))
                (resp/response "error: mesh gen failed"))
              (resp/response "error: wrong/empty payload"))))
+
    (POST "/regenerate-assets" [:as req]
          (let [[params err] (validate-params (:params req) :regen-assets)]
            (if (nil? err)
              (try
-               (let [{:strs [since until] :or {since 0 until 0}} params
-                     f-since [:>= :created since]
-                     f-until [:<= :created until]
-                     filter (if (pos? since)
-                              (if (pos? until) [:and f-since f-until] f-since)
-                              f-until)
-                     _ (prn :filter filter)
-                     entities (ds/query CodeTree
-                                        :filter filter
-                                        :limit 100)
-                     _ (prn :regenerate (count entities) "objects")
-                     [ok err] (reduce
-                               (fn [[ok err] {:keys [id tree seed]}]
-                                 (try
-                                   (prn :queue id)
-                                   (task/queue!
-                                    nil {:url "/tasks/process-object"
-                                         :headers {"Content-Type" (:edn config/mime-types)}
-                                         :payload {:id id :tree tree :seed (keyword seed)}})
-                                   [(conj ok id) err]
-                                   (catch Exception e
-                                     (prn "error: couldn't initiate object processing: "
-                                          (.getMessage e))
-                                     [ok (conj err id)])))
-                               [[] []] entities)]
+               (let [{:strs [since until limit]
+                      :or {since 0 until 0 limit 1000}} params
+                      f-since [:>= :created since]
+                      f-until [:<= :created until]
+                      filter (if (pos? since)
+                               (if (pos? until) [:and f-since f-until] f-since)
+                               f-until)
+                      _ (prn :filter filter)
+                      entities (ds/query
+                                CodeTree
+                                :filter filter
+                                :limit limit)
+                      _ (prn :regenerate (count entities) "objects")
+                      [ok err] (reduce
+                                (fn [[ok err] {:keys [id tree seed]}]
+                                  (try
+                                    (prn :queue id)
+                                    (task/queue!
+                                     nil {:url "/tasks/process-object"
+                                          :headers {"Content-Type" (:edn config/mime-types)}
+                                          :payload {:id id :tree tree :seed (keyword seed)}})
+                                    [(conj ok id) err]
+                                    (catch Exception e
+                                      (prn "error: couldn't initiate object processing: "
+                                           (.getMessage e))
+                                      [ok (conj err id)])))
+                                [[] []] entities)]
                  (-> (pr-str {:ok ok :err err
                               :last (select-keys (last entities) [:id :created])})
+                     (resp/response)
+                     (resp/content-type (:edn config/mime-types))))
+               (catch Exception e
+                 (.printStackTrace e)
+                 (resp/response (str "error: " (.getMessage e)))))
+             (resp/response (pr-str err)))))
+
+   (POST "/delete-simple-objects" [:as req]
+         (let [[params err] (validate-params (:params req) :delete-simple-objects)]
+           (if (nil? err)
+             (try
+               (let [{:strs [since min-depth] :or {since 0}} params
+                     objects (ds/query CodeTree :filter [:>= :created since])
+                     filtered (filter
+                               (fn [{:keys [tree-depth]}]
+                                 (or (nil? tree-depth) (< tree-depth min-depth)))
+                               objects)
+                     _ (prn :retrieved (count objects) :matching (count filtered))
+                     deleted (reduce
+                              (fn [num o]
+                                (try
+                                  (let [depth (cv/compute-tree-depth (:tree o) 0)
+                                        delete? (< depth min-depth)
+                                        num (if delete? (inc num) num)]
+                                    (prn :object (:id o) depth)
+                                    (if delete?
+                                      ;;(ds/save! (assoc o :status "removed"))
+                                      (ds/delete! CodeTree (ds/entity-key o))
+                                      (ds/save! (assoc o :tree-depth depth)))
+                                    num)
+                                  (catch Exception e
+                                    (prn (.getMessage e))
+                                    num)))
+                              0 filtered)]
+                 (-> (pr-str {:deleted deleted})
                      (resp/response)
                      (resp/content-type (:edn config/mime-types))))
                (catch Exception e
