@@ -73,8 +73,7 @@
         view-rect (r/rect 0 0 w h)
         icon-size (get-in config/app [:editor :toolbar-icon-size 0])]
     (dom/set-attribs! canvas {:width w :height h})
-    (dom/set-style! (config/dom-component :preview-label)
-                    #js {:width (->px (- w icon-size 30))})
+    ;; (dom/set-style! (config/dom-component :preview-label) #js {:width (->px (- w icon-size 30))})
     (dom/set-style! (config/dom-component :toolbar-label)
                     #js {:width (->px (- w 20)) :top (->px (- h 19))})
     (swap!
@@ -250,8 +249,9 @@
               {:keys [offset intro-offset content auto?]} (tooltips id)
               body (tip-body tip)
               intro? (:intro-active? @local)
+              offset (if intro? (or intro-offset offset) offset)
               [x y] (g/+ (vec2 (dom/offset el))
-                         (if intro? (or intro-offset offset) offset))]
+                         (if (fn? offset) (offset el) offset))]
           (dom/set-html! body content)
           (add-tooltip-buttons body bus local)
           (-> tip
@@ -272,7 +272,7 @@
   [bus local]
   (let [tooltips (-> config/app :editor :tooltips)
         tips     (->> tooltips
-                      (filter (comp not :auto? val))
+                      (filter (comp :user? val))
                       keys
                       (mapv #(-> % name dom/by-id (dom/query "svg"))))
         channels (fn [ev] (set (map #(first (async/event-channel % ev)) tips)))
@@ -315,7 +315,9 @@
             (async/publish bus :hide-tooltip (tips id)))
           (if (< id' (count tips))
             (let [kid (tips id')
-                  el  (-> kid name dom/by-id (dom/query "svg"))]
+                  el  (if-not (= :edit-canvas kid)
+                        (-> kid name dom/by-id (dom/query "svg"))
+                        (-> kid name dom/by-id))]
               (swap! local assoc-in [:intro-id] id')
               (async/publish bus :show-tooltip [el kid]))
             (async/publish bus :intro-done nil)))

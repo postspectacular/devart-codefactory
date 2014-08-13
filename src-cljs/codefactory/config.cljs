@@ -96,11 +96,11 @@
               :limit  15}
     :buttons {:edit     true
               :download true}}
-   
+
    :about
    {:icon-size [64 64]
     :links-clickable? true}
-   
+
    :thanks
    {:link-clickable? true
     :body "To view visit <a href=\"devartcodefactory.com\">devartcodefactory.com</a> and see which piece is selected each day to be 3D printed and displayed at the Barbican."}
@@ -140,16 +140,21 @@
     :toolbar-sep-size [15 60]
     :toolbar-margin-left 55
     :toolbar-margin-right 55
-    :tooltips {:preview-label {:offset [-5 24]
-                               :content "Drag the shape to rotate. Use touchpad or mouse wheel to zoom."}
+    :tooltips {:edit-canvas {:offset (fn [el]
+                                       [(- (/ (.-clientWidth el) 2) 125)
+                                        (/ (.-clientHeight el) 2)])
+                             :content "This is your 3D preview. Drag the shape to rotate. Use the touchpad or mouse wheel to zoom."}
                :toolbar-label {:offset [12 -96]
                                :intro-offset [12 -114]
+                               :user? true
                                :content "These are the code blocks to modify your shape. Drag to scroll left/right to reveal more tools. The slider below varies the amount of change for some tools. Use \"Empty\" to remove shapes. If you made a mistake, use \"Undo\" to go back."}
                :viz-label     {:offset [12 -72]
                                :intro-offset [12 -90]
+                               :user? true
                                :content "A visualization of your code. Each code block creates one or more new shapes. Click any of the boxes to select them for modification. Click again to deselect. Drag to scroll."}
                :map-label     {:offset [-262 -50]
                                :intro-offset [-262 -68]
+                               :user? true
                                :content "A zoomed out map of your code structure. The yellow rectangle marks the code region visible on the left. Drag to scroll."}
                :axis-label    {:offset [-262 -18]
                                :auto? true
@@ -159,7 +164,7 @@
     :ftu-label "<span>Tap to select</span>"
     :leaf-label "<span>+</span>"
     :map-labels ["CODE OVERVIEW"]
-    :intro [:preview-label :toolbar-label :viz-label :map-label]}
+    :intro [:edit-canvas :toolbar-label :viz-label :map-label]}
 
    :icons
    {:fullscreen {:paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0.2,0.4 L0.2,0.2 L0.4,0.2 M0.2,0.2 L0.4,0.4 M0.8,0.4 L0.8,0.2 L0.6,0.2 M0.8,0.2 L0.6,0.4 M0.8,0.6 L0.8,0.8 L0.6,0.8 M0.8,0.8 L0.6,0.6 M0.4,0.8 L0.2,0.8 L0.2,0.6 M0.2,0.8 L0.4,0.6"}]}
@@ -362,19 +367,19 @@
    {:modules {:gallery false}
 
     :gallery {:buttons {:download false}}
-    
+
     :timeouts {:editor (* 2 60 1000)}
 
     :api {:inject {:location "barbican"}}
 
     :about {:links-clickable? false}
-    
+
     :thanks
     {:link-clickable? false
      :body "To view visit devartcodefactory.com and see which piece is selected each day to be 3D printed and displayed here at the Barbican."}
 
     :editor
-    {:tooltips {:preview-label {:content "Touch the shape to rotate. Pinch to zoom."}
+    {:tooltips {:edit-canvas   {:content "This your 3D preview. Touch the shape to rotate. Pinch to zoom."}
                 :viz-label     {:content "A visualization of your code. Each code block creates one or more new shapes. Tap any of the boxes to select them for modification. Tap again to deselect. Drag to scroll."}
                 :axis-label    {:content "Tap here to display the XYZ axes for better orientation."}}}}))
 
