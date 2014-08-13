@@ -16,14 +16,13 @@
    tree-depth
    seed
    author-location
+   approved
    short-uri
    stl-uri
    video-uri
    preview-uri
+   lux-uri
    created
-   stl-created
-   video-created
-   preview-created
    parent-id
    job-id]
   :key :id)
