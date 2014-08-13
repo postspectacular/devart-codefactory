@@ -70,10 +70,10 @@
   [el prop]
   (style/getStyle el (name prop)))
 
-(defn show
+(defn show!
   [el] (style/setStyle el "display" "block"))
 
-(defn hide
+(defn hide!
   [el] (style/setStyle el "display" "none"))
 
 (defn offset
