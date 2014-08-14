@@ -69,20 +69,21 @@
     (dom/set-style!
      (dom/query item ".obj-preview")
      (clj->js {:background-image (str "url(" img-url ")")}))
-    (dom/add-listeners
-     (cond->
-      [[(dom/query item ".obj-preview") "mouseover"
-        (fn [] (async/publish bus :focus-gallery-item [:on item obj]))]
-       [(dom/query item ".obj-overlay") "mouseleave"
-        (fn [] (async/publish bus :focus-gallery-item [:off item obj]))]
-       [(dom/query item ".obj-preview") "touchstart"
-        (fn [e] (.stopPropagation e) (async/publish bus :focus-gallery-item [:on item obj]))]
-       [(dom/query item ".obj-overlay") "touchstart"
-        (fn [e] (.stopPropagation e) (async/publish bus :focus-gallery-item [:off item obj]))]]
-      edit     (conj [(dom/query item ".obj-edit") "click"
-                      (fn [e] (.stopPropagation e) (route/set-route! "objects" id))])
-      download (conj [(dom/query item ".obj-download") "click"
-                      (fn [e] (.stopPropagation e) (route/set-location! stl-url))])))))
+    (when (or edit download)
+      (dom/add-listeners
+       (cond->
+        [[(dom/query item ".obj-preview") "mouseover"
+          (fn [] (async/publish bus :focus-gallery-item [:on item obj]))]
+         [(dom/query item ".obj-overlay") "mouseleave"
+          (fn [] (async/publish bus :focus-gallery-item [:off item obj]))]
+         [(dom/query item ".obj-preview") "touchstart"
+          (fn [e] (.stopPropagation e) (async/publish bus :focus-gallery-item [:on item obj]))]
+         [(dom/query item ".obj-overlay") "touchstart"
+          (fn [e] (.stopPropagation e) (async/publish bus :focus-gallery-item [:off item obj]))]]
+        edit     (conj [(dom/query item ".obj-edit") "click"
+                        (fn [e] (.stopPropagation e) (route/set-route! "objects" id))])
+        download (conj [(dom/query item ".obj-download") "click"
+                        (fn [e] (.stopPropagation e) (route/set-location! stl-url))]))))))
 
 (defn build-gallery
   [objects bus]
