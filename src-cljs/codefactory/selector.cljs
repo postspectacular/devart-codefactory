@@ -186,7 +186,8 @@
                  (or (= continue ch) (center-click? select ch canvas e 120))
                  (start-editor local)
                  (or (= cancel ch)
-                     (>= (- (utils/now) (:last-click @local)) module-timeout))
+                     (and (:active? @local)
+                          (>= (- (utils/now) (:last-click @local)) module-timeout)))
                  (route/set-route! "home")
                  :else (recur)))))
 
