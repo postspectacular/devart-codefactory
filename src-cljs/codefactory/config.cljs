@@ -328,7 +328,8 @@
     :object-error     "object-error"
     :object-loader    "object-load-progress"
     :gallery-main     "gallery-items"
-    :gallery-cancel   "gallery-cancel"
+    :gallery-prev     "gallery-prev"
+    :gallery-next     "gallery-next"
     :nav-toggle       "nav-toggle"
     :nav-body         "nav-body"
     }

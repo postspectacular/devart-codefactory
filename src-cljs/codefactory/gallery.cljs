@@ -23,29 +23,42 @@
      dom/request-fullscreen
      "fs-toggle")))
 
-(defn init-button-bar
-  []
-  (dom/add-listeners
-   [[(config/dom-component :gallery-cancel) "click"
-     #(route/set-route! "home")]]))
+(defn load-page
+  [bus page]
+  (let [q-conf (-> config/app :gallery :query)
+        offset (* page (:limit q-conf))]
+    (dom/set-html!
+     (config/dom-component :gallery-main)
+     (h/render-html
+      [:div.loading
+       [:p "loading objects..."]
+       [:img {:src "/img/loading.gif" :alt "loading"}]]))
+    (io/request
+     :uri     (config/api-route :gallery)
+     :params  (assoc q-conf :offset offset)
+     :method  :get
+     :edn?    true
+     :success (fn [_ {:keys [body] :as data}]
+                (async/publish bus :gallery-loaded body))
+     :error   (fn [status body]
+                (warn :response body)))))
 
-(defn load-objects
-  [bus offset]
-  (dom/set-html!
-   (config/dom-component :gallery-main)
-   (h/render-html
-    [:div.loading
-     [:p "loading objects..."]
-     [:img {:src "/img/loading.gif" :alt "loading"}]]))
-  (io/request
-   :uri     (config/api-route :gallery)
-   :params  (assoc (-> config/app :gallery :query) :offset offset)
-   :method  :get
-   :edn?    true
-   :success (fn [_ {:keys [body] :as data}]
-              (async/publish bus :gallery-loaded body))
-   :error   (fn [status body]
-              (warn :response body))))
+(defn handle-page-change
+  [bus local dir]
+  (let [page (+ (:page @local) dir)]
+    (debug :new-page page)
+    (swap! local assoc :page page)
+    (if (neg? page)
+      (route/set-route! "home")
+      (load-page bus page))))
+
+(defn init-button-bar
+  [bus local]
+  (dom/add-listeners
+   [[(config/dom-component :gallery-prev) "click"
+     #(handle-page-change bus local -1)]
+    [(config/dom-component :gallery-next) "click"
+     #(handle-page-change bus local 1)]]))
 
 (defn gallery-item
   [{:keys [id title author created preview-uri stl-uri] :as obj} parent bus]
@@ -64,7 +77,7 @@
        [:div.obj-preview
         [:div.obj-overlay.anim buttons]]
        [:div.credits
-        [:span (str title " by " author)]
+        [:span (str (.toUpperCase title) " by " (.toUpperCase author))]
         [:span (utils/format-date-time (js/Date. created))]])))
     (dom/set-style!
      (dom/query item ".obj-preview")
@@ -126,15 +139,15 @@
   (let [init    (async/subscribe bus :init-gallery)
         refresh (async/subscribe bus :gallery-loaded)
         focus   (async/subscribe bus :focus-gallery-item)
-        local   (atom {:focused nil})]
+        local   (atom {:focused nil :page 0})]
 
     (init-fullscreen-button)
-    (init-button-bar)
+    (init-button-bar bus local)
     (handle-refresh refresh bus local)
     (handle-item-overlay focus bus local)
 
     (go
       (loop []
         (let [[_ [state params]] (<! init)]
-          (load-objects bus 0))
+          (load-page bus 0))
         (recur)))))
