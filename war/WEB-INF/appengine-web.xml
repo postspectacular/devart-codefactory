@@ -2,7 +2,7 @@
 <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
 
   <application>devartcodefactory</application>
-  <version>1</version>
+  <version>2</version>
   <static-files/>
   <resource-files/>
   <ssl-enabled>true</ssl-enabled>
