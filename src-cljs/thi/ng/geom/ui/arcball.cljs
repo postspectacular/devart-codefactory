@@ -18,7 +18,8 @@
   (update-view [_])
   (get-view [_])
   (get-rotation [_])
-  (set-rotation [_ q]))
+  (set-rotation [_ q])
+  (set-zoom-range [_ min max]))
 
 (defn pos->sphere
   [p r x y]
@@ -29,7 +30,8 @@
       (assoc v :z (Math/sqrt (- 1 m))))))
 
 (deftype ArcBall
-    [min-dist max-dist
+    [^:mutable min-dist
+     ^:mutable max-dist
      ^:mutable radius
      ^:mutable center
      ^:mutable dist
@@ -86,7 +88,12 @@
   (set-rotation
     [_ q]
     (set! curr-rot q)
-    (update-view _)))
+    (update-view _))
+  (set-zoom-range
+    [_ min max]
+    (set! min-dist min)
+    (set! max-dist max)
+    (set! dist (m/clamp dist min max))))
 
 (defn make-arcball
   [& {:keys [init dist min-dist max-dist radius center] :or {dist 2.75}}]

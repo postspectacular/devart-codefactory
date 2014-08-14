@@ -14,6 +14,7 @@
    [thi.ng.cljs.utils :as utils :refer [->px]]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.gestures :as gest]
+   [thi.ng.geom.ui.arcball :as arcball]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.matrix :as mat :refer [M44]]
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
@@ -360,6 +361,15 @@
      dom/add-class!)
    (config/dom-component :edit-continue) "hidden"))
 
+(defn update-zoom-range
+  [editor]
+  (let [{:keys [bounds arcball]} @editor
+        max-dim (reduce max (:size bounds))
+        min (* max-dim 1.41)
+        max (* max-dim 3.5)]
+    (debug :zoom-range min max)
+    (arcball/set-zoom-range arcball min max)))
+
 (defn handle-resize
   [ch bus editor local]
   (go
@@ -370,12 +380,13 @@
         (async/publish bus :user-action nil)
         (recur)))))
 
-(defn handle-regen
+(defn handle-regenerate
   [ch bus editor local]
   (go
     (loop []
       (when (<! ch)
         (update-submit-button (:tree-depth @editor))
+        (update-zoom-range editor)
         (regenerate-viz editor local bus)
         (regenerate-map editor local)
         (async/publish bus :render-scene nil)
@@ -652,7 +663,7 @@
     (regenerate-map editor local)
 
     (handle-resize          (:window-resize subs)    bus editor local)
-    (handle-regen           (:regenerate-scene subs) bus editor local)
+    (handle-regenerate           (:regenerate-scene subs) bus editor local)
     (handle-node-toggle     (:node-toggle subs)      bus local)
     (handle-node-selected   (:node-selected subs)    bus editor local)
     (handle-node-deselected (:node-deselected subs)  bus editor local)
