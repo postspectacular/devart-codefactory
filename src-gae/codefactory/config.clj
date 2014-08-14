@@ -89,7 +89,8 @@
 
     :tasks {:regen-assets
             {"since" [(v/optional (v/number (fn [_ v] (util/parse-long v 0))))]
-             "until" [(v/optional (v/number (fn [_ v] (util/parse-long v 0))))]}
+             "until" [(v/optional (v/number (fn [_ v] (util/parse-long v 0))))]
+             "limit" [(v/optional (v/number (fn [_ v] (util/parse-int v 0))))]}
 
             :delete-simple-objects
             {"since"     [(v/optional (v/number (fn [_ v] (util/parse-long v 0))))]

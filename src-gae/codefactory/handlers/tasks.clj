@@ -107,10 +107,7 @@
                                (if (pos? until) [:and f-since f-until] f-since)
                                f-until)
                       _ (prn :filter filter)
-                      entities (ds/query
-                                CodeTree
-                                :filter filter
-                                :limit limit)
+                      entities (ds/query CodeTree :filter filter :limit limit)
                       _ (prn :regenerate (count entities) "objects")
                       [ok err] (reduce
                                 (fn [[ok err] {:keys [id tree seed]}]
@@ -140,28 +137,28 @@
            (if (nil? err)
              (try
                (let [{:strs [since min-depth] :or {since 0}} params
-                     objects (ds/query CodeTree :filter [:>= :created since])
+                     objects  (ds/query CodeTree :filter [:>= :created since])
                      filtered (filter
                                (fn [{:keys [tree-depth]}]
                                  (or (nil? tree-depth) (< tree-depth min-depth)))
                                objects)
                      _ (prn :retrieved (count objects) :matching (count filtered))
-                     deleted (reduce
-                              (fn [num o]
-                                (try
-                                  (let [depth (cv/compute-tree-depth (:tree o) 0)
-                                        delete? (< depth min-depth)
-                                        num (if delete? (inc num) num)]
-                                    (prn :object (:id o) depth)
-                                    (if delete?
-                                      ;;(ds/save! (assoc o :status "removed"))
-                                      (ds/delete! CodeTree (ds/entity-key o))
-                                      (ds/save! (assoc o :tree-depth depth)))
-                                    num)
-                                  (catch Exception e
-                                    (prn (.getMessage e))
-                                    num)))
-                              0 filtered)]
+                     deleted  (reduce
+                               (fn [num o]
+                                 (try
+                                   (let [depth   (cv/compute-tree-depth (:tree o) 0)
+                                         delete? (< depth min-depth)
+                                         num     (if delete? (inc num) num)]
+                                     (prn :object (:id o) depth)
+                                     (if delete?
+                                       ;;(ds/save! (assoc o :status "removed"))
+                                       (ds/delete! CodeTree (ds/entity-key o))
+                                       (ds/save! (assoc o :tree-depth depth)))
+                                     num)
+                                   (catch Exception e
+                                     (prn (.getMessage e))
+                                     num)))
+                               0 filtered)]
                  (-> (pr-str {:deleted deleted})
                      (resp/response)
                      (resp/content-type (:edn config/mime-types))))
