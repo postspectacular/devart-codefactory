@@ -417,7 +417,7 @@
 (def ^:export staging
   (-> barbican
       (deep-merge
-       {:gallery {:buttons {:download false}}
+       {:gallery {:buttons {:download true}}
         :about   {:links-clickable? true}
         :thanks  {:link-clickable? true}})
       (enable-module :gallery)))

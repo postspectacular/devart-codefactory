@@ -82,15 +82,22 @@
   [bus state edit?]
   (let [nav-body  (config/dom-component :nav-body)
         nav-bt    (config/dom-component :nav-toggle)
-        nav-items [:ul
-                   [:li [:a {:href "#/home"} "home"]]
-                   [:li [:a {:href "#/about"} "about"]]
-                   [:li [:a {:href "#/gallery"} "gallery"]]]
-        nav-items (if edit?
-                    (conj nav-items [:li [:a {:href "#/select"} "create"]])
-                    nav-items)
+        nav-items (cond->
+                   [:ul
+                    [:li [:a {:href "#/home"} "home"]]
+                    [:li [:a {:href "#/about"} "about"]]]
+
+                   (config/module-enabled? :gallery)
+                   (conj [:li [:a {:href "#/gallery"} "gallery"]])
+
+                   edit?
+                   (conj [:li [:a {:href "#/select"} "create"]]))
         toggle    (async/subscribe bus :nav-toggle)
         hide      (async/subscribe bus :nav-hide)]
+
+    (-> nav-bt
+        (dom/set-style! #js {:visibility "visible"})
+        (dom/add-class! "fade-in"))
 
     (dom/set-html! nav-body (h/render-html nav-items))
     (dom/add-listeners
@@ -139,21 +146,13 @@
     (route/start-router! router)))
 
 (defn init-modules
-  [bus state]
+  [bus state modules routes default-route]
   (listen-dom bus)
-  (let [{:keys [modules routes default-route]} config/app]
-    (doseq [[id init] module-initializers]
-      (when (modules id)
-        (debug :init-module id)
-        (init bus)))
-    (init-router bus state routes default-route)))
-
-(defn init-fallback
-  [bus state]
-  (init-router
-   bus state
-   (:routes-unsupported config/app)
-   (:default-route-unsupported config/app)))
+  (doseq [[id init] module-initializers]
+    (when (modules id)
+      (debug :init-module id)
+      (init bus)))
+  (init-router bus state routes default-route))
 
 (defn load-featured-image
   [bus url]
@@ -190,13 +189,12 @@
 
 (defn check-requirements
   []
-  (let [[w h :as min-size] (:min-window-size config/app)
-        satisfied? (and detect/webgl?
-                        (or detect/chrome? detect/firefox? detect/safari?)
-                        (or (not min-size) (detect/min-window-size w h)))]
-    ;; (debug :detect detect/webgl? detect/chrome? detect/firefox?)
+  (let [[w h :as min-size] (:min-window-size config/app)]
+    (and detect/webgl?
+         (or detect/chrome? detect/firefox? detect/safari?)
+         (or (not min-size) (detect/min-window-size w h)))
     ;; false
-    satisfied?))
+    ))
 
 (defn start
   []
@@ -205,15 +203,27 @@
                     ;;(fn [e] (debug :bus (first e)) (first e))
                     first
                     )
-        state      (atom {:bus bus :ctrl-id :loader})
-        satisfied? (check-requirements)]
+        satisfied? (check-requirements)
+        state      (atom {:bus bus :ctrl-id :loader :fallback? (not satisfied?)})]
+
 
     (load-credits bus state)
+
     (go
       (<! (async/subscribe bus :app-ready))
       (if satisfied?
-        (init-modules bus state)
-        (init-fallback bus state))
+        (init-modules
+         bus state
+         (:modules       config/app)
+         (:routes        config/app)
+         (:default-route config/app))
+        (do
+          (config/apply-fallback config/app)
+          (init-modules
+           bus state
+           (:modules-fallback config/app)
+           (:routes-fallback config/app)
+           (:default-route-fallback config/app))))
       (init-nav bus state satisfied?))))
 
 (.addEventListener js/window "load" start)
