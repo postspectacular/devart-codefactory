@@ -217,9 +217,12 @@
     [:splity3 {:label "split y3" :node (mg/subdiv :rows 3)}]
     [:splitz3 {:label "split z3" :node (mg/subdiv :slices 3)}]
     [:sep]
-    [:insetx {:label "inset x" :node (mg/subdiv-inset :dir :x :inset 0.5)}]
-    [:insety {:label "inset y" :node (mg/subdiv-inset :dir :y :inset 0.5)}]
-    [:insetz {:label "inset z" :node (mg/subdiv-inset :dir :z :inset 0.5)}]
+    [:insetx {:label "inset x" :node (mg/subdiv-inset :dir :x :inset 0.5)
+              :view [0 0.7071067811865475 0 0.7071067811865475]}]
+    [:insety {:label "inset y" :node (mg/subdiv-inset :dir :y :inset 0.5)
+              :view [0 0.7071067811865475 -0.7071067811865475 0]}]
+    [:insetz {:label "inset z" :node (mg/subdiv-inset :dir :z :inset 0.5)
+              :view [0 1 0 0]}]
     [:sep]
     [:mirrore {:label "mirror right" :node (mg/reflect :dir :e)}]
     [:mirrorw {:label "mirror left" :node (mg/reflect :dir :w)}]
@@ -438,10 +441,10 @@
 (defn operator-color
   [op] (-> app :operators op :col))
 
-(defn preset-node
+(defn preset-for-id
   [op]
   (some
-   #(if (= op (first %)) (-> % second :node))
+   #(if (= op (first %)) (second %))
    (:op-presets app)))
 
 (defn translate-mg-op

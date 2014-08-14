@@ -101,3 +101,10 @@
         max-dist (or max-dist (* dist 3.5))
         curr-rot (if init (q/quat init) (q/quat-from-axis-angle V3Y m/PI))]
     (ArcBall. min-dist max-dist radius center dist curr-rot (vec3) nil nil)))
+
+(defn update-zoom-range
+  [arcball bounds]
+  (let [max-dim (reduce max (:size bounds))
+        min (* max-dim 1.41)
+        max (* max-dim 3.5)]
+    (set-zoom-range arcball min max)))

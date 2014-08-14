@@ -12,7 +12,6 @@
    [thi.ng.common.math.core :as m :refer [HALF_PI]]
    [thi.ng.morphogen.core :as mg]
    [thi.ng.geom.core.vector :refer [V3X V3Y V3Z]]
-   [thi.ng.geom.core.quaternion :as q]
    [clojure.string :as str]))
 
 (defn op-class

@@ -389,6 +389,22 @@
    :view-tween-cancel? false
    :view-tween? false))
 
+(defn tween-view!
+  [ball local]
+  (go
+    (loop []
+      (<! (timeout 16))
+      (let [{{:keys [start target phase]} :view
+             cancel? :view-tween-cancel?} @local]
+        (if-not cancel?
+          (do
+            (arcball/set-rotation ball (g/mix start target (min phase 1.0)))
+            (swap! local assoc-in [:view :phase] (m/mix phase 1.0 0.2))
+            (if (>= phase 0.995)
+              (end-view-tween local)
+              (recur)))
+          (end-view-tween local))))))
+
 (defn handle-view-update
   [ch ball bus local]
   (go
@@ -398,19 +414,7 @@
           (init-view-tween local ball target)
           (when-not (:view-tween? @local)
             (swap! local assoc :view-tween? true)
-            (go
-              (loop []
-                (<! (timeout 16))
-                (let [{{:keys [start target phase]} :view
-                       cancel? :view-tween-cancel?} @local]
-                  (if-not cancel?
-                    (do
-                      (arcball/set-rotation ball (g/mix start target (min phase 1.0)))
-                      (swap! local assoc-in [:view :phase] (m/mix phase 1.0 0.1))
-                      (if (>= phase 0.9995)
-                        (end-view-tween local)
-                        (recur)))
-                    (end-view-tween local))))))
+            (tween-view! ball local))
           (recur))))))
 
 (defn render-loop
@@ -536,6 +540,7 @@
                (init-tree (:tree @local) (:seed-id params))
                (assoc-in [:tools :curr-offset] t-offset)))
           (viz/init local bus)
+          (arcball/update-zoom-range arcball (:bounds @local))
           (resize-canvas local)
           (render-scene local)
 

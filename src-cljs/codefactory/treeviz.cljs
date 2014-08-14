@@ -18,6 +18,7 @@
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.matrix :as mat :refer [M44]]
    [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
+   [thi.ng.geom.core.quaternion :as q]
    [thi.ng.geom.rect :as r]
    [thi.ng.common.math.core :as m]))
 
@@ -361,15 +362,6 @@
      dom/add-class!)
    (config/dom-component :edit-continue) "hidden"))
 
-(defn update-zoom-range
-  [editor]
-  (let [{:keys [bounds arcball]} @editor
-        max-dim (reduce max (:size bounds))
-        min (* max-dim 1.41)
-        max (* max-dim 3.5)]
-    (debug :zoom-range min max)
-    (arcball/set-zoom-range arcball min max)))
-
 (defn handle-resize
   [ch bus editor local]
   (go
@@ -385,11 +377,12 @@
   (go
     (loop []
       (when (<! ch)
-        (update-submit-button (:tree-depth @editor))
-        (update-zoom-range editor)
-        (regenerate-viz editor local bus)
-        (regenerate-map editor local)
-        (async/publish bus :render-scene nil)
+        (let [{:keys [tree-depth bounds arcball]} @editor]
+          (update-submit-button tree-depth)
+          (arcball/update-zoom-range arcball bounds)
+          (regenerate-viz editor local bus)
+          (regenerate-map editor local)
+          (async/publish bus :render-scene nil))
         (recur)))))
 
 (defn handle-node-toggle
@@ -486,13 +479,15 @@
             {:keys [tree selection tools]} @editor]
         (when id
           (when (and selection (not (:active? tools)))
-            (let [preset (config/preset-node id)
+            (let [{preset :node view :view} (config/preset-for-id id)
                   op (config/translate-mg-op (:op preset))]
               (debug :new-op id preset)
               (ops/release-op-controls local)
               (ops/highlight-selected-preset id (:specs tools))
               (ops/center-preset bus (id (:specs tools)))
               (async/publish bus :backup-tree tree)
+              (when view
+                (async/publish bus :camera-update (q/quat view)))
               (ops/handle-operator
                (or op id)
                (assoc preset :id id)
@@ -663,7 +658,7 @@
     (regenerate-map editor local)
 
     (handle-resize          (:window-resize subs)    bus editor local)
-    (handle-regenerate           (:regenerate-scene subs) bus editor local)
+    (handle-regenerate      (:regenerate-scene subs) bus editor local)
     (handle-node-toggle     (:node-toggle subs)      bus local)
     (handle-node-selected   (:node-selected subs)    bus editor local)
     (handle-node-deselected (:node-deselected subs)  bus editor local)
