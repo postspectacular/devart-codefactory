@@ -78,6 +78,10 @@
     :about         true
     :object-loader true}
 
+   :modules-fallback
+   {:about   true
+    :gallery true}
+
    :min-window-size [480 600]
 
    :webgl
@@ -266,19 +270,15 @@
     {:match ["objects" "submit"] :controller :submit-form}
     {:match ["thanks"] :controller :submit-confirm}
     {:match ["about"] :controller :about}
-    #_{:match ["gallery" :page]
-       :bindings {:page {:coerce utils/parse-int :validate [(v/number) (v/pos)]}}
-       :controller :gallery}
-    {:match ["gallery"] :controller :gallery}
-    #_{:match ["login"] :controller :login}]
+    {:match ["gallery"] :controller :gallery}]
 
-   :routes-unsupported
-   [{:match ["not-supported"]
-     :hash "not-supported"
-     :controller :upgrade-browser}]
+   :routes-fallback
+   [{:match ["not-supported"] :hash "not-supported" :controller :upgrade-browser}
+    {:match ["gallery"] :controller :gallery}
+    {:match ["about"] :controller :about}]
 
    :default-route 0
-   :default-route-unsupported 0
+   :default-route-fallback 0
 
    :dom-transitions
    {[:loader :home] -1
@@ -353,54 +353,83 @@
           {}))}
    })
 
+(defn disable-routes
+  [id]
+  (fn [routes]
+    (mapv #(if (= (:controller %) id) (assoc % :disabled true) %) routes)))
+
+(defn enable-routes
+  [id]
+  (fn [routes]
+    (mapv #(if (= (:controller %) id) (dissoc % :disabled) %) routes)))
+
+(defn disable-module
+  [config id]
+  (-> config
+      (assoc-in [:modules id] false)
+      (update-in [:routes] (disable-routes id))
+      (update-in [:routes-fallback] (disable-routes id))))
+
+(defn enable-module
+  [config id]
+  (-> config
+      (assoc-in [:modules id] true)
+      (update-in [:routes] (enable-routes id))
+      (update-in [:routes-fallback] (enable-routes id))))
+
 (def ^:export app default-config)
 
 (def ^:export maintenance
   (-> app
       (assoc :modules nil
              :routes [(get-in app [:routes 0])]
-             :routes-unsupported [(get-in app [:routes 0])])))
+             :routes-fallback [(get-in app [:routes 0])])))
 
 (def ^:export barbican
-  (deep-merge
-   app
-   {:modules {:gallery false}
+  (-> app
+      (deep-merge
+       {:gallery {:buttons {:download false}}
 
-    :gallery {:buttons {:download false}}
+        :timeouts {:editor (* 2 60 1000)}
 
-    :timeouts {:editor (* 2 60 1000)}
+        :api {:inject {:location "barbican"}}
 
-    :api {:inject {:location "barbican"}}
+        :about {:links-clickable? false}
 
-    :about {:links-clickable? false}
+        :thanks
+        {:link-clickable? false
+         :body "To view visit devartcodefactory.com and see which piece is selected each day to be 3D printed and displayed here at the Barbican."}
 
-    :thanks
-    {:link-clickable? false
-     :body "To view visit devartcodefactory.com and see which piece is selected each day to be 3D printed and displayed here at the Barbican."}
-
-    :editor
-    {:tooltips {:edit-canvas   {:content "This your 3D preview. Touch the shape to rotate. Pinch to zoom."}
-                :viz-label     {:content "A visualization of your code. Each code block creates one or more new shapes. Tap any of the boxes to select them for modification. Tap again to deselect. Drag to scroll."}
-                :axis-label    {:content "Tap here to display the XYZ axes for better orientation."}}}}))
+        :editor
+        {:tooltips {:edit-canvas   {:content "This your 3D preview. Touch the shape to rotate. Pinch to zoom."}
+                    :viz-label     {:content "A visualization of your code. Each code block creates one or more new shapes. Tap any of the boxes to select them for modification. Tap again to deselect. Drag to scroll."}
+                    :axis-label    {:content "Tap here to display the XYZ axes for better orientation."}}}})
+      (disable-module :gallery)))
 
 (def ^:export workshop
-  (deep-merge
-   app
-   {:api {:inject {:location "workshop"}}
-    :modules {:workshop true}
-    :timeouts {:editor (* 30 60 1000)
-               :thanks (* 5 60 1000)}}))
+  (-> app
+      (deep-merge
+       {:api {:inject {:location "workshop"}}
+        :modules {:workshop true}
+        :timeouts {:editor (* 30 60 1000)
+                   :thanks (* 5 60 1000)}})))
 
 (def ^:export staging
-  (deep-merge
-   barbican
-   {:modules {:gallery true}
-    :gallery {:buttons {:download true}}
-    :about   {:links-clickable? true}
-    :thanks  {:link-clickable? true}}))
+  (-> barbican
+      (deep-merge
+       {:gallery {:buttons {:download false}}
+        :about   {:links-clickable? true}
+        :thanks  {:link-clickable? true}})
+      (enable-module :gallery)))
 
 (defn set-config!
   [sym] (set! app (js/eval (aget js/window sym))))
+
+(defn apply-fallback
+  [config]
+  (->> {:gallery {:buttons {:edit false}}}
+       (deep-merge config)
+       (set! app)))
 
 (defn operator
   [op] (-> app :operators op))

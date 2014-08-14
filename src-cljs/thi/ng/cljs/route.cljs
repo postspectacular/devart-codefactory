@@ -70,13 +70,14 @@
 
 (defn router
   [routes default route-changed]
-  (fn []
-    (let [info (match-route routes)]
-      (if info
-        (route-changed info)
-        (do
-          (warn "no matching route:" (get-route) "redirect to default...")
-          (apply set-route! (:hash default) (:params default)))))))
+  (let [routes (filter (complement :disabled) routes)]
+    (fn []
+      (let [info (match-route routes)]
+        (if info
+          (route-changed info)
+          (do
+            (warn "no matching route:" (get-route) "redirect to default...")
+            (apply set-route! (:hash default) (:params default))))))))
 
 (defn start-router!
   [router]
