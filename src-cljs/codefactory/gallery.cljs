@@ -149,5 +149,6 @@
     (go
       (loop []
         (let [[_ [state params]] (<! init)]
+          (async/publish bus :broadcast-tree nil)
           (load-page bus 0))
         (recur)))))
