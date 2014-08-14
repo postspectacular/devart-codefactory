@@ -182,18 +182,37 @@ void main() {
      gl xray meshes shared-uniforms {:alpha alpha})))
 
 (defn render-axes
-  [gl shader uniforms axes]
-  (render-meshes
-   gl shader [(axes 0)] uniforms {:lightCol [1 0 0]})
-  (render-meshes
-   gl shader [(axes 1)] uniforms {:lightCol [0 1 0]})
-  (render-meshes
-   gl shader [(axes 2)] uniforms {:lightCol [0 0 1]}))
+  [gl shader uniforms [x y z] bounds]
+  (let [w (g/width bounds)
+        h (g/height bounds)
+        d (g/depth bounds)
+        r {:lightCol [1 0 0]}
+        g {:lightCol [0 1 0]}
+        b {:lightCol [0 0 1]}
+        off 0.1]
+    (render-meshes
+     gl shader [(x 0)]
+     (update-in uniforms [:model] g/scale w 1 1) r)
+    (render-meshes
+     gl shader [(x 1)]
+     (update-in uniforms [:model] g/translate (+ w off) 0 0) r)
+    (render-meshes
+     gl shader [(y 0)]
+     (update-in uniforms [:model] g/scale 1 h 1) g)
+    (render-meshes
+     gl shader [(y 1)]
+     (update-in uniforms [:model] g/translate 0 (+ h off) 0) g)
+    (render-meshes
+     gl shader [(z 0)]
+     (update-in uniforms [:model] g/scale 1 1 d) b)
+    (render-meshes
+     gl shader [(z 1)]
+     (update-in uniforms [:model] g/translate 0 0 (+ d off)) b)))
 
 (defn axis-meshes
   [gl radius len]
   (let [z (-> (c/circle radius)
-              (g/extrude {:depth len :bottom? false :res 8})
+              (g/extrude {:depth 1 :bottom? false :res 8})
               (g/as-mesh {:mesh (bm/basic-mesh)}))
         x (g/transform z (g/rotate-y M44 HALF_PI))
         y (g/transform z (g/rotate-x M44 (- HALF_PI)))
@@ -206,14 +225,17 @@ void main() {
         loff (+ len 0.1)]
     (reduce
      (fn [specs [m l o]]
-       (conj specs
-             (-> (g/into m (-> l
-                               (g/scale 0.01)
-                               (g/center)
-                               (g/extrude {:depth 0.01 :mesh (bm/basic-mesh)})
-                               (g/translate o)))
-                 (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
-                 (buf/make-attribute-buffers-in-spec gl gl/static-draw))))
+       (conj
+        specs
+        [(-> m
+             (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
+             (buf/make-attribute-buffers-in-spec gl gl/static-draw))
+         (-> (-> l
+                 (g/scale 0.01)
+                 (g/center)
+                 (g/extrude {:depth 0.01 :mesh (bm/basic-mesh)}))
+             (gl/as-webgl-buffer-spec {:tessellate true :fnormals true})
+             (buf/make-attribute-buffers-in-spec gl gl/static-draw))]))
      [] [[x lx (vec3 loff 0 0)]
          [y ly (vec3 0 loff 0)]
          [z lz (vec3 0 0 loff)]])))

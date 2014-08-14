@@ -64,7 +64,8 @@
         (webgl/render-meshes
          gl (shaders 1) (vals display-meshes) shared-unis nil))
       (when (:show-axes? @local)
-        (webgl/render-axes gl (shaders 1) shared-unis (:axes @local))))))
+        (webgl/render-axes
+         gl (shaders 1) shared-unis (:axes @local) bounds)))))
 
 (defn resize-canvas
   [local]
