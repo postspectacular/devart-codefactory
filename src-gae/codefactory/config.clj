@@ -84,6 +84,11 @@
                       (v/optional (v/greater-than -1))]
             "filter" [(v/member-of #{"approved" "unapproved" "all"})]}
 
+           :exec-task
+           {"token" [(v/equals "")]
+            "task"  [(v/member-of #{"process-object"
+                                    "regenerate-assets"
+                                    "delete-simple-objects"})]}
            :new-job
            {"object-id" [(v/required) (v/uuid4)]}}
 
@@ -94,7 +99,7 @@
 
             :delete-simple-objects
             {"since"     [(v/optional (v/number (fn [_ v] (util/parse-long v 0))))]
-             "min-depth" [(v/number (fn [_ v] (util/parse-int v 0))) (v/pos)]}}}
+             "min-depth" [(v/number (fn [_ v] (util/parse-int v 0))) (v/in-range 2 4)]}}}
 
    :db
    {:query-result-limit query-result-limit

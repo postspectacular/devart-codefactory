@@ -202,4 +202,16 @@
                 (catch Exception e
                   {:status 204}))
               (api-response req {:reason (str "Unknown ID: " id)} 404))
-            (api-response req err 400))))))
+            (api-response req err 400))))
+
+   (POST "/exec-task" [:as req]
+         (let [[params err] (validate-params (:params req) :exec-task)]
+           (if (nil? err)
+             (try
+               (task/queue!
+                nil {:url (str "/tasks/" (get params "task"))
+                     :params (dissoc params "token" "task")})
+               (resp/response "ok")
+               (catch Exception e
+                 (prn :warn "couldn't initiate object processing" (.getMessage e))))
+             {:status 403 :body "Forbidden"})))))
