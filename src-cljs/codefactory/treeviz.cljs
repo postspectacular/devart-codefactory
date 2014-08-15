@@ -67,7 +67,7 @@
                :preserveAspectRatio "none"
                :class "op-delete"})]
      (dom/create-ns!
-      dom/svg-ns "path" svg {:d "M0,0 L1,1 M0,1 L1,0"})
+      dom/svg-ns "path" svg {:d "M0.01,0.01 L0.99,0.99 M0.01,0.99 L0.99,0.01"})
      (dom/create-ns!
       dom/svg-ns "rect" svg {:x 0.01 :y 0.01 :width 0.98 :height 0.98}))
 
