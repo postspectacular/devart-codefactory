@@ -35,16 +35,21 @@
 (def op-aliases-reverse
   (zipmap (vals op-aliases) (keys op-aliases)))
 
+(defn seed-3d
+  [points]
+  (let [[a b c d e f g h] (mapv #(g/rotate-z % (- HALF_PI)) points)]
+    (cub/cuboid [b f g c a e h d])))
+
 (def seeds
   (->>
    {:box   {:seed (a/aabb 1)
             :scale 0.71
             :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2.5}}
-    :pent3 {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 5 5 0.25)) (- HALF_PI))
+    :pent3 {:seed (seed-3d (mg/sphere-lat 5 5 0.25))
             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
-    :hex3  {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 6 12 0.25)) (- HALF_PI))
+    :hex3  {:seed (seed-3d (mg/sphere-lat 6 12 0.25))
             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
-    :oct3  {:seed (g/rotate-z (cub/cuboid (mg/sphere-lat 8 8 0.25)) (- HALF_PI))
+    :oct3  {:seed (seed-3d (mg/sphere-lat 8 8 0.25))
             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
     :pent2 {:seed (cub/cuboid (mg/circle-lattice-seg 5 1 0.5))
             :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2}}
