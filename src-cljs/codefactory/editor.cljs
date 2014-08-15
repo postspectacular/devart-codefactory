@@ -81,7 +81,7 @@
      local assoc
      :canvas-width w :canvas-height h
      :view-rect view-rect
-     :proj (gl/perspective 45 view-rect 0.1 20))
+     :proj (gl/perspective 45 view-rect 0.1 30))
     (gl/set-viewport gl view-rect)
     (arcball/resize arcball w h)))
 
