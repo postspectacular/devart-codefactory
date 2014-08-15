@@ -2,12 +2,15 @@
   (:require
    [thi.ng.cljs.dom :as dom]
    [thi.ng.geom.core :as g]
+   [thi.ng.geom.core.utils :as gu]
    [thi.ng.geom.types.utils :as tu]
    [thi.ng.geom.core.vector :refer [vec3 V3Y V3Z]]
+   [thi.ng.geom.core.matrix :as mat]
+   [thi.ng.geom.core.quaternion :as q]
    [thi.ng.geom.aabb :as a]
    [thi.ng.geom.cuboid :as cub]
    [thi.ng.morphogen.core :as mg]
-   [thi.ng.common.math.core :refer [HALF_PI]]
+   [thi.ng.common.math.core :refer [HALF_PI SQRT2]]
    [thi.ng.cljs.utils :as utils :refer [deep-merge]]
    [thi.ng.validate.core :as v]))
 
@@ -71,6 +74,28 @@
                  g/center
                  mg/seed-box))))
     {})))
+
+(def cam-views
+  {:x  [0 (/ SQRT2) 0 (/ SQRT2)]
+   :ix [0 (/ SQRT2) 0 (- (/ SQRT2))]
+   :y  [0 (/ SQRT2) (- (/ SQRT2)) 0]
+   :z  [0 1 0 0]})
+
+(defn face-right
+  [[a b c d]]
+  (let [m1 (g/mix b c)
+        m2 (g/mix a d)]
+    (g/normalize (g/- m2 m1))))
+
+(def view-face
+  (memoize
+   (fn [id]
+     (fn [node]
+       (let [verts (mg/face-vertices node id)
+             n (mg/quad-normal verts)
+             r (face-right verts)]
+         (q/quat-from-matrix
+          (mat/look-at n (vec3) (gu/ortho-normal n r))))))))
 
 (def ^:export default-config
   {:modules
@@ -215,26 +240,23 @@
               :paths [{:d "M0,0 L1,0 L1,1 L0,1 Z M0.2,0.8 L0.2,0.2 L0.8,0.2 M0.2,0.2 L0.8,0.8"}]}}
 
    :op-presets
-   [[:splitx2 {:label "split x2" :node (mg/subdiv :cols 2)}]
-    [:splity2 {:label "split y2" :node (mg/subdiv :rows 2)}]
-    [:splitz2 {:label "split z2" :node (mg/subdiv :slices 2)}]
-    [:splitx3 {:label "split x3" :node (mg/subdiv :cols 3)}]
-    [:splity3 {:label "split y3" :node (mg/subdiv :rows 3)}]
-    [:splitz3 {:label "split z3" :node (mg/subdiv :slices 3)}]
+   [[:splitx2 {:label "split x2" :node (mg/subdiv :cols 2) :view (view-face :f)}]
+    [:splity2 {:label "split y2" :node (mg/subdiv :rows 2) :view (view-face :f)}]
+    [:splitz2 {:label "split z2" :node (mg/subdiv :slices 2) :view (view-face :w)}]
+    [:splitx3 {:label "split x3" :node (mg/subdiv :cols 3) :view (:z cam-views)}]
+    [:splity3 {:label "split y3" :node (mg/subdiv :rows 3) :view (:z cam-views)}]
+    [:splitz3 {:label "split z3" :node (mg/subdiv :slices 3) :view (:ix cam-views)}]
     [:sep]
-    [:insetx {:label "inset x" :node (mg/subdiv-inset :dir :x :inset 0.5)
-              :view [0 0.7071067811865475 0 0.7071067811865475]}]
-    [:insety {:label "inset y" :node (mg/subdiv-inset :dir :y :inset 0.5)
-              :view [0 0.7071067811865475 -0.7071067811865475 0]}]
-    [:insetz {:label "inset z" :node (mg/subdiv-inset :dir :z :inset 0.5)
-              :view [0 1 0 0]}]
+    [:insetx {:label "inset x" :node (mg/subdiv-inset :dir :x :inset 0.5) :view (:x cam-views)}]
+    [:insety {:label "inset y" :node (mg/subdiv-inset :dir :y :inset 0.5) :view (:y cam-views)}]
+    [:insetz {:label "inset z" :node (mg/subdiv-inset :dir :z :inset 0.5) :view (:z cam-views)}]
     [:sep]
-    [:mirrore {:label "mirror right" :node (mg/reflect :dir :e)}]
-    [:mirrorw {:label "mirror left" :node (mg/reflect :dir :w)}]
-    [:mirrorn {:label "mirror up" :node (mg/reflect :dir :n)}]
-    [:mirrors {:label "mirror down" :node (mg/reflect :dir :s)}]
-    [:mirrorf {:label "mirror front" :node (mg/reflect :dir :f)}]
-    [:mirrorb {:label "mirror back" :node (mg/reflect :dir :b)}]
+    [:mirrore {:label "mirror right" :node (mg/reflect :dir :e) :view (:z cam-views)}]
+    [:mirrorw {:label "mirror left" :node (mg/reflect :dir :w) :view (:z cam-views)}]
+    [:mirrorn {:label "mirror up" :node (mg/reflect :dir :n) :view (:z cam-views)}]
+    [:mirrors {:label "mirror down" :node (mg/reflect :dir :s) :view (:z cam-views)}]
+    [:mirrorf {:label "mirror front" :node (mg/reflect :dir :f) :view (:x cam-views)}]
+    [:mirrorb {:label "mirror back" :node (mg/reflect :dir :b) :view (:x cam-views)}]
     [:sep]
     [:scalee {:label "scale right" :node (scale-op :e 0.5)}]
     [:scalew {:label "scale left" :node (scale-op :w 0.5)}]

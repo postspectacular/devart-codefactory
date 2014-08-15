@@ -476,7 +476,7 @@
   (go
     (loop []
       (let [[_ id] (<! ch)
-            {:keys [tree selection tools]} @editor]
+            {:keys [tree node-cache selection tools]} @editor]
         (when id
           (when (and selection (not (:active? tools)))
             (let [{preset :node view :view} (config/preset-for-id id)
@@ -487,7 +487,11 @@
               (ops/center-preset bus (id (:specs tools)))
               (async/publish bus :backup-tree tree)
               (when view
-                (async/publish bus :camera-update (q/quat view)))
+                (async/publish
+                 bus :camera-update
+                 (if (fn? view)
+                   (view (node-cache selection))
+                   (q/quat view))))
               (ops/handle-operator
                (or op id)
                (assoc preset :id id)
