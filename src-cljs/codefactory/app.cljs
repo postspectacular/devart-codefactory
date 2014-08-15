@@ -3,6 +3,7 @@
    [cljs.core.async.macros :refer [go]])
   (:require
    [codefactory.config :as config]
+   [codefactory.nav :as nav]
    [codefactory.home :as home]
    [codefactory.gallery :as gallery]
    [codefactory.editor :as editor]
@@ -77,65 +78,6 @@
        (async/publish
         bus :window-resize
         [(.-innerWidth js/window) (.-innerHeight js/window)]))]]))
-
-(defn init-nav
-  [bus state edit?]
-  (let [nav-body  (config/dom-component :nav-body)
-        nav-bt    (config/dom-component :nav-toggle)
-        nav-items (cond->
-                   [:ul
-                    [:li [:a {:href "#/home"} "home"]]
-                    [:li [:a {:href "#/about"} "about"]]]
-
-                   (config/module-enabled? :gallery)
-                   (conj [:li [:a {:href "#/gallery"} "gallery"]])
-
-                   edit?
-                   (conj [:li [:a {:href "#/select"} "create"]]))
-        toggle    (async/subscribe bus :nav-toggle)
-        hide      (async/subscribe bus :nav-hide)]
-
-    (-> nav-bt
-        (dom/set-style! #js {:visibility "visible"})
-        (dom/add-class! "fade-in"))
-
-    (dom/set-html! nav-body (h/render-html nav-items))
-    (dom/add-listeners
-     [[nav-bt "click"
-       (fn [e] (.preventDefault e) (async/publish bus :nav-toggle nil))]])
-    (swap! state assoc :nav-active? false)
-
-    (go
-      (loop []
-        (<! toggle)
-        (if (:nav-active? @state)
-          (async/publish bus :nav-hide nil)
-          (do
-            (-> nav-body
-                (dom/set-style! #js {:visibility "visible"})
-                (dom/remove-class! "fade-out")
-                (dom/add-class! "fade-in"))
-            (-> nav-bt
-                (dom/add-class! "rotate-right")
-                (dom/remove-class! "rotate-left"))
-            (swap! state assoc :nav-active? true)))
-        (recur)))
-
-    (go
-      (loop []
-        (<! hide)
-        (-> nav-body
-            (dom/remove-class! "fade-in")
-            (dom/add-class! "fade-out"))
-        (-> nav-bt
-            (dom/remove-class! "rotate-right")
-            (dom/add-class! "rotate-left"))
-        (swap! state assoc :nav-active? false)
-        (js/setTimeout
-         #(when-not (:nav-active? @state)
-            (dom/set-style! nav-body #js {:visibility "hidden"}))
-         500)
-        (recur)))))
 
 (defn init-router
   [bus state routes default-route-id]
@@ -224,6 +166,6 @@
            (:modules-fallback config/app)
            (:routes-fallback config/app)
            (:default-route-fallback config/app))))
-      (init-nav bus state satisfied?))))
+      (nav/init bus state satisfied?))))
 
 (.addEventListener js/window "load" start)
