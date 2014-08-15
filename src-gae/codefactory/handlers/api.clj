@@ -205,6 +205,7 @@
             (api-response req err 400))))
 
    (POST "/exec-task" [:as req]
+         (prn (:params req))
          (let [[params err] (validate-params (:params req) :exec-task)]
            (if (nil? err)
              (try
@@ -214,4 +215,4 @@
                (resp/response "ok")
                (catch Exception e
                  (prn :warn "couldn't initiate object processing" (.getMessage e))))
-             {:status 403 :body "Forbidden"})))))
+             {:status 403 :body (pr-str (dissoc err "token"))})))))
