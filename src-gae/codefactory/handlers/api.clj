@@ -168,6 +168,20 @@
               (api-response
                req (model/public-entity entity :public-codetree-keys) 201)))))
 
+   (POST "/objects/:id" [id :as req]
+         (if (valid-api-accept? req)
+           (let [[params err] (validate-params (assoc (:params req) "id" id) :update-object)]
+             (if (nil? err)
+               (if-let [entity (ds/retrieve CodeTree id)]
+                 (let [{:strs [status]} params
+                       entity (assoc entity :status status)]
+                   (ds/save! entity)
+                   (api-response
+                    req (model/public-entity entity :public-codetree-keys) 200))
+                 (api-response req {:reason (str "Unknown ID: " id)} 404))
+               (api-response req (dissoc err "token") 400)))
+           (invalid-api-response)))
+
    (GET "/objects/:id" [id :as req]
         (if (valid-api-accept? req)
           (let [[params err] (validate-params {:id id} :get-object)]
