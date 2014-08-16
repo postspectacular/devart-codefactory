@@ -118,12 +118,13 @@
    (fn [_ body]
      (let [{:keys [title author id created preview-uri]} (-> body :body :object)
            preview-uri (or preview-uri (-> config/app :home :default-bg))]
-       (swap!
-        state assoc :credits
-        {:title title
-         :author author
-         :id id
-         :date (utils/format-date (js/Date. created))})
+       (when id
+         (swap!
+          state assoc :credits
+          {:title title
+           :author author
+           :id id
+           :date (utils/format-date (js/Date. created))}))
        (load-featured-image bus preview-uri)))
    :error
    (fn [_ body]
