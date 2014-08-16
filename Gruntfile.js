@@ -50,7 +50,8 @@ module.exports = function(grunt) {
           'war/index.html': 'src-html/index.html',
           'war/barbican/index.html': 'src-html/barbican.html',
           'war/workshop/index.html': 'src-html/workshop.html',
-          'war/staging/index.html': 'src-html/staging.html'
+          'war/staging/index.html': 'src-html/staging.html',
+          'war/maintenance.html': 'src-html/maintenance.html'
         }
       }
     },
@@ -80,6 +81,7 @@ module.exports = function(grunt) {
           {src: ['war/barbican/index.html'], dest: 'war/barbican/index.html'},
           {src: ['war/workshop/index.html'], dest: 'war/workshop/index.html'},
           {src: ['war/staging/index.html'], dest: 'war/staging/index.html'},
+          {src: ['war/maintenance.html'], dest: 'war/maintenance.html'}
         ]
       }
     }

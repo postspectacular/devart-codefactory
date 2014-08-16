@@ -4,23 +4,351 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-    <meta name="author" content="Karsten Schmidt" />
+    <meta name="author" content="Karsten Schmidt, PostSpectacular" />
     <meta name="description" content="Co(de)Factory - Create a piece of art using simple code operations. Commissioned as part of DevArt by Google and Barbican Centre of Arts, London." />
     <title>Google DevArt: Co(de)Factory</title>
     <link rel="stylesheet" href="/css/app.css?v=@@timestamp" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/css/print.css?v=@@timestamp" type="text/css" media="print" />
     <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.3/webfont.js"></script>
     <script>WebFont.load({google: {families: ['Abel']}});</script>
   </head>
   <body>
+    <nav>
+      <div id="nav-toggle" class="anim-ease-out">
+        <a href="#"><svg width="32" height="32" viewBox="0 0 1 1">
+            <path d="M0,0.25 L1,0.25 M0,0.5 L1,0.5 M0,0.75 L1,0.75"/>
+        </svg></a>
+      </div>
+      <div id="nav-body" class="anim-ease-out"></div>
+    </nav>
     <div class="modules">
-      <section id="home" class="current" style="background-image:url(/img/renders/20140701.jpg)">
+
+      <section id="loader" class="current">
         <div class="flex-container">
-          <div class="wrapper flex-item">
-              <div class="main-title flex-item flex-content"><h1>Create a piece of art using code</h1> We are currently down for maintenance.<br/>Please check again soon.</div>
-            </div>
+          <div class="center"><img src="/img/loading.gif" alt="loading" /></div>
         </div>
       </section>
+
+      <section id="object-loader" class="next">
+        <div class="flex-container">
+          <div id="object-load-progress" class="center">
+            <p>Loading artwork...</p>
+            <img src="/img/loading.gif" alt="loading" />
+          </div>
+          <div id="object-error" class="center">
+            <p>Unfortunately, this object couldn't be found in our records.</p>
+            <p><input id="object-restart" type="button" value="RESTART"/></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="upgrade-browser" class="next">
+        <div class="flex-container">
+          <div class="body-wrapper flex-item flex-content">
+            <h1>Thanks for visiting Co(de)Factory!</h1>
+            <div>
+              <p>This experience requires WebGL and has been optimized for Chrome, Firefox &amp; Safari browsers on desktops, laptops &amp; tablets.</p>
+              <p>Please use one of these browsers or devices to create your own Co(de)Factory sculpture.</p>
+              <p>If you're already using one of these browsers, please ensure you have WebGL enabled and a minimum window size of 480 x 640 pixels.</p>
+              <p><a href="http://google.com/chrome">Download Google Chrome</a></p>
+              <p><a href="http://getfirefox.com">Download Mozilla Firefox</a></p>
+              <p><a href="http://apple.com/safari">Download Apple Safari</a></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="home" class="next">
+        <div class="flex-container">
+          <div class="header flex-item">
+            <h2>Co(de)Factory</h2>
+            <div class="overlay tools-extra"></div>
+          </div>
+          <div class="wrapper flex-item">
+            <div class="flex-item"></div>
+            <div class="main-title flex-item flex-content"><h1>Create a piece of art using code</h1></div>
+            <div class="credits flex-item flex-content">
+              <p id="credits-intro">Currently printing at the Barbican:</p>
+              <div>title:<span id="credits-title"></span></div>
+              <div>author:<span id="credits-author"></span></div>
+              <div>date:<span id="credits-date"></span></div>
+            </div>
+          </div>
+          <div class="flex-item buttonbar">
+            <div class="inner">
+              <div id="home-gallery" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="gallery">
+                  <g><path fill="none" d="M0.2,0.2 L0.8,0.2 L0.8,0.8 L0.2,0.8 z M 0.5,0.2 L 0.5, 0.8 M 0.2,0.5 L 0.8,0.5"/></g></svg></div>
+              <div id="home-continue" class="flex-item center flash-border flash">
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="continue">
+                  <g><path fill="none" d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="gallery" class="next">
+        <div class="flex-container">
+          <div class="header flex-item">
+            <h2>Co(de)Factory</h2>
+            <div class="overlay tools-extra"></div>
+          </div>
+          <div id="gallery-items" class="body-wrapper flex-item flex-content">
+          </div>
+          <div class="flex-item buttonbar">
+            <div class="inner">
+              <div id="gallery-prev" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="cancel">
+                  <g><path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
+                </svg>
+              </div>
+              <div id="gallery-next" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="continue">
+                  <g><path fill="none" d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="fade-top"></div>
+        </div>
+      </section>
+
+      <section id="about" class="prev">
+        <div class="flex-container">
+          <div class="header flex-item">
+            <h2>Co(de)Factory</h2>
+            <div class="overlay tools-extra"></div>
+          </div>
+          <div class="body-wrapper flex-item">
+            <div>
+              <p>Co(de)factory is an installation and online design tool that allows anybody to create art and become an artist. It empowers people by giving them tools to create complex 3D forms, and offers the chance to have their digital piece fabricated in 3D and showcased in the Digital Revolutions exhibition at the Barbican.</p>
+              <p>For this piece, Karsten Schmidt has created a visual programming interface with simple design tools, which people can use to transform a single shape in countless ways to construct more complex objects. The interface is accessible to anybody online with a modern web browser, and all pieces can be uploaded to appear in the curated online gallery of this website. Any existing object can then be edited further, thus forming a chain of related pieces and their co-authorships.</p>
+              <!-- <p>The installation also includes a next generation, open-source 3D printer (an OS-RC Ilios HD model) that will print select pieces, live in the gallery. Each day, the Barbican will curate the on-site showcase by choosing one piece from the online gallery to be printed and displayed. Day by day, piece by piece, the physical collection of art will grow.</p> -->
+            </div>
+            <div class="tools">
+              <h2>Code operations</h2>
+              <p>Any object, physical or virtual, is the result of a process. Co(de)Factory provides a minimal set of 8 simple geometric operations (processes), which can be combined in countless ways to explore basic programming concepts and construct new forms from a single start shape. At each step on the way to the final outcome, <em>"Input, Process, Output"</em>, a fundamental concept of programming, is used to define an ever more detailed description of the 3D form. Because the created code is independent from the actual shapes, users can also experiment with switching between different start shapes and observe their different results.</p>
+              <div data-op="sd">
+                <h3>split</h3>
+                <p>This operation splits a shape into smaller shapes in a given direction (along the X, Y or Z axis). This operation is useful to create a grid of smaller shapes to which other operations can be applied later.</p>
+              </div>
+              <div data-op="inset">
+                <h3>inset</h3>
+                <p>This operation moves the corners of a shape towards their center in a given direction (along the X, Y or Z axis) and results in 5 new shapes: the four walls and the enclosed core. The inset amount (wall thickness) can be controlled via the operation's slider. In combination with "Empty", this operation allows for the easy creation of hollow shapes (by later removing their core).</p>
+              </div>
+              <div data-op="reflect">
+                <h3>mirror</h3>
+                <p>A mirror produces a reflection. This operation reflects/flips a shape on one of its six sides. It outputs both the new shape, but also the original, in order to allow further operations to be applied. When the shape is not a cube, repeated application of this operation results in curves or even rings.</p>
+              </div>
+              <div data-op="scale">
+                <h3>scale</h3>
+                <p>The Scale operation is used to adjust the size of one of a shape's six sides. This can be used to create bevels, cones or as preparation step for the "Mirror" operation. The scale factor can be adjusted via the control slider.</p>
+              </div>
+              <div data-op="stretch">
+                <h3>stretch</h3>
+                <p>With this operation a shape can be made longer (or shorter) along a given direction. The are six ways this tool can be applied, one for each side of the shape. The stretch amount can be adjusted via the control slider.</p>
+              </div>
+              <div data-op="tilt">
+                <h3>tilt</h3>
+                <p>Tilting or skewing a shape allows for the creation of rhombic or diamond shapes, which in turn are useful starting points for building larger curved elements.</p>
+              </div>
+              <div data-op="shift">
+                <h3>shift</h3>
+                <p>This operation splits a shape in half and shifts the center by a given length to form a symmetric chevron. Again, the shift amount can be adjusted via the control slider.</p>
+              </div>
+              <div data-op="delete">
+                <h3>empty</h3>
+                <p>Last, but not least, this operation turns a selected shape into empty space and is therefore one of the most important operations to create complex forms.</p>
+              </div>
+            </div>
+            <div>
+              <h2>Open Source</h2>
+              <p>All components of this project are completely open source and available on GitHub:</p>
+              <p>
+                <a href="https://github.com/postspectacular/devart-codefactory">github.com/postspectacular/devart-codefactory</a>
+              </p>
+              <p>Furthermore, the following projects &amp; technologies were playing a crucial role in the making of this project and deserve special mention:</p>
+              <p><a href="http://thi.ng">thi.ng</a></p>
+              <p><a href="http://clojure.org/">Clojure / ClojureScript</a></p>
+              <p><a href="https://github.com/clojure/core.async">core.async</a></p>
+              <p><a href="https://khronos.org/webgl">WebGL</a></p>
+              <p><a href="http://luxrender.net">Luxrender</a></p>
+              <p><a href="https://developers.google.com/closure">Google Closure compiler</a></p>
+              <p><a href="https://cloud.google.com/">Google Cloud</a></p>
+            </div>
+            <div>
+              <h2>Contact</h2>
+              <p>Karsten Schmidt<br/><a href="http://postspectacular.com">postspectacular.com</a><br/><a href="https://twitter.com/toxi">@toxi</a>
+              </p>
+            </div>
+            <div>
+              <h2>Credits</h2>
+              <p>Commissioned by Google & Barbican.</p>
+              <p>Made in collaboration with<br/>Google Creative Lab (London)</p>
+            </div>
+          </div>
+          <div class="flex-item buttonbar">
+            <div class="inner">
+              <div id="about-continue" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="continue">
+                  <g><path fill="none" d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="fade-top"></div>
+        </div>
+      </section>
+
+      <section id="selector" class="next">
+        <div class="flex-container">
+          <div class="flex-item preview-wrapper">
+            <canvas id="seed-canvas"></canvas>
+          </div>
+          <div class="flex-item buttonbar">
+            <div class="inner">
+              <div id="seed-cancel" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="cancel">
+                  <g><path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
+                </svg>
+              </div>
+              <div id="seed-continue" class="flex-item center flash-border flash">
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="continue">
+                  <g><path fill="none" d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="seed-overlay" class="overlay"><h1>Select start shape</h1></div>
+        <a id="seed-left" class="overlay" href="#"><svg width="80" height="80" viewbox="0 0 1 1"><g fill="none" stroke="#fff" stroke-width="0.05"><path d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g></svg></a>
+        <a id="seed-right" class="overlay" href="#"><svg width="80" height="80" viewbox="0 0 1 1"><g fill="none" stroke="#fff" stroke-width="0.05"><path d="M0.2,0.2 L0.5,0.5 L0.2,0.8"/></g></svg></a>
+        <div class="overlay tools-extra"></div>
+      </section>
+
+      <section id="editor" class="next">
+        <div class="flex-container">
+          <div class="flex-item preview-wrapper">
+            <div id="toolbar-label" class="section-label">
+              <svg width="11" height="11" viewbox="0 0 1 1">
+                <path d="M0,0 L1,0 L1,1 L0,1 Z M0.25,0.4 L0.3,0.2 L0.7,0.2 L0.8,0.3 L0.45,0.55 L0.45,0.65 M0.45,0.75 L0.45,0.8" />
+              </svg>code operations
+            </div>
+            <canvas id="edit-canvas"></canvas>
+            <div class="overlay tools-extra"></div>
+          </div>
+          <div id="toolbar" class="flex-item">
+            <div id="tools">
+              <div id="tools-left"></div>
+              <div id="tools-right"></div>
+            </div>
+            <div id="slider" class="disabled">
+              <div id="slider-label"></div>
+              <div id="slider-wrapper"><input id="slider-val" type="range" min="0" max="100" value="50" disabled /></div>
+              <div id="slider-val-label"></div>
+            </div>
+          </div>
+          <div id="edit-treemap" class="flex-item">
+            <div id="viz-label" class="section-label">
+              <svg width="11" height="11" viewbox="0 0 1 1">
+                <path d="M0,0 L1,0 L1,1 L0,1 Z M0.25,0.4 L0.3,0.2 L0.7,0.2 L0.8,0.3 L0.45,0.55 L0.45,0.65 M0.45,0.75 L0.45,0.8" />
+              </svg>code structure
+              <span id="map-label"><svg width="11" height="11" viewbox="0 0 1 1">
+                  <path d="M0,0 L1,0 L1,1 L0,1 Z M0.25,0.4 L0.3,0.2 L0.7,0.2 L0.8,0.3 L0.45,0.55 L0.45,0.65 M0.45,0.75 L0.45,0.8" />
+                </svg>overview
+              </span>
+            </div>
+            <canvas id="viz-map"></canvas>
+            <div id="viz-container"></div>
+            <div id="viz-mask-left"></div>
+          </div>
+          <div class="flex-item buttonbar">
+            <div class="inner">
+              <div id="edit-cancel" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="cancel">
+                  <g><path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
+                </svg>
+              </div>
+              <div id="edit-continue" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 3 1" class="continue">
+                  <g>
+                    <path fill="none" d="M0.2,0.6 L0.2,0.8 L0.8,0.8 L0.8,0.6 M0.3,0.4 L0.5,0.2 L0.7,0.4 M0.5,0.2 L0.5,0.7"/>
+                    <text x="1.1" y="0.71" font-size="0.6" stroke="none">SUBMIT</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="edit-canvas-tip" class="tooltip bottom">
+          <div class="arrow"></div>
+          <div class="tooltip-content"></div>
+        </div>
+        <div id="toolbar-label-tip" class="tooltip right">
+          <div class="arrow"></div>
+          <div class="tooltip-content"></div>
+        </div>
+        <div id="viz-label-tip" class="tooltip right">
+          <div class="arrow"></div>
+          <div class="tooltip-content"></div>
+        </div>
+        <div id="map-label-tip" class="tooltip left">
+          <div class="arrow"></div>
+          <div class="tooltip-content"></div>
+        </div>
+        <div id="axis-label-tip" class="tooltip left">
+          <div class="arrow"></div>
+          <div class="tooltip-content"></div>
+        </div>
+      </section>
+
+      <section id="submit-form" class="next">
+        <div class="flex-container">
+          <div id="submit-form-wrapper" class="flex-item flex-content">
+            <div>
+              <h1>Submit to gallery</h1>
+              <form id="submit-art-form">
+                <p><input type="text" placeholder="TITLE" name="title" maxlength="16"/></p>
+                <p><input type="text" placeholder="AUTHOR NAME" name="author" maxlength="16"/></p>
+                <p class="disclaimer">By clicking 'Submit' your sculpture will be entered into the Co(de)Factory gallery and will be put forward to the Digital Revolution curator for a chance to be printed and displayed in the Digital Revolution exhibition.</p>
+                <p><input id="bt-submit" type="submit" value="SUBMIT"/></p>
+              </form>
+            </div>
+          </div>
+          <div class="flex-item buttonbar">
+            <div class="inner">
+              <div id="submit-cancel" class="flex-item center">
+                <svg width="50%" height="50" viewbox="0 0 1 1" class="cancel">
+                  <g><path fill="none" d="M0.8,0.2 L0.5,0.5 L0.8,0.8"/></g>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="submit-confirm" class="next">
+        <div class="flex-container">
+          <div class="body-wrapper flex-item flex-content">
+            <h1>Thank you for taking part!</h1>
+            <div>
+              <p class="noprint">Your artwork has been received.</p>
+              <p class="noprint" id="thanks-body"></p>
+              <div id="art-url-wrapper" class="hidden">
+                <p>Your object is stored at this unique web address:</p>
+                <p id="art-url"></p>
+              </div>
+              <input id="thanks-cancel" class="noprint" type="button" value="RESTART"/>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
+    <script>var __APP_CONFIG__ = "codefactory.config.default_config";</script>
+    <script src="/js/app.js?v=@@timestamp"></script>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
