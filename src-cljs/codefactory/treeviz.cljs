@@ -486,7 +486,7 @@
               (ops/highlight-selected-preset id (:specs tools))
               (ops/center-preset bus (id (:specs tools)))
               (async/publish bus :backup-tree tree)
-              (when view
+              (when (and view (-> config/app :editor :views-enabled?))
                 (async/publish
                  bus :camera-update
                  (if (fn? view)

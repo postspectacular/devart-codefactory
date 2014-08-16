@@ -127,7 +127,7 @@
 
    :gallery
    {:query   {:filter "all"
-              :limit  15}
+              :limit  20}
     :buttons {:edit     true
               :download true}}
 
@@ -152,6 +152,7 @@
 
    :editor
    {:min-submit-depth 3
+    :views-enabled? false
     :inset 11
     :gap 2
     :margin 10
@@ -365,10 +366,10 @@
     }
 
    :timeouts
-   {:selector (* 30 1000)
-    :editor   (* 7 24 60 60 1000)
-    :thanks   (* 60 1000)
-    :about    (* 5 60 1000)
+   {:selector (* 24 60 60 1000)
+    :editor   (* 24 60 60 1000)
+    :thanks   (* 24 60 60 1000)
+    :about    (* 24 60 60 1000)
     :controller 900
     :tooltip  3000}
 
@@ -421,7 +422,10 @@
       (deep-merge
        {:gallery {:buttons {:download false}}
 
-        :timeouts {:editor (* 2 60 1000)}
+        :timeouts {:selector (* 30 1000)
+                   :editor   (* 3 60 1000)
+                   :thanks   (* 60 1000)
+                   :about    (* 5 60 1000)}
 
         :api {:inject {:location "barbican"}}
 
@@ -441,12 +445,10 @@
   (-> app
       (deep-merge
        {:api {:inject {:location "workshop"}}
-        :modules {:workshop true}
-        :timeouts {:editor (* 30 60 1000)
-                   :thanks (* 5 60 1000)}})))
+        :modules {:workshop true}})))
 
 (def ^:export staging
-  (-> barbican
+  (-> app
       (deep-merge
        {:gallery {:buttons {:download true}}
         :about   {:links-clickable? true}
