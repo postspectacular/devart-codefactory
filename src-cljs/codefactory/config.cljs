@@ -126,10 +126,12 @@
     :credits nil}
 
    :gallery
-   {:query   {:filter "all"
-              :limit  20}
-    :buttons {:edit     true
-              :download true}}
+   {:query       {:filter "approved"
+                  :limit  20}
+    :admin-query {:filter "unapproved"
+                  :limit 20}
+    :buttons     {:edit     true
+                  :download true}}
 
    :about
    {:icon-size [64 64]
@@ -301,7 +303,10 @@
     {:match ["objects" "submit"] :controller :submit-form}
     {:match ["thanks"] :controller :submit-confirm}
     {:match ["about"] :controller :about}
-    {:match ["gallery"] :controller :gallery}]
+    {:match ["gallery"] :controller :gallery}
+    {:match ["admin" "gallery" :token]
+     :bindings {:token {:validate [(v/required)]}}
+     :controller :gallery}]
 
    :routes-fallback
    [{:match ["not-supported"] :hash "not-supported" :controller :upgrade-browser}
@@ -379,7 +384,8 @@
     (->> {:get-object "objects/"
           :submit-object "objects"
           :credits "jobs/current"
-          :gallery "objects"}
+          :gallery "objects"
+          :approve-item "objects/"}
          (reduce-kv
           (fn [acc k v] (assoc acc k (str api-prefix v)))
           {}))}

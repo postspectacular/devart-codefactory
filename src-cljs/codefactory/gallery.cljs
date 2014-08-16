@@ -24,8 +24,10 @@
      "fs-toggle")))
 
 (defn load-page
-  [bus page]
-  (let [q-conf (-> config/app :gallery :query)
+  [bus page token]
+  (let [q-conf (if token
+                 (-> config/app :gallery :admin-query)
+                 (-> config/app :gallery :query))
         offset (* page (:limit q-conf))]
     (dom/set-html!
      (config/dom-component :gallery-main)
@@ -46,11 +48,10 @@
 (defn handle-page-change
   [bus local dir]
   (let [page (+ (:page @local) dir)]
-    (debug :new-page page)
     (swap! local assoc :page page)
     (if (neg? page)
       (route/set-route! "home")
-      (load-page bus page))))
+      (load-page bus page (:admin-token @local)))))
 
 (defn init-button-bar
   [bus local]
@@ -61,7 +62,7 @@
      #(handle-page-change bus local 1)]]))
 
 (defn gallery-item
-  [{:keys [id title author created preview-uri stl-uri] :as obj} parent bus]
+  [{:keys [id title author created preview-uri stl-uri] :as obj} parent bus token]
   (let [img-url (str "/api/1.0/objects/" id "/preview")
         stl-url (str "/api/1.0/objects/" id "/stl")
         item (dom/create! "div" parent {:id (str "obj-" id)})
@@ -69,7 +70,8 @@
         buttons (cond->
                  (list)
                  download (conj [:input.obj-download {:type "button" :value "download"}])
-                 edit     (conj [:input.obj-edit {:type "button" :value "edit"}]))]
+                 edit     (conj [:input.obj-edit {:type "button" :value "edit"}])
+                 token    (conj [:input.obj-approve {:type "button" :value "approve"}]))]
     (dom/set-html!
      item
      (h/render-html
@@ -94,17 +96,25 @@
          [(dom/query item ".obj-overlay") "touchstart"
           (fn [e] (.stopPropagation e) (async/publish bus :focus-gallery-item [:off item obj]))]]
         edit     (conj [(dom/query item ".obj-edit") "click"
-                        (fn [e] (.stopPropagation e) (route/set-route! "objects" id))])
+                        (fn [e]
+                          (.stopPropagation e)
+                          (route/set-route! "objects" id))])
         download (conj [(dom/query item ".obj-download") "click"
-                        (fn [e] (.stopPropagation e) (route/set-location! stl-url))]))))))
+                        (fn [e]
+                          (.stopPropagation e)
+                          (route/set-location! stl-url))])
+        token    (conj [(dom/query item ".obj-approve") "click"
+                        (fn [e]
+                          (.stopPropagation e)
+                          (async/publish bus :approve-gallery-item id))]))))))
 
 (defn build-gallery
-  [objects bus]
+  [objects bus token]
   (let [parent (config/dom-component :gallery-main)]
     (dom/set-html! parent "")
     (loop [objects (seq objects)]
       (when objects
-        (gallery-item (first objects) parent bus)
+        (gallery-item (first objects) parent bus token)
         (recur (next objects))))))
 
 (defn handle-item-overlay
@@ -131,24 +141,55 @@
   (go
     (loop []
       (let [[_ objects] (<! ch)]
-        (build-gallery objects bus))
+        (build-gallery objects bus (:admin-token @local)))
       (recur))))
+
+(defn approve-item
+  [bus local id]
+  (io/request
+   :uri    (str (config/api-route :approve-item) id)
+   :data   {:status "approved" :token (:admin-token @local)}
+   :method :post
+   :edn?   true
+   :success (fn [_ {:keys [body] :as data}]
+              (debug :approve-ok data)
+              (handle-page-change bus local 0))
+   :error   (fn [status data]
+              (warn :response data)
+              (handle-page-change bus local 0))))
+
+(defn handle-approval
+  [ch bus local]
+  (go
+    (loop []
+      (let [[_ id] (<! ch)]
+        (approve-item bus local id)
+        (recur)))))
 
 (defn init
   [bus]
   (let [init    (async/subscribe bus :init-gallery)
         refresh (async/subscribe bus :gallery-loaded)
         focus   (async/subscribe bus :focus-gallery-item)
+        approve (async/subscribe bus :approve-gallery-item)
         local   (atom {:focused nil :page 0})]
 
     (init-fullscreen-button)
     (init-button-bar bus local)
     (handle-refresh refresh bus local)
     (handle-item-overlay focus bus local)
+    (handle-approval approve bus local)
 
     (go
       (loop []
         (let [[_ [state params]] (<! init)]
+          (swap!
+           local assoc
+           :focused nil
+           :page 0
+           :admin-token (if-not (empty? (:token params))
+                          (:token params)))
+          (debug @local)
           (async/publish bus :broadcast-tree nil)
-          (load-page bus 0))
+          (load-page bus 0 (:token params)))
         (recur)))))
