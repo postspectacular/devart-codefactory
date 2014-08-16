@@ -23,9 +23,14 @@
   [mesh]
   (first (tu/fit-all-into-bounds norm-box [mesh])))
 
+(defn seed-3d
+  [points]
+  (let [[a b c d e f g h] (mapv #(g/rotate-z % (- HALF_PI)) points)]
+    (cub/cuboid [b f g c a e h d])))
+
 (def seeds
   (let [c     #(cub/cuboid (apply mg/circle-lattice-seg %))
-        s     #(g/rotate-z (cub/cuboid (apply mg/sphere-lat %)) (- HALF_PI))
+        s     #(seed-3d (apply mg/sphere-lat %))
         seeds {:box   {:seed (a/aabb 1)}
                :pent3 {:seed (s [5 5 0.25])}
                :hex3  {:seed (s [6 12 0.25])}

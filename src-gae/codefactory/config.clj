@@ -74,11 +74,16 @@
             "location" [(v/optional (v/max-length 16))]
             "parent"   [(v/optional (v/uuid4))]}
 
+           :update-object
+           {"id"     [(v/required) (v/uuid4)]
+            "status" [(v/member-of #{"approved" "unapproved"})]
+            "token"  [(v/equals "")]}
+
            :get-object
            {:id [(v/required) (v/uuid4)]}
 
            :query-objects
-           {"limit" [(v/optional (v/number (fn [_ v] (util/parse-int v 0))))
+           {"limit"  [(v/optional (v/number (fn [_ v] (util/parse-int v 0))))
                      (v/optional (v/in-range 1 query-result-limit))]
             "offset" [(v/optional (v/number (fn [_ v] (util/parse-int v 0))))
                       (v/optional (v/greater-than -1))]
