@@ -51,8 +51,13 @@
   (let [ch (async/subscribe bus :broadcast-tree)]
     (go
       (loop []
-        (let [[_ [tree seed history]] (<! ch)]
-          (swap! local assoc :tree tree :seed seed :history history)
+        (let [[_ [tree seed history parent-id]] (<! ch)]
+          (swap!
+           local assoc
+           :tree tree
+           :seed seed
+           :history history
+           :parent-id parent-id)
           (recur))))))
 
 (defn handle-submit
@@ -66,15 +71,18 @@
          (let [form   (aget (.-forms js/document) "submit-art-form")
                title  (.-value (aget form "title"))
                author (.-value (aget form "author"))
-               {:keys [tree seed]} @local]
+               {:keys [tree seed parent-id]} @local
+               data {:tree (pr-str tree)
+                     :seed seed
+                     :title title
+                     :author author}
+               data (if parent-id
+                      (assoc data :parent parent-id)
+                      data)]
            (-> bt
                (dom/set-attribs! {:value "PLEASE WAIT..." :disabled true})
                (dom/add-class! "disabled"))
-           (submit-model
-            bus {:tree (pr-str tree)
-                 :seed seed
-                 :title title
-                 :author author})))]])))
+           (submit-model bus data)))]])))
 
 (defn handle-cancel
   [bus local]

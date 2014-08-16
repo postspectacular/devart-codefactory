@@ -30,8 +30,8 @@
 
 (defn submit-model
   [bus local]
-  (let [{:keys [tree seed-id history]} @local]
-    (async/publish bus :broadcast-tree [tree seed-id history])
+  (let [{:keys [tree seed-id history parent-id]} @local]
+    (async/publish bus :broadcast-tree [tree seed-id history parent-id])
     (route/set-route! "objects" "submit")))
 
 (defn relaunch-selector
@@ -332,7 +332,6 @@
           (when (>= id 0)
             (async/publish bus :hide-tooltip (tips id)))
           (swap! local assoc :intro-active? false)
-          ;; TODO reset camera
           (async/publish bus :regenerate-scene nil))
         (recur)))))
 
@@ -357,9 +356,14 @@
   (let [ch (async/subscribe bus :broadcast-tree)]
     (go
       (loop []
-        (let [[_ [tree seed history]] (<! ch)]
-          (debug :editor-tree-received tree seed history)
-          (swap! local assoc :tree tree :seed-id seed :history history)
+        (let [[_ [tree seed history parent-id]] (<! ch)]
+          (debug :editor-tree-received tree seed history parent-id)
+          (swap!
+           local assoc
+           :tree tree
+           :seed-id seed
+           :history history
+           :parent-id parent-id)
           (when-not tree
             (swap! local assoc :history []))
           (recur))))))
@@ -531,6 +535,7 @@
                  :time        now
                  :active?     true
                  :history     (or (:history @local) [])
+                 :parent-id   (:parent-id @local)
                  :tools       (:tools @local)
                  :axes        axes
                  :show-axes?  false

@@ -26,10 +26,10 @@
    :uri     (str (config/api-route :get-object) id)
    :method  :get
    :edn?    true
-   :success (fn [_ {{:keys [tree seed]} :body  :as data}]
+   :success (fn [_ {{:keys [tree seed id]} :body :as data}]
               (let [tree (if (string? tree) (read-string tree) tree)
                     seed (or seed "box")]
-                (async/publish bus :broadcast-tree [tree (keyword seed)])
+                (async/publish bus :broadcast-tree [tree (keyword seed) nil id])
                 (go (<! (timeout 1000)) (route/replace-route! "objects" "edit" seed))))
    :error   (fn [status body]
               (warn :response body)
