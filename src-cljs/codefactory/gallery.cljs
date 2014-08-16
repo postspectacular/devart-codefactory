@@ -69,7 +69,7 @@
         buttons (cond->
                  (list)
                  download (conj [:input.obj-download {:type "button" :value "download"}])
-                 edit     (conj [:input.obj-edit {:type "button" :value "clone"}]))]
+                 edit     (conj [:input.obj-edit {:type "button" :value "edit"}]))]
     (dom/set-html!
      item
      (h/render-html
