@@ -137,7 +137,7 @@
 
    :thanks
    {:link-clickable? true
-    :body "To view visit <a href=\"devartcodefactory.com\">devartcodefactory.com</a> and see which piece is selected each day to be 3D printed and displayed at the Barbican."}
+    :body "To view visit <a href=\"http://devartcodefactory.com\">devartcodefactory.com</a> and see if your piece has been selected to be shown in the online gallery."}
 
    :seed-select
    {:space 1.45
@@ -433,7 +433,7 @@
 
         :thanks
         {:link-clickable? false
-         :body "To view visit devartcodefactory.com and see which piece is selected each day to be 3D printed and displayed here at the Barbican."}
+         :body "To view visit devartcodefactory.com and see if your piece has been selected to be shown in the online gallery."}
 
         :editor
         {:tooltips {:edit-canvas   {:content "This your 3D preview. Touch the shape to rotate. Pinch to zoom."}
