@@ -397,9 +397,9 @@
       (let [{{:keys [start target phase]} :view
              cancel? :view-tween-cancel?} @local]
         (if-not cancel?
-          (do
-            (arcball/set-rotation ball (g/mix start target (min phase 1.0)))
-            (swap! local assoc-in [:view :phase] (m/mix phase 1.0 0.2))
+          (let [phase (if (>= phase 0.99) 1.0 (m/mix phase 1.0 0.15))]
+            (arcball/set-rotation ball (g/mix start target phase))
+            (swap! local assoc-in [:view :phase] phase)
             (if (>= phase 0.995)
               (end-view-tween local)
               (recur)))
