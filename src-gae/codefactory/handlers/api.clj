@@ -101,8 +101,7 @@
                {:job    (model/public-entity job :public-job-keys)
                 :object (model/public-entity object :public-codetree-keys)}
                200)
-              (api-response
-               req {:reason "No print jobs"} 404)))
+              {:status 204}))
           (invalid-api-response)))
 
    (POST "/jobs" [:as req]
@@ -125,14 +124,15 @@
             (if (nil? err)
               (let [{:strs [limit offset filter] :or {limit 25 offset 0}} params
                     [sort filter] (object-query-opts filter)
-                    entities (ds/query
-                              CodeTree
-                              :sort   sort
-                              :filter filter
-                              :limit  limit
-                              :offset offset)
-                    entities (mapv #(model/public-entity % :public-codetree-keys) entities)]
-                (api-response req entities 200))
+                    objects (->> (ds/query
+                                  CodeTree
+                                  :sort   sort
+                                  :filter filter
+                                  :limit  limit
+                                  :offset offset)
+                                 (clojure.core/filter :preview-uri)
+                                 (mapv #(model/public-entity % :public-codetree-keys)))]
+                (api-response req objects 200))
               (api-response req err 400)))
           (invalid-api-response)))
 
