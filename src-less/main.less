@@ -100,6 +100,11 @@ svg.cancel {
     stroke: @col-bt-cancel;
 }
 
+svg.disabled {
+    fill: @op-col-disabled;
+    stroke: @op-col-disabled;
+}
+
 svg.generic {
     fill: none;
     stroke: @col-text;
@@ -127,6 +132,16 @@ svg.generic {
                 stroke-width: 0.05;
                 stroke: #fff;
                 fill: #fff;
+            }
+        }
+
+        div.disabled:hover {
+            border: 2px solid @border-col;
+            cursor: default;
+
+            svg g {
+                fill: @op-col-disabled;
+                stroke: @op-col-disabled;
             }
         }
     }

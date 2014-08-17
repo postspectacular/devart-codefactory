@@ -45,13 +45,25 @@
      :error   (fn [status body]
                 (warn :response body)))))
 
+(defn toggle-page-button
+  [id pred cls]
+  (let [el (config/dom-component id)]
+    (dom/set-attribs! (dom/query el "svg") {:class (if pred "disabled" cls)})
+    (-> el
+        (dom/add-class! (if pred "disabled" cls))
+        (dom/remove-class! (if pred cls "disabled")))))
+
 (defn handle-page-change
   [bus local dir]
-  (let [page (+ (:page @local) dir)]
-    (swap! local assoc :page page)
-    (if (neg? page)
-      (route/set-route! "home")
-      (load-page bus page (:admin-token @local)))))
+  (when-not (:loading? @local)
+    (let [page (+ (:page @local) dir)]
+      (when-not (neg? page)
+        (swap!
+         local assoc
+         :loading? true
+         :page page :prev-page (:page @local)
+         :prev-objects (:objects @local))
+        (load-page bus page (:admin-token @local))))))
 
 (defn init-button-bar
   [bus local]
@@ -141,7 +153,15 @@
   (go
     (loop []
       (let [[_ objects] (<! ch)]
-        (build-gallery objects bus (:admin-token @local)))
+        (swap! local assoc :loading? false)
+        (if (seq objects)
+          (do
+            (swap! local assoc :objects objects)
+            (build-gallery objects bus (:admin-token @local)))
+          (let [objects (:prev-objects @local)]
+            (swap! local assoc :page (:prev-page @local))
+            (build-gallery objects bus (:admin-token @local))))
+        (toggle-page-button :gallery-prev (zero? (:page @local)) "cancel"))
       (recur))))
 
 (defn approve-item
@@ -186,10 +206,14 @@
           (swap!
            local assoc
            :focused nil
-           :page 0
+           :page 0 :prev-page 0
+           :objects []
+           :prev-objects []
+           :loading? false
            :admin-token (if-not (empty? (:token params))
                           (:token params)))
           (debug @local)
           (async/publish bus :broadcast-tree nil)
+          (toggle-page-button :gallery-prev true "cancel")
           (load-page bus 0 (:token params)))
         (recur)))))
