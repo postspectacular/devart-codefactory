@@ -27,7 +27,8 @@
 
 (defn seed->index
   [seeds seed-name]
-  (let [id (keyword seed-name)]
+  (let [id (keyword seed-name)
+        id (get-in config/app [:seed-select :aliases id] id)]
     (loop [seeds seeds, i 0]
       (if seeds
         (if (= (first seeds) id)

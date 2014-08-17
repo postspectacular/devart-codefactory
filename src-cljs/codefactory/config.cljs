@@ -43,25 +43,34 @@
   (let [[a b c d e f g h] (mapv #(g/rotate-z % (- HALF_PI)) points)]
     (cub/cuboid [b f g c a e h d])))
 
+(defn seed-3d-old
+  [points] (g/rotate-z (cub/cuboid points) (- HALF_PI)))
+
 (def seeds
   (->>
-   {:box   {:seed (a/aabb 1)
-            :scale 0.71
-            :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2.5}}
-    :pent3 {:seed (seed-3d (mg/sphere-lat 5 5 0.25))
-            :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
-    :hex3  {:seed (seed-3d (mg/sphere-lat 6 12 0.25))
-            :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
-    :oct3  {:seed (seed-3d (mg/sphere-lat 8 8 0.25))
-            :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
-    :pent2 {:seed (cub/cuboid (mg/circle-lattice-seg 5 1 0.5))
-            :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2}}
-    :hex2  {:seed (cub/cuboid (mg/circle-lattice-seg 6 1 0.5))
-            :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2}}
-    :oct2  {:seed (cub/cuboid (mg/circle-lattice-seg 8 1 0.5))
-            :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.75}}
-    :tri2  {:seed (cub/cuboid (mg/circle-lattice-seg 3 1 0.4))
-            :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.5}}}
+   {:box    {:seed (a/aabb 1)
+             :scale 0.71
+             :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2.5}}
+    :pent3  {:seed (seed-3d-old (mg/sphere-lat 5 5 0.25))
+             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+    :hex3   {:seed (seed-3d-old (mg/sphere-lat 6 12 0.25))
+             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+    :oct3   {:seed (seed-3d-old (mg/sphere-lat 8 8 0.25))
+             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+    :pent3b {:seed (seed-3d (mg/sphere-lat 5 5 0.25))
+             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+    :hex3b  {:seed (seed-3d (mg/sphere-lat 6 12 0.25))
+             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+    :oct3b  {:seed (seed-3d (mg/sphere-lat 8 8 0.25))
+             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+    :pent2  {:seed (cub/cuboid (mg/circle-lattice-seg 5 1 0.5))
+             :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2}}
+    :hex2   {:seed (cub/cuboid (mg/circle-lattice-seg 6 1 0.5))
+             :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2}}
+    :oct2   {:seed (cub/cuboid (mg/circle-lattice-seg 8 1 0.5))
+             :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.75}}
+    :tri2   {:seed (cub/cuboid (mg/circle-lattice-seg 3 1 0.4))
+             :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 1.5}}}
    (reduce-kv
     (fn [acc k v]
       (assoc
@@ -150,7 +159,8 @@
     :rot-speed 2
     :scroll-speed 0.15
     :falloff [1.0 0.25 0.1875]
-    :seed-order [:box :hex2 :pent2 :tri2 :hex3 :oct3 :pent3 :oct2]}
+    :seed-order [:box :hex2 :pent2 :tri2 :hex3b :oct3b :pent3b :oct2]
+    :aliases {:pent3 :pent3b :hex3 :hex3b :oct3 :oct3b}}
 
    :editor
    {:min-submit-depth 3
