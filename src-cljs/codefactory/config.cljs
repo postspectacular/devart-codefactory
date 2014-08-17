@@ -148,7 +148,7 @@
 
    :thanks
    {:link-clickable? true
-    :body "To view visit <a href=\"http://devartcodefactory.com\">devartcodefactory.com</a> and see if your piece has been selected to be shown in the online gallery."}
+    :body "To view visit devartcodefactory.com and see if your piece has been selected to be shown in the online gallery."}
 
    :seed-select
    {:space 1.45
@@ -330,7 +330,6 @@
    {[:loader :home] -1
     [:loader :editor] -1
     [:loader :gallery] -1
-    [:loader :login] -1
     [:loader :submit-form] -1
     [:home :editor] -1
     [:home :selector] -1
@@ -343,7 +342,12 @@
     [:selector :home] 1
     [:about :home] -1
     [:home :about] 1
-    [:login :home] -1
+    [:home :gallery] -1
+    [:gallery :home] 1
+    [:gallery :about] 1
+    [:gallery :object-loader] -1
+    [:editor :gallery] 1
+    [:editor :about] 1
     }
 
    :dom-components
