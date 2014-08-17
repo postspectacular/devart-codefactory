@@ -147,22 +147,31 @@ svg.generic {
     }
 }
 
+#fs-toggle {
+    position: fixed;
+    top: @margin;
+    right: @margin;
+    margin-bottom: 20px;
+    z-index: 1001;
+
+    svg {
+        stroke: @col-tool-fs;
+    }
+
+    &:hover {
+        svg { stroke: @col-tool-hover; }
+    }
+}
+
 .tools-extra {
-    top: 10px;
-    right: 10px;
+    top: (2 * @margin + @icon-size);
+    right: @margin;
 
     div {
         margin-bottom: 10px;
 
         &:hover {
             svg { stroke: @col-tool-hover; }
-        }
-    }
-
-    div.fs-toggle {
-        margin-bottom: 20px;
-        svg {
-            stroke: @col-tool-fs !important;
         }
     }
 

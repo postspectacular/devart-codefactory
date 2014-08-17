@@ -464,10 +464,6 @@
                  (async/publish bus :render-scene nil)))
         paths #(-> icons % :paths)]
     (common/icon-button
-     tools nil size (paths :fullscreen) nil
-     (fn [] (dom/request-fullscreen))
-     "fs-toggle")
-    (common/icon-button
      tools "axis-toggle" size (paths :axis) nil
      (fn []
        (swap! local update-in [:show-axes?] not)

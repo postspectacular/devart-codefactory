@@ -11,16 +11,6 @@
    [thi.ng.cljs.dom :as dom]
    [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
 
-(defn init-fullscreen-button
-  []
-  (let [tools (dom/query nil "#home .tools-extra")
-        icons (:icons config/app)
-        size (-> config/app :editor :toolbar-icon-size)]
-    (common/icon-button
-     tools nil size (-> icons :fullscreen :paths) nil
-     (fn [] (dom/request-fullscreen))
-     "fs-toggle")))
-
 (defn init-button-bar
   []
   (dom/add-listeners
@@ -45,7 +35,6 @@
   [bus]
   (let [init (async/subscribe bus :init-home)]
 
-    (init-fullscreen-button)
     (init-button-bar)
 
     (go

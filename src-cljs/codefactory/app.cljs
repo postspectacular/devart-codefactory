@@ -3,6 +3,7 @@
    [cljs.core.async.macros :refer [go]])
   (:require
    [codefactory.config :as config]
+   [codefactory.common :as common]
    [codefactory.nav :as nav]
    [codefactory.home :as home]
    [codefactory.gallery :as gallery]
@@ -98,6 +99,14 @@
       (init bus)))
   (init-router bus state routes default-route))
 
+(defn init-fullscreen-button
+  []
+  (let [icons (:icons config/app)
+        size (-> config/app :editor :toolbar-icon-size)]
+    (common/icon-button
+     (dom/by-id "fs-toggle") nil size (-> icons :fullscreen :paths) nil
+     (fn [] (dom/request-fullscreen)))))
+
 (defn load-featured-image
   [bus url]
   (debug :load-bg url)
@@ -169,6 +178,7 @@
            (:modules-fallback config/app)
            (:routes-fallback config/app)
            (:default-route-fallback config/app))))
-      (nav/init bus state satisfied?))))
+      (nav/init bus state satisfied?)
+      (init-fullscreen-button))))
 
 (.addEventListener js/window "load" start)
