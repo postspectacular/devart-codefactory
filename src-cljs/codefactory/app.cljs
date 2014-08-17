@@ -53,8 +53,10 @@
      {:route             route
       :ctrl-id           new-id
       :last-route-change (utils/now)})
-    (async/publish bus init-id [state params])
-    (js/setTimeout #(async/publish bus release-id nil) delay)))
+    (if (= new-id ctrl-id)
+      (async/publish bus release-id nil)
+      (js/setTimeout #(async/publish bus release-id nil) delay))
+    (async/publish bus init-id [state params])))
 
 (defn listen-route-change
   [bus]
