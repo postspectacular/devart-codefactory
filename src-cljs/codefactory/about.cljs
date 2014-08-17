@@ -4,7 +4,7 @@
   (:require
    [codefactory.config :as config]
    [codefactory.common :as common]
-   [codefactory.operators :as ops]
+   [codefactory.editor.operators :as ops]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]

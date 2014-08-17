@@ -1,9 +1,9 @@
-(ns codefactory.operators
+(ns codefactory.editor.operators
   (:require-macros
    [thi.ng.macromath.core :as mm])
   (:require
+   [codefactory.editor.tree :as tree]
    [codefactory.config :as config]
-   [codefactory.tree :as tree]
    [codefactory.common :as common]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.dom :as dom]

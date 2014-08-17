@@ -4,13 +4,16 @@
    [thi.ng.macromath.core :as mm])
   (:require
    [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]
+   [codefactory.editor.tree :as tree]
+   [codefactory.editor.operators :as ops]
+   [codefactory.editor.node-edit :as nedit]
+   [codefactory.editor.render :as render]
+   [codefactory.editor.tooltips :as tips]
+   [codefactory.editor.toolbar :as tools]
    [codefactory.config :as config]
    [codefactory.color :as col]
    [codefactory.webgl :as webgl]
    [codefactory.common :as common]
-   [codefactory.tree :as tree]
-   [codefactory.operators :as ops]
-   [codefactory.treeviz :as viz]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
@@ -38,164 +41,16 @@
   [bus local]
   (route/set-route! "select" (:seed-id @local)))
 
-(defn render-scene
-  [local]
-  (when (:active? @local)
-    (let [{:keys [gl arcball shaders proj display-meshes bounds
-                  selection sel-type start-time sel-time bg-col]} @local
-                  now         (utils/now)
-                  time        (mm/subm now start-time 0.001)
-                  view        (arcball/get-view arcball)
-                  shared-unis {:view view
-                               :model (g/translate M44 (g/- (g/centroid bounds)))
-                               :proj proj
-                               :normalMat (-> (g/invert view) (g/transpose))}]
-      (apply gl/clear-color-buffer gl bg-col)
-      (gl/clear-depth-buffer gl 1.0)
-      (if selection
-        (webgl/render-with-selection
-         gl
-         shaders
-         shared-unis
-         (vals (dissoc display-meshes selection))
-         [(display-meshes selection)]
-         (col/hex->rgb (config/operator-color sel-type))
-         time sel-time)
-        (webgl/render-meshes
-         gl (shaders 1) (vals display-meshes) shared-unis nil))
-      (when (:show-axes? @local)
-        (webgl/render-axes
-         gl (shaders 1) shared-unis (:axes @local) bounds)))))
-
-(defn resize-canvas
-  [local]
-  (let [{:keys [gl canvas arcball]} @local
-        [w h]     (dom/size (dom/parent canvas))
-        view-rect (r/rect 0 0 w h)
-        icon-size (get-in config/app [:editor :toolbar-icon-size 0])]
-    (dom/set-attribs! canvas {:width w :height h})
-    ;; (dom/set-style! (config/dom-component :preview-label) #js {:width (->px (- w icon-size 30))})
-    (dom/set-style! (config/dom-component :toolbar-label)
-                    #js {:width (->px (- w 20)) :top (->px (- h 19))})
-    (swap!
-     local assoc
-     :canvas-width w :canvas-height h
-     :view-rect view-rect
-     :proj (gl/perspective 45 view-rect 0.1 30))
-    (gl/set-viewport gl view-rect)
-    (arcball/resize arcball w h)))
-
 (defn handle-resize
   [ch bus local]
   (go
     (loop []
       (let [[_ size] (<! ch)]
         (when size
-          (resize-canvas local)
+          (render/resize-canvas local)
           (async/publish bus :render-scene nil)
           (async/publish bus :update-toolbar-pos (-> @local :tools :offset))
           (recur))))))
-
-(defn handle-arcball
-  [canvas ball events bus local]
-  (go
-    (loop [state nil]
-      (let [[[e data] ch] (alts! events)]
-        (when e
-          (recur
-           (case e
-             :drag-start (let [[x y] (:p data)
-                               h (.-clientHeight canvas)]
-                           (arcball/down ball x (- h y))
-                           (swap! local assoc :view-tween-cancel? true)
-                           state)
-             :drag-move  (let [[x y] (:p data)
-                               h (.-clientHeight canvas)]
-                           (when (arcball/drag ball x (- h y))
-                             (async/publish bus :render-scene nil))
-                           state)
-
-             :dual-start [(:dist data) 0]
-
-             :dual-move (let [[start-dist delta] state
-                              abs-delta (- (:dist data) start-dist)
-                              delta' (mm/subm delta abs-delta 0.1)]
-                          (arcball/zoom-delta ball delta')
-                          (async/publish bus :render-scene nil)
-                          [start-dist delta'])
-             :mouse-wheel (let [delta (:delta data)]
-                            (arcball/zoom-delta ball delta)
-                            (async/publish bus :render-scene nil)
-                            state)
-
-             :gesture-end (do
-                            (arcball/up ball)
-                            (swap! local assoc :view-tween-cancel? false)
-                            state)
-             state)))))))
-
-(defn handle-toolbar-scroll
-  [toolbar events bus local]
-  (go
-    (loop [state nil]
-      (let [[[e data] ch] (alts! events)]
-        (when e
-          (recur
-           (case e
-             :drag-start (let [offset (get-in @local [:tools :offset] 0)
-                               target (common/next-parent-id (:target data))]
-                           (swap! local assoc-in [:tools :active?] true)
-                           [offset (:p data) (vec2) (keyword target)])
-             :drag-move  (if state
-                           (let [[offset p _ target] state
-                                 delta (g/- (:p data) p)
-                                 offset' (mm/madd (:x delta) 2 offset)]
-                             (async/publish bus :update-toolbar-pos offset')
-                             [offset p delta target])
-                           state)
-             :gesture-end (when state
-                            (let [[_ p delta target] state
-                                  dist (g/mag delta)]
-                              (when (and (:touch? data) (< dist 20))
-                                ;;(debug :end-touch target dist)
-                                (if (= target :undo)
-                                  (async/publish bus :undo-triggered target)
-                                  (async/publish bus :op-triggered target)))
-                              (swap! local assoc-in [:tools :active?] false)
-                              nil))
-             nil)))))))
-
-(defn handle-toolbar-update
-  [bus local toolbar]
-  (let [update (async/subscribe bus :update-toolbar)
-        pos (async/subscribe bus :update-toolbar-pos)]
-    (go
-      (loop []
-        (<! update)
-        (let [{:keys [offset curr-offset]} (:tools @local)
-              curr-offset (m/mix curr-offset offset (-> config/app :editor :toolbar-speed))]
-          (swap! local assoc-in [:tools :curr-offset] curr-offset)
-          (dom/set-style! toolbar (clj->js {:marginLeft (->px curr-offset)}))
-          (if (> (m/abs-diff curr-offset offset) 0.5)
-            (when-not (:toolbar-frame @local)
-              (swap!
-               local assoc
-               :toolbar-frame (anim/animframe-provider #(async/publish bus :update-toolbar nil)))))
-          (swap! local dissoc :toolbar-frame))
-        (recur)))
-
-    (go
-      (loop []
-        (let [[_ offset] (<! pos)
-              {max :toolbar-margin-left
-               right :toolbar-margin-right} (:editor config/app)
-               {:keys [width]} (:tools @local)
-               min (- (.-innerWidth js/window) width right)
-               offset (m/clamp offset min max)]
-          (swap! local assoc-in [:tools :offset] offset)
-          (when-not (:toolbar-frame @local)
-            (async/publish bus :update-toolbar nil)))
-        (recur)))))
 
 (defn handle-buttons
   [bus local module-timeout]
@@ -225,116 +80,6 @@
         (swap! local assoc :last-action (utils/now))
         (recur)))))
 
-(def tooltip-element (memoize #(dom/by-id (str (name %) "-tip"))))
-
-(defn add-tooltip-buttons
-  [el bus local]
-  (when (:intro-active? @local)
-    (let [div (dom/create! "div" el)
-          skip (dom/create! "input" div {:type "button" :value "skip"})
-          next (dom/create! "input" div {:type "button" :value "next"})]
-      (dom/add-listeners
-       [[skip "click" #(async/publish bus :intro-done nil)]
-        [next "click" #(async/publish bus :intro-next nil)]]))))
-
-(defn handle-tooltip-display
-  [bus local]
-  (let [show     (async/subscribe bus :show-tooltip)
-        hide     (async/subscribe bus :hide-tooltip)
-        tooltips (-> config/app :editor :tooltips)
-        tip-body (memoize #(dom/query % ".tooltip-content"))]
-    (go
-      (loop []
-        (let [[_ [el id]] (<! show)
-              tip (tooltip-element id)
-              {:keys [offset intro-offset content auto?]} (tooltips id)
-              body (tip-body tip)
-              intro? (:intro-active? @local)
-              offset (if intro? (or intro-offset offset) offset)
-              [x y] (g/+ (vec2 (dom/offset el))
-                         (if (fn? offset) (offset el) offset))]
-          (dom/set-html! body content)
-          (add-tooltip-buttons body bus local)
-          (-> tip
-              (dom/set-style! (clj->js {:display "block" :left (->px x) :top (->px y)}))
-              (dom/remove-class! "hidden"))
-          (when auto?
-            (js/setTimeout
-             #(async/publish bus :hide-tooltip id)
-             (config/timeout :tooltip)))
-          (recur))))
-    (go
-      (loop []
-        (let [[_ id] (<! hide)]
-          (dom/set-style! (tooltip-element id) #js {:display "none"})
-          (recur))))))
-
-(defn handle-tooltips
-  [bus local]
-  (let [tooltips (-> config/app :editor :tooltips)
-        tips     (->> tooltips
-                      (filter (comp :user? val))
-                      keys
-                      (mapv #(-> % name dom/by-id (dom/query "svg"))))
-        channels (fn [ev] (set (map #(first (async/event-channel % ev)) tips)))
-        on       (channels "mouseenter")
-        off      (channels "mouseleave")
-        touch    (channels "touchstart")
-        all      (vec (concat on off touch))]
-    (go
-      (loop [state {}]
-        (let [[e ch] (alts! all)
-              el (.-target e)
-              id (-> el dom/parent (dom/get-attribs ["id"]) first)
-              kid (keyword id)
-              show? (or (on ch) (and (touch ch) (not (state kid))))]
-          (when (and id (not (:intro-active? @local)))
-            (if show?
-              (async/publish bus :show-tooltip [el kid])
-              (async/publish bus :hide-tooltip kid)))
-          (async/publish bus :user-action nil)
-          (recur (assoc state kid show?)))))))
-
-(defn hide-tooltips
-  []
-  (->> (-> config/app :editor :tooltips)
-       keys
-       (map #(-> % tooltip-element (dom/add-class! "hidden")))
-       (dorun)))
-
-(defn handle-intro
-  [bus local]
-  (let [next (async/subscribe bus :intro-next)
-        done (async/subscribe bus :intro-done)
-        tips (-> config/app :editor :intro)]
-    (go
-      (loop []
-        (<! next)
-        (let [id  (:intro-id @local)
-              id' (inc id)]
-          (when (>= id 0)
-            (async/publish bus :hide-tooltip (tips id)))
-          (if (< id' (count tips))
-            (let [kid (tips id')
-                  el  (if-not (= :edit-canvas kid)
-                        (-> kid name dom/by-id (dom/query "svg"))
-                        (-> kid name dom/by-id))]
-              (swap! local assoc-in [:intro-id] id')
-              (async/publish bus :show-tooltip [el kid]))
-            (async/publish bus :intro-done nil)))
-        (async/publish bus :user-action nil)
-        (recur)))
-
-    (go
-      (loop []
-        (<! done)
-        (let [id  (:intro-id @local)]
-          (when (>= id 0)
-            (async/publish bus :hide-tooltip (tips id)))
-          (swap! local assoc :intro-active? false)
-          (async/publish bus :regenerate-scene nil))
-        (recur)))))
-
 (defn handle-release
   [bus local]
   (let [ch (async/subscribe bus :release-editor)]
@@ -347,7 +92,7 @@
           (async/unsubscribe-and-close-many bus subs)
           (dorun (map async/destroy-event-channel events))
           (ops/disable-presets (:specs tools))
-          (hide-tooltips)
+          (tips/hide-tooltips)
           (webgl/delete-meshes gl (vals display-meshes))
           (recur))))))
 
@@ -378,73 +123,6 @@
           (dom/remove-class! (dom/by-id "undo") "disabled")
           (debug :backup-tree (count (:history @local)) tree)
           (recur))))))
-
-(defn init-view-tween
-  [local ball target]
-  (swap! local assoc
-         :view {:start (arcball/get-rotation ball)
-                :target target
-                :phase 0}))
-
-(defn end-view-tween
-  [local]
-  (swap!
-   local assoc
-   :view-tween-cancel? false
-   :view-tween? false))
-
-(defn tween-view!
-  [ball local]
-  (go
-    (loop []
-      (<! (timeout 16))
-      (let [{{:keys [start target phase]} :view
-             cancel? :view-tween-cancel?} @local]
-        (if-not cancel?
-          (let [phase (if (>= phase 0.99) 1.0 (m/mix phase 1.0 0.15))]
-            (arcball/set-rotation ball (g/mix start target phase))
-            (swap! local assoc-in [:view :phase] phase)
-            (if (>= phase 0.995)
-              (end-view-tween local)
-              (recur)))
-          (end-view-tween local))))))
-
-(defn handle-view-update
-  [ch ball bus local]
-  (go
-    (loop []
-      (let [[_ target] (<! ch)]
-        (when target
-          (init-view-tween local ball target)
-          (when-not (:view-tween? @local)
-            (swap! local assoc :view-tween? true)
-            (tween-view! ball local))
-          (recur))))))
-
-(defn render-loop
-  [bus local]
-  (let [ch (async/subscribe bus :render-scene)
-        render-fn (fn render*
-                    [& _]
-                    (render-scene local)
-                    (swap!
-                     local assoc
-                     :render-frame
-                     (if (or (and (:selection @local) (not detect/mobile?))
-                             (:view-tween? @local))
-                       (anim/animframe-provider render*))))]
-    (go
-      (loop []
-        (let [_ (<! ch)]
-          (when-not (:render-frame @local)
-            (swap! local assoc :render-frame (anim/animframe-provider render-fn)))
-          (recur))))))
-
-(defn init-arcball
-  [params]
-  (let [id (keyword (:seed-id params))
-        {:keys [view dist]} (-> config/seeds id :initial-view)]
-    (arcball/make-arcball :init view :dist dist)))
 
 (defn init-tree
   [state tree seed]
@@ -506,7 +184,7 @@
                          [js/window "touchend" gest/gesture-end]])
               c-events (mapv first c-specs)
               t-events (mapv first t-specs)
-              arcball  (init-arcball params)
+              arcball  (render/init-arcball params)
               glconf   (:webgl config/app)
               aconf    (:axis glconf)
               now      (utils/now)
@@ -519,54 +197,54 @@
            local
            (-> state
                (merge
-                {:bg-col      (:bg-col glconf)
-                 :subs        subs
-                 :events      (concat c-specs t-specs)
-                 :arcball     arcball
-                 :selection   nil
-                 :sel-type    nil
-                 :last-action now
-                 :start-time  now
-                 :sel-time    now
-                 :time        now
-                 :active?     true
-                 :history     (or (:history @local) [])
-                 :parent-id   (:parent-id @local)
-                 :tools       (:tools @local)
-                 :axes        axes
-                 :show-axes?  false
-                 :intro-active? intro?
-                 :intro-id -1
+                {:bg-col           (:bg-col glconf)
+                 :subs             subs
+                 :events           (concat c-specs t-specs)
+                 :arcball          arcball
+                 :selection        nil
+                 :sel-type         nil
+                 :last-action      now
+                 :start-time       now
+                 :sel-time         now
+                 :time             now
+                 :active?          true
+                 :history          (or (:history @local) [])
+                 :parent-id        (:parent-id @local)
+                 :tools            (:tools @local)
+                 :axes             axes
+                 :show-axes?       false
+                 :intro-active?    intro?
+                 :intro-id         -1
                  :axis-hint-shown? false})
                (init-tree (:tree @local) (:seed-id params))
                (assoc-in [:tools :curr-offset] t-offset)))
-          (viz/init local bus)
+          (nedit/init local bus)
           (arcball/update-zoom-range arcball (:bounds @local))
-          (resize-canvas local)
-          (render-scene local)
+          (render/resize-canvas local)
+          (render/render-scene local)
 
-          (handle-resize         (:window-resize subs) bus local)
-          (handle-reset-timeout  (:user-action subs) local)
-          (handle-arcball        canvas arcball c-events bus local)
-          (handle-toolbar-scroll toolbar t-events bus local)
-          (handle-view-update    (:camera-update subs) arcball bus local)
-          (handle-buttons        bus local (config/timeout :editor))
+          (handle-resize               (:window-resize subs) bus local)
+          (handle-reset-timeout        (:user-action subs) local)
+          (render/handle-arcball       canvas arcball c-events bus local)
+          (render/handle-view-update   (:camera-update subs) arcball bus local)
+          (tools/handle-toolbar-scroll toolbar t-events bus local)
+          (handle-buttons              bus local (config/timeout :editor))
 
           (async/publish bus :update-toolbar-pos t-offset)
           (js/setTimeout
            (fn []
-             (resize-canvas local)
+             (render/resize-canvas local)
              (if intro? (async/publish bus :intro-next nil)))
            850)
 
           (recur))))
 
-    (render-loop            bus local)
-    (handle-release         bus local)
-    (handle-tree-broadcast  bus local)
-    (handle-tree-backup     bus local)
-    (handle-toolbar-update  bus local toolbar)
-    (handle-tooltips        bus local)
-    (handle-tooltip-display bus local)
-    (handle-intro           bus local)
-    (init-extra-tools       bus local)))
+    (render/render-loop          bus local)
+    (handle-release              bus local)
+    (handle-tree-broadcast       bus local)
+    (handle-tree-backup          bus local)
+    (tools/handle-toolbar-update bus local toolbar)
+    (tips/handle-tooltips        bus local)
+    (tips/handle-tooltip-display bus local)
+    (tips/handle-intro           bus local)
+    (init-extra-tools            bus local)))

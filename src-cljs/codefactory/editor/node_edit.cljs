@@ -1,13 +1,13 @@
-(ns codefactory.treeviz
+(ns codefactory.editor.node-edit
   (:require-macros
    [cljs.core.async.macros :refer [go]]
    [thi.ng.macromath.core :as mm])
   (:require
    [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]
+   [codefactory.editor.tree :as tree]
+   [codefactory.editor.operators :as ops]
    [codefactory.config :as config]
    [codefactory.color :as col]
-   [codefactory.tree :as tree]
-   [codefactory.operators :as ops]
    [codefactory.common :as common]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
@@ -609,8 +609,8 @@
 (defn handle-release
   [ch bus local]
   (go
-    (let [_ (<! ch)
-          {:keys [viz canvas op-triggers nodes subs ctrls]} @local]
+    (<! ch)
+    (let [{:keys [viz canvas op-triggers nodes subs ctrls]} @local]
       (debug :tedit-release)
       (dom/set-html! viz "")
       (ops/release-op-controls local)
@@ -661,15 +661,15 @@
     (regenerate-viz editor local bus)
     (regenerate-map editor local)
 
-    (handle-resize          (:window-resize subs)    bus editor local)
-    (handle-regenerate      (:regenerate-scene subs) bus editor local)
-    (handle-node-toggle     (:node-toggle subs)      bus local)
-    (handle-node-selected   (:node-selected subs)    bus editor local)
-    (handle-node-deselected (:node-deselected subs)  bus editor local)
-    (handle-op-triggered    (:op-triggered subs)     bus editor local)
-    (handle-undo            (:undo-triggered subs)   bus editor local)
-    (handle-commit-op       (:commit-operator subs)  bus local)
-    (handle-cancel-op       (:cancel-operator subs)  bus editor local)
-    (handle-release         (:release-editor subs)   bus local)
+    (handle-resize           (:window-resize subs)    bus editor local)
+    (handle-regenerate       (:regenerate-scene subs) bus editor local)
+    (handle-node-toggle      (:node-toggle subs)      bus local)
+    (handle-node-selected    (:node-selected subs)    bus editor local)
+    (handle-node-deselected  (:node-deselected subs)  bus editor local)
+    (handle-op-triggered     (:op-triggered subs)     bus editor local)
+    (handle-undo             (:undo-triggered subs)   bus editor local)
+    (handle-commit-op        (:commit-operator subs)  bus local)
+    (handle-cancel-op        (:cancel-operator subs)  bus editor local)
+    (handle-release          (:release-editor subs)   bus local)
     (handle-map-interactions m-events bus editor local)
-    (handle-viz-scroll viz v-events bus editor local)))
+    (handle-viz-scroll       viz v-events bus editor local)))

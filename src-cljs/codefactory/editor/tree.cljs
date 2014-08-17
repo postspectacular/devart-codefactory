@@ -1,4 +1,4 @@
-(ns codefactory.tree
+(ns codefactory.editor.tree
   (:require
    [codefactory.config :as config]
    [codefactory.webgl :as webgl]
