@@ -106,22 +106,22 @@
     [id {:el el :x x :y y :w w :h h :path path}]))
 
 (defn reposition-branch
-  [nodes tree gap [offx offy]]
+  [nodes tree sizes gap [offx offy]]
   (fn repos-branch*
-    [path x w]
+    [path x]
     (let [el (:el (nodes (node-id path)))
-          nc (tree/num-children-at tree path)
-          wc (layout/cell-size w gap nc)]
+          nc (tree/num-children-at tree path)]
       (dom/set-style! el #js {:left (->px (+ x offx))})
       (if (pos? nc)
-        (loop [i 0]
-          (when (< i nc)
-            (repos-branch* (conj path i) (mm/madd i wc i gap x) wc)
-            (recur (inc i))))))))
+        (loop [i 0, x x]
+          (if (< i nc)
+            (let [path' (conj path i)]
+              (repos-branch* path' x)
+              (recur (inc i) (+ x (sizes path'))))))))))
 
 (defn reposition-viz
   [editor local scroll]
-  (let [{:keys [viz nodes width]} @local
+  (let [{:keys [viz nodes layout-nodes width]} @local
         {:keys [node-cache tree]} @editor
         {:keys [gap margin map-width]} (:editor config/app)
         min (- (layout/viewport-width) width)
@@ -129,70 +129,40 @@
         offset (layout/scroll-offset scroll viz)]
     ;;(debug :repos-scroll scroll)
     (swap! local assoc :scroll scroll)
-    ((reposition-branch nodes tree gap offset) [] margin width)))
+    ((reposition-branch nodes tree layout-nodes gap offset) [] margin)))
 
 (defn center-node
   [editor local]
-  (comment ;; FIXME
-    (let [{:keys [width nodes selected-id]} @local
-          {:keys [w x]} (nodes selected-id)
-          vp-width (layout/viewport-width)
-          min (- vp-width width)
-          x' (+ (- (- x) (/ w 2)) (/ vp-width 2))
-          x' (m/clamp x' min 0)]
-      (reposition-viz editor local (vec2 x' 0)))))
+  (let [{:keys [width nodes selected-id]} @local
+        {:keys [w x]} (nodes selected-id)
+        vp-width (layout/viewport-width)
+        min (- vp-width width)
+        x' (+ (- (- x) (/ w 2)) (/ vp-width 2))
+        x' (m/clamp x' min 0)]
+    (reposition-viz editor local (vec2 x' 0))))
 
 (defn generate-branch
-  [bus viz tree depth scroll sel intro?]
-  (let [{:keys [gap min-label-width]} (:editor config/app)
-        [offx offy] (layout/scroll-offset scroll viz)
-        event? (not intro?)]
-    (fn gen-branch*
-      [acc path x y w h]
-      (let [node (tree/node-at tree path)
-            nc   (count (:out node))
-            wc   (layout/cell-size w gap nc)
-            cy   (mm/sub y h gap)
-            op   (config/translate-mg-op (tree/node-operator node))
-            [x y w h] (if (and (== 1 depth) (empty? path))
-                        [x (- y 4) (- w 4) (- h 4)] [x y w h])
-            node (make-node viz path op x (- y h) w h offx offy bus sel event?)
-            acc  (conj acc node)]
-        (set-node-label (-> node second :el) path op depth w min-label-width intro?)
-        (if (pos? nc)
-          (loop [acc acc, i 0]
-            (if (< i nc)
-              (recur (gen-branch* acc (conj path i) (mm/madd i wc i gap x) cy wc h)
-                     (inc i))
-              acc))
-          acc)))))
-
-(defn generate-branch2
   [bus parent tree sizes depth scroll sel intro?]
   (let [{:keys [gap min-label-width]} (:editor config/app)
         [offx offy] (layout/scroll-offset scroll parent)
         event? (not intro?)]
-    (fn gen-branch2*
+    (fn gen-branch*
       [acc path x y h]
       (let [node (tree/node-at tree path)
             nc   (count (:out node))
             w    (sizes path)
             cy   (mm/sub y h gap)
             op   (config/translate-mg-op (tree/node-operator node))
-            _    (debug :node path x w)
             [x y w h] (if (and (== 1 depth) (empty? path))
-                        [x (- y 4) (- w 4) (- h 4)] [x y w h])
-            _    (debug :node* x w)
+                        [x (- y 4) (- w 4) (- h 4)] [x y (- w gap) h])
             node (make-node parent path op x (- y h) w h offx offy bus sel event?)
             acc  (conj acc node)]
         (set-node-label (-> node second :el) path op depth w min-label-width intro?)
         (if (pos? nc)
           (loop [acc acc, i 0, x x]
             (if (< i nc)
-              (let [path' (conj path i)
-                    x' (+ x (sizes path'))]
-                (debug :x* x' path')
-                (recur (gen-branch2* acc path' x cy h) (inc i) x'))
+              (let [path' (conj path i)]
+                (recur (gen-branch* acc path' x cy h) (inc i) (+ x (sizes path'))))
               acc))
           acc)))))
 
@@ -207,9 +177,8 @@
                     (* width (/ min-size min-size'))
                     width)
         sizes     (layout/scale-nodes sizes total)]
-    (debug :total total width min-size')
-    (debug :weights weights)
-    (debug :sizes sizes)
+    ;;(debug :total total width min-size')
+    ;;(debug :sizes sizes)
     [total sizes]))
 
 (defn regenerate-viz
@@ -218,20 +187,20 @@
   (let [{:keys [viz nodes width scroll]} @local
         {:keys [tree tree-depth node-cache selection intro-active?]} @editor
         {:keys [gap margin height min-size]} (:editor config/app)
-        width' (layout/compute-required-width editor)
         [width' sizes] (compute-layout tree node-cache min-size)
         scroll (if (< width' (m/abs (:x scroll))) (vec2) scroll)
         node-height (layout/cell-size height gap tree-depth)
-        layout (generate-branch2 bus viz tree sizes tree-depth scroll selection intro-active?)]
+        layout (generate-branch bus viz tree sizes tree-depth scroll selection intro-active?)]
     (-> viz
         (dom/set-html! "")
         (dom/set-attribs! {:class (str "depth" tree-depth)}))
     (swap!
      local assoc
-     :width       width'
-     :node-height node-height
-     :scroll      scroll
-     :nodes       (layout {} [] margin height node-height))
+     :width        width'
+     :node-height  node-height
+     :scroll       scroll
+     :nodes        (layout {} [] margin height node-height)
+     :layout-nodes sizes)
     (if selection
       (center-node editor local))))
 
