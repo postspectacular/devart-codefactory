@@ -86,12 +86,12 @@
     (go
       (loop []
         (<! ch)
-        (let [{:keys [subs events tools gl display-meshes]} @local]
+	(let [{:keys [subs events tools gl display-meshes]} @local]
           (debug :release-editor display-meshes)
           (swap! local assoc :active? false)
           (async/unsubscribe-and-close-many bus subs)
           (dorun (map async/destroy-event-channel events))
-          (ops/disable-presets (:specs tools))
+	  (ops/disable-presets (:specs tools))
           (tips/hide-tooltips)
           (webgl/delete-meshes gl (vals display-meshes))
           (recur))))))
@@ -156,7 +156,7 @@
   (let [canvas  (config/dom-component :edit-canvas)
         toolbar (config/dom-component :tools)
         init    (async/subscribe bus :init-editor)
-        local   (atom {:tools (ops/init-op-triggers bus toolbar)})]
+        local   (atom {:tools (tools/init bus toolbar)})]
 
     (go
       (loop []
@@ -243,8 +243,8 @@
     (handle-release              bus local)
     (handle-tree-broadcast       bus local)
     (handle-tree-backup          bus local)
+    (init-extra-tools            bus local)
     (tools/handle-toolbar-update bus local toolbar)
     (tips/handle-tooltips        bus local)
     (tips/handle-tooltip-display bus local)
-    (tips/handle-intro           bus local)
-    (init-extra-tools            bus local)))
+    (tips/handle-intro           bus local)))

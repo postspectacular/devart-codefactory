@@ -6,6 +6,7 @@
    [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]
    [codefactory.config :as config]
    [codefactory.common :as common]
+   [codefactory.editor.operators :as ops]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.utils :as utils :refer [->px]]
@@ -14,7 +15,62 @@
    [thi.ng.geom.webgl.animator :as anim]
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.vector :as v :refer [vec2]]
-   [thi.ng.common.math.core :as m]))
+   [thi.ng.common.math.core :as m]
+   [clojure.string :as str]))
+
+(defn preset-separator
+  [parent [w h]]
+  (let [el  (dom/create! "div" parent)
+        svg (dom/create-ns!
+             dom/svg-ns "svg" el
+             {:width w :height h :viewBox "0 0 1 1"
+              :preserveAspectRatio "none"})]
+    (dom/create-ns! dom/svg-ns "path" svg {:d "M0.5,0 L0.5,1"})
+    (dom/add-class! el "sep")
+    [w]))
+
+(defn preset-button
+  [parent id op label icon-size width bus & [handler]]
+  (let [[el :as spec] (common/icon-button
+                       parent id icon-size
+                       (-> config/app :operators op :paths)
+                       (str/replace label " " "<br/>")
+                       (or handler #(async/publish bus :op-triggered id)))]
+    (-> el
+        (dom/add-class! (ops/op-class op))
+        (dom/add-class! "disabled"))
+    [width spec]))
+
+(defn init
+  [bus tools]
+  (let [{icon-size :toolbar-icon-size
+         op-width  :toolbar-op-width
+         sep-size  :toolbar-sep-size
+         offset    :toolbar-margin-left} (:editor config/app)
+         [width specs] (reduce
+                        (fn [[total specs] [id {:keys [label node]}]]
+                          (let [op (config/translate-mg-op (:op node))
+                                [w spec] (if (= :sep id)
+                                           (preset-separator tools sep-size)
+                                           (preset-button
+                                            tools id op label
+                                            icon-size op-width bus))
+                                total' (+ total w)]
+                            (if spec
+                              [total' (assoc specs id (conj spec total))]
+                              [total' specs])))
+                        [0 {}] (:op-presets config/app))]
+    (dom/set-style! tools #js {:width width})
+    (preset-button
+     (dom/create! "div" (dom/by-id "tools-left"))
+     :undo :undo "undo"
+     icon-size op-width bus
+     (fn [] (async/publish bus :undo-triggered nil)))
+    (preset-button
+     (dom/create! "div" (dom/by-id "tools-right"))
+     :delete :delete "empty"
+     icon-size op-width bus)
+    {:width width :offset offset :curr-offset offset :specs specs}))
 
 (defn handle-toolbar-scroll
   [toolbar events bus state]
@@ -78,3 +134,38 @@
           (when-not (:toolbar-frame @state)
             (async/publish bus :update-toolbar nil)))
         (recur)))))
+
+(defn center-preset
+  [bus spec]
+  (when spec
+    (let [off (nth spec 3)
+          w (.-innerWidth js/window)
+          x (mm/sub w off (mm/madd w 0.5 (-> config/app :editor :toolbar-op-width) 0.5))]
+      (async/publish bus :update-toolbar-pos x))))
+
+(defn highlight-selected-preset
+  [id specs]
+  (loop [specs specs]
+    (if specs
+      (let [[k [el]] (first specs)]
+        ((if (= id k) dom/add-class! dom/remove-class!) el "selected")
+        (recur (next specs))))))
+
+(defn disable-presets
+  [specs]
+  (loop [specs specs]
+    (if specs
+      (let [[k [el]] (first specs)]
+        (dom/remove-class! el "selected")
+        (dom/add-class! el "disabled")
+        (recur (next specs)))))
+  (dom/add-class! (dom/by-id "delete") "disabled"))
+
+(defn enable-presets
+  [specs]
+  (loop [specs specs]
+    (if specs
+      (let [[k [el]] (first specs)]
+        (dom/remove-class! el "disabled")
+        (recur (next specs)))))
+  (dom/remove-class! (dom/by-id "delete") "disabled"))

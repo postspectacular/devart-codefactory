@@ -6,6 +6,7 @@
    [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]
    [codefactory.editor.tree :as tree]
    [codefactory.editor.operators :as ops]
+   [codefactory.editor.toolbar :as tools]
    [codefactory.editor.layout :as layout]
    [codefactory.editor.overview :as overview]
    [codefactory.config :as config]
@@ -300,7 +301,7 @@
                       (dom/set-html! (-> config/app :editor :ftu-label-sel))
                       (dom/remove-class! "op-root")))
                 (highlight-selected-node el (->> @local :nodes vals (map :el)))
-                (ops/enable-presets (:specs tools))
+                (tools/enable-presets (:specs tools))
                 (debug :sel-node node)
                 (if-not (#{:leaf :delete} op)
                   (async/publish bus :op-triggered (:id node))
@@ -331,7 +332,7 @@
                 (-> el
                     (dom/set-html! (get-in config/app [:editor :root-label]))
                     (dom/add-class! "op-root"))))
-            (ops/disable-presets (:specs tools))
+            (tools/disable-presets (:specs tools))
             (ops/release-op-controls local)
             (when render?
               (swap!
@@ -359,8 +360,8 @@
                   op (config/translate-mg-op (:op preset))]
               (debug :new-op id preset)
               (ops/release-op-controls local)
-              (ops/highlight-selected-preset id (:specs tools))
-              (ops/center-preset bus (id (:specs tools)))
+              (tools/highlight-selected-preset id (:specs tools))
+              (tools/center-preset bus (id (:specs tools)))
               (async/publish bus :backup-tree tree)
               (when (and view (-> config/app :editor :views-enabled?))
                 (async/publish
@@ -398,7 +399,7 @@
             (swap! local assoc :selected-id nil)
             (swap! editor tree/update-meshes true)
             (ops/release-op-controls local)
-            (ops/disable-presets (:specs tools))
+            (tools/disable-presets (:specs tools))
             (when-not (seq (:history @editor))
               (dom/add-class! (dom/by-id "undo") "disabled"))
             (async/publish bus :regenerate-scene nil))

@@ -11,108 +11,10 @@
    [thi.ng.cljs.utils :as utils]
    [thi.ng.common.math.core :as m :refer [HALF_PI]]
    [thi.ng.morphogen.core :as mg]
-   [thi.ng.geom.core.vector :refer [V3X V3Y V3Z]]
-   [clojure.string :as str]))
+   [thi.ng.geom.core.vector :refer [V3X V3Y V3Z]]))
 
 (defn op-class
   [op] (str "op-" (name op)))
-
-(defn init-op-separator
-  [parent [w h]]
-  (let [el  (dom/create! "div" parent)
-        svg (dom/create-ns!
-             dom/svg-ns "svg" el
-             {:width w :height h :viewBox "0 0 1 1"
-              :preserveAspectRatio "none"})]
-    (dom/create-ns! dom/svg-ns "path" svg {:d "M0.5,0 L0.5,1"})
-    (dom/add-class! el "sep")
-    [w]))
-
-(defn init-op-button
-  [parent id op label icon-size width bus & [handler]]
-  (let [[el :as spec] (common/icon-button
-                       parent id icon-size
-                       (-> config/app :operators op :paths)
-                       (str/replace label " " "<br/>")
-                       (or handler #(async/publish bus :op-triggered id)))]
-    (-> el
-        (dom/add-class! (op-class op))
-        (dom/add-class! "disabled"))
-    [width spec]))
-
-(defn center-preset
-  [bus spec]
-  (when spec
-    (let [off (nth spec 3)
-          w (.-innerWidth js/window)
-          x (mm/sub w off (mm/madd w 0.5 (get-in config/app [:editor :toolbar-op-width]) 0.5))]
-      (async/publish bus :update-toolbar-pos x))))
-
-(defn highlight-selected-preset
-  [id specs]
-  (loop [specs specs]
-    (if specs
-      (let [[k [el]] (first specs)]
-        ((if (= id k) dom/add-class! dom/remove-class!) el "selected")
-        (recur (next specs))))))
-
-(defn disable-presets
-  [specs]
-  (loop [specs specs]
-    (if specs
-      (let [[k [el]] (first specs)]
-        (dom/remove-class! el "selected")
-        (dom/add-class! el "disabled")
-        (recur (next specs)))))
-  (dom/add-class! (dom/by-id "delete") "disabled"))
-
-(defn enable-presets
-  [specs]
-  (loop [specs specs]
-    (if specs
-      (let [[k [el]] (first specs)]
-        (dom/remove-class! el "disabled")
-        (recur (next specs)))))
-  (dom/remove-class! (dom/by-id "delete") "disabled"))
-
-(defn init-op-triggers
-  [bus tools]
-  (let [{icon-size :toolbar-icon-size
-         op-width  :toolbar-op-width
-         sep-size  :toolbar-sep-size
-         offset    :toolbar-margin-left} (:editor config/app)
-         [width specs] (reduce
-                        (fn [[total specs] [id {:keys [label node]}]]
-                          (let [op (config/translate-mg-op (:op node))
-                                [w spec] (if (= :sep id)
-                                           (init-op-separator tools sep-size)
-                                           (init-op-button
-                                            tools id op label
-                                            icon-size op-width bus))
-                                total' (+ total w)]
-                            (if spec
-                              [total' (assoc specs id (conj spec total))]
-                              [total' specs])))
-                        [0 {}] (:op-presets config/app))]
-    (dom/set-style! tools #js {:width width})
-    (init-op-button
-     (dom/create! "div" (dom/by-id "tools-left"))
-     :undo :undo "undo"
-     icon-size op-width bus
-     (fn [] (async/publish bus :undo-triggered nil)))
-    (init-op-button
-     (dom/create! "div" (dom/by-id "tools-right"))
-     :delete :delete "empty"
-     icon-size op-width bus)
-    {:width width :offset offset :curr-offset offset :specs specs}))
-
-(defn remove-op-triggers
-  [bus coll]
-  (loop [coll coll]
-    (if coll
-      (let [[el f] (first coll)]
-        (.removeEventListener el "click" f)
-        (recur (next coll))))))
 
 (defn init-op-slider
   [editor bus path op
@@ -138,7 +40,6 @@
              (swap! editor assoc-in (cons :tree path)
                     (listener n (get-in (:tree @editor) (conj path :args))))
              (set-val! n)
-             ;;(debug :tree (:tree @editor))
              (swap! editor tree/update-meshes false)
              (async/publish bus :render-scene nil)))]]))))
 
