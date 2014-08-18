@@ -86,14 +86,15 @@
     (go
       (loop []
         (<! ch)
-	(let [{:keys [subs events tools gl display-meshes]} @local]
+        (let [{:keys [subs events tools gl display-meshes axes]} @local]
           (debug :release-editor display-meshes)
           (swap! local assoc :active? false)
           (async/unsubscribe-and-close-many bus subs)
           (dorun (map async/destroy-event-channel events))
-	  (ops/disable-presets (:specs tools))
+          (tools/disable-presets (:specs tools))
           (tips/hide-tooltips)
           (webgl/delete-meshes gl (vals display-meshes))
+          (webgl/delete-meshes gl (mapcat identity axes))
           (recur))))))
 
 (defn handle-tree-broadcast
