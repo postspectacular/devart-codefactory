@@ -461,7 +461,8 @@
         {:tooltips {:edit-canvas   {:content "This your 3D preview. Touch the shape to rotate. Pinch to zoom."}
                     :viz-label     {:content "A visualization of your code. Each code block creates one or more new shapes. Tap any of the boxes to select them for modification. Tap again to deselect. Drag to scroll."}
                     :axis-label    {:content "Tap here to display the XYZ axes for better orientation."}}}})
-      (disable-module :gallery)))
+      ;;(disable-module :gallery)
+      ))
 
 (def ^:export workshop
   (-> app
