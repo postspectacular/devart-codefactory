@@ -6,6 +6,8 @@
    [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]
    [codefactory.editor.tree :as tree]
    [codefactory.editor.operators :as ops]
+   [codefactory.editor.layout :as layout]
+   [codefactory.editor.overview :as overview]
    [codefactory.config :as config]
    [codefactory.color :as col]
    [codefactory.common :as common]
@@ -102,72 +104,13 @@
 
     [id {:el el :x x :y y :w w :h h :path path}]))
 
-(defn cell-size
-  [total gap num]
-  (if (pos? num)
-    (/ (- total (* (dec num) gap)) num)
-    total))
-
-(defn cell-size-at
-  [tree path width gap]
-  (reduce
-   (fn [width n]
-     (->> path
-          (take n)
-          (tree/num-children-at tree)
-          (cell-size width gap)))
-   width (range (inc (count path)))))
-
-(defn viewport-width
-  []
-  (let [{:keys [margin map-width]} (:editor config/app)]
-    (mm/madd margin -3 (- (.-innerWidth js/window) map-width))))
-
-(defn compute-viewport
-  [local]
-  (let [{:keys [scroll]} @local
-        {:keys [height]} (:editor config/app)]
-    [(- (:x scroll)) (:y scroll) (viewport-width) height]))
-
-(defn scroll-offset
-  [scroll el]
-  (let [{:keys [height margin-bottom]} (:editor config/app)]
-    (g/+ scroll
-         (.-offsetLeft el)
-         (mm/sub (.-innerHeight js/window) height margin-bottom))))
-
-(defn map-focus-rect
-  [[x y w h] viz-width viz-height map-width map-height]
-  (let [x (m/map-interval x 0 viz-width  1 (- map-width 2))
-        y (m/map-interval y 0 viz-height 1 (- map-height 2))
-        w (m/map-interval w 0 viz-width  1 (- map-width 2))
-        h (m/map-interval h 0 viz-height 1 (- map-height 2))]
-    [x y w h]))
-
-(defn compute-required-width
-  [editor]
-  (let [{:keys [max-nodes-path tree]} @editor
-        {:keys [gap margin min-size]} (:editor config/app)
-        width  (viewport-width)
-        cw     (cell-size-at tree max-nodes-path width gap)]
-    (if (< cw min-size)
-      (loop [path     max-nodes-path
-             num-sibs (tree/num-children-at tree max-nodes-path)
-             width    min-size]
-        (let [width'  (mm/madd width num-sibs gap (dec num-sibs))]
-          (if (seq path)
-            (let [path' (pop path)]
-              (recur path' (tree/num-children-at tree path') width'))
-            width')))
-      width)))
-
 (defn reposition-branch
   [nodes tree gap [offx offy]]
   (fn repos-branch*
     [path x w]
     (let [el (:el (nodes (node-id path)))
           nc (tree/num-children-at tree path)
-          wc (cell-size w gap nc)]
+          wc (layout/cell-size w gap nc)]
       (dom/set-style! el #js {:left (->px (+ x offx))})
       (if (pos? nc)
         (loop [i 0]
@@ -180,9 +123,9 @@
   (let [{:keys [viz nodes width]} @local
         {:keys [node-cache tree]} @editor
         {:keys [gap margin map-width]} (:editor config/app)
-        min (- (viewport-width) width)
+        min (- (layout/viewport-width) width)
         scroll (assoc scroll :x (m/clamp (:x scroll) min 0))
-        offset (scroll-offset scroll viz)]
+        offset (layout/scroll-offset scroll viz)]
     ;;(debug :repos-scroll scroll)
     (swap! local assoc :scroll scroll)
     ((reposition-branch nodes tree gap offset) [] margin width)))
@@ -191,7 +134,7 @@
   [editor local]
   (let [{:keys [width nodes selected-id]} @local
         {:keys [w x]} (nodes selected-id)
-        vp-width (viewport-width)
+        vp-width (layout/viewport-width)
         min (- vp-width width)
         x' (+ (- (- x) (/ w 2)) (/ vp-width 2))
         x' (m/clamp x' min 0)]
@@ -200,13 +143,13 @@
 (defn generate-branch
   [bus viz tree depth scroll sel intro?]
   (let [{:keys [gap min-label-width]} (:editor config/app)
-        [offx offy] (scroll-offset scroll viz)
+        [offx offy] (layout/scroll-offset scroll viz)
         event? (not intro?)]
     (fn gen-branch*
       [acc path x y w h]
       (let [node (tree/node-at tree path)
             nc   (count (:out node))
-            wc   (cell-size w gap nc)
+            wc   (layout/cell-size w gap nc)
             cy   (mm/sub y h gap)
             op   (config/translate-mg-op (tree/node-operator node))
             [x y w h] (if (and (== 1 depth) (empty? path))
@@ -228,9 +171,9 @@
   (let [{:keys [viz nodes width scroll]} @local
         {:keys [tree tree-depth selection intro-active?]} @editor
         {:keys [gap margin height]} (:editor config/app)
-        width' (compute-required-width editor)
+        width' (layout/compute-required-width editor)
         scroll (if (< width' (m/abs (:x scroll))) (vec2) scroll)
-        node-height (cell-size height gap tree-depth)
+        node-height (layout/cell-size height gap tree-depth)
         layout (generate-branch bus viz tree tree-depth scroll selection intro-active?)]
     (-> viz
         (dom/set-html! "")
@@ -252,7 +195,7 @@
           nc (tree/num-children-at tree path)
           [x y w h] (if (and (== 1 depth) (empty? path))
                       [x (- y 4) (- w 4) (- h 4)] [x y w h])
-          wc (cell-size w gap nc)
+          wc (layout/cell-size w gap nc)
           cy (mm/sub y h gap)]
       (dom/set-style!
        el #js {:left  (->px (+ x offx))
@@ -269,91 +212,24 @@
   (let [{:keys [viz nodes scroll]}           @local
         {:keys [node-cache tree tree-depth]} @editor
         {:keys [gap margin height]}          (:editor config/app)
-        width       (compute-required-width editor)
-        node-height (cell-size height gap tree-depth)
-        offset      (scroll-offset scroll viz)]
+        width       (layout/compute-required-width editor)
+        node-height (layout/cell-size height gap tree-depth)
+        offset      (layout/scroll-offset scroll viz)]
     ((resize-branch nodes tree tree-depth gap offset) [] margin height width node-height)
     (swap! local assoc :width width :node-height node-height)))
-
-(def map-op-color
-  (memoize
-   (fn [op]
-     ;;(debug :col-op op)
-     (col/gray-offset-hex
-      (config/operator-color op)
-      (-> config/app :editor :map-color-offset)))))
-
-(defn draw-map-branch
-  [ctx tree path x y w h sel]
-  (let [{:keys [op out] :as node} (tree/node-at tree path)
-        nc (count out)
-        wc (cell-size w 1 nc)
-        col (map-op-color (config/translate-mg-op (tree/node-operator node)))]
-    (if (or (not sel) (= path sel))
-      (do
-        (set! (.-fillStyle ctx) col)
-        (set! (.-strokeStyle ctx) "")
-        (.fillRect ctx x (inc (- y h)) w (dec h)))
-      (do
-        (set! (.-fillStyle ctx) "")
-        (set! (.-strokeStyle ctx) col)
-        (.strokeRect ctx x (inc (- y h)) (max (dec w) 1) (dec h))))
-    (if (pos? nc)
-      (loop [i 0]
-        (when (< i nc)
-          (draw-map-branch ctx tree (conj path i) (mm/madd i wc i 1 x) (- y h) wc h sel)
-          (recur (inc i)))))))
-
-(defn draw-map-labels
-  [ctx labels cx cy col font leading]
-  (let [num (count labels)]
-    (set! (.-fillStyle ctx) col)
-    (set! (.-font ctx) font)
-    (set! (.-textAlign ctx) "center")
-    (set! (.-textBaseline ctx) "middle")
-    (loop [i 0, y (int (/ num -2))]
-      (when (< i num)
-        (.fillText ctx (labels i) cx (mm/madd leading y cy))
-        (recur (inc i) (inc y))))))
-
-(defn regenerate-map
-  [editor local]
-  (let [{:keys [ctx width height]} @local
-        {:keys [tree tree-depth selection]} @editor
-        {:keys [map-bg map-label-col map-width map-height] :as econf} (:editor config/app)
-        [vx vy vw vh :as vp] (map-focus-rect
-                              (compute-viewport local)
-                              width height map-width map-height)]
-    (swap! local assoc :viewport vp)
-    (set! (.-fillStyle ctx) map-bg)
-    (set! (.-strokeStyle ctx) nil)
-    (set! (.-lineWidth ctx) 1)
-    (.fillRect ctx 0 0 map-width map-height)
-    (if (< 1 tree-depth)
-      (do
-        (draw-map-branch ctx tree [] 0 map-height
-                         map-width (/ map-height tree-depth)
-                         selection)
-        (set! (.-strokeStyle ctx) "yellow")
-        (set! (.-lineWidth ctx) 2)
-        (.strokeRect ctx vx vy vw vh))
-      (let [{:keys [map-labels map-label-font map-label-size]} econf]
-        (draw-map-labels ctx map-labels
-                         (/ map-width 2) (/ map-height 2)
-                         map-label-col map-label-font map-label-size)))))
 
 (defn scroll-viewport
   [editor local x]
   (let [{:keys [width viewport scroll]} @local
         {:keys [map-width map-height]} (:editor config/app)
-        [_ _ viz-width] (compute-viewport local)
+        [_ _ viz-width] (layout/compute-viewport local)
         [_ _ vw] viewport
         sx (m/map-interval-clamped
             (mm/madd vw -0.5 x)
             0 (- map-width vw)
             0 (- (- width viz-width)))]
     (reposition-viz editor local (assoc scroll :x sx))
-    (regenerate-map editor local)))
+    (overview/regenerate editor local)))
 
 (defn update-submit-button
   [depth]
@@ -368,7 +244,7 @@
     (loop []
       (when (<! ch)
         (resize-viz editor local)
-        (regenerate-map editor local)
+        (overview/regenerate editor local)
         (async/publish bus :user-action nil)
         (recur)))))
 
@@ -381,7 +257,7 @@
           (update-submit-button tree-depth)
           (arcball/update-zoom-range arcball bounds)
           (regenerate-viz editor local bus)
-          (regenerate-map editor local)
+          (overview/regenerate editor local)
           (async/publish bus :render-scene nil))
         (recur)))))
 
@@ -430,7 +306,7 @@
                   (async/publish bus :op-triggered (:id node))
                   (async/publish bus :render-scene nil))
                 (async/publish bus :user-action nil)
-                (regenerate-map editor local))
+                (overview/regenerate editor local))
               (warn :unknown-sel-id id))
             (recur)))))))
 
@@ -462,7 +338,7 @@
                editor assoc
                :display-meshes (tree/filter-leaves-and-selection meshes tree nil))
               (async/publish bus :render-scene nil)
-              (regenerate-map editor local))
+              (overview/regenerate editor local))
             (recur)))))))
 
 (defn orig-tree-node
@@ -592,7 +468,7 @@
                                  delta  (g/- (:p data) p)
                                  scroll' (g/madd (assoc delta :y 0) 2 scroll)]
                              (reposition-viz editor local scroll')
-                             (regenerate-map editor local)
+                             (overview/regenerate editor local)
                              (async/publish bus :user-action nil)
                              [scroll p delta target]))
              :gesture-end (when state
@@ -659,7 +535,7 @@
     (debug :init-tedit)
     (update-submit-button (:tree-depth @editor))
     (regenerate-viz editor local bus)
-    (regenerate-map editor local)
+    (overview/regenerate editor local)
 
     (handle-resize           (:window-resize subs)    bus editor local)
     (handle-regenerate       (:regenerate-scene subs) bus editor local)
