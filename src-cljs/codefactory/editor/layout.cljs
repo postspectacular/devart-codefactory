@@ -73,3 +73,50 @@
               (recur path' (tree/num-children-at tree path') width'))
             width')))
       width)))
+
+;; new layout...
+
+(defn init-node-weights
+  [paths] (zipmap paths (repeat 0)))
+
+(defn leaf-nodes
+  [tree paths] (filter #(zero? (tree/num-children-at tree %)) paths))
+
+(defn compute-branch-weights
+  [acc tree path]
+  (loop [acc acc, path path]
+    (debug :path path)
+    (let [acc (update-in acc [path] (fnil inc 0))]
+      (if (seq path)
+        (recur acc (pop path))
+        acc))))
+
+(defn compute-node-weights
+  [tree paths]
+  (reduce
+   #(compute-branch-weights % tree %2)
+   (init-node-weights paths)
+   (leaf-nodes tree paths)))
+
+(defn node-width-at
+  [acc index path]
+  (let [v (index path)
+        p' (pop path)]
+    (assoc acc path (* (/ v (index p')) (acc p')))))
+
+(defn compute-node-sizes
+  [index total-width]
+  (reduce
+   (fn [acc p] (node-width-at acc index p))
+   {[] total-width}
+   (drop 1 (sort (keys index)))))
+
+(defn scale-nodes
+  [index scale]
+  (reduce-kv (fn [idx k v] (assoc idx k (* v scale))) index index))
+
+(defn scale-nodes-to-min-size
+  [index min-size]
+  (let [min (reduce min (vals index))
+        scale (/ min-size min)]
+    (scale-nodes index scale)))
