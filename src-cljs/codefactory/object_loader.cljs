@@ -30,7 +30,7 @@
               (let [tree (if (string? tree) (read-string tree) tree)
                     seed (or seed "box")]
                 (async/publish bus :broadcast-tree [tree (keyword seed) nil id])
-                (go (<! (timeout 1000)) (route/replace-route! "objects" "edit" seed))))
+                (js/setTimeout #(route/replace-route! "objects" "edit" seed) 1000)))
    :error   (fn [status body]
               (warn :response body)
               (toggle-error true))))
