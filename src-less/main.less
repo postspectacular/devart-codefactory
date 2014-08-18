@@ -232,7 +232,12 @@ svg.generic {
 #gallery-items {
     .flex(row wrap);
 
-    div { width: 320px; font-size: @app-font-size; }
+    div {
+        width: 320px;
+        max-width: 320px !important;
+        font-size: @app-font-size;
+    }
+
     img { width: 320px; }
     span { display: block; }
 
