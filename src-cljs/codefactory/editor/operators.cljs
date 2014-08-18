@@ -47,7 +47,7 @@
   [{:keys [editor local bus node slider op orig]}]
   (let [{:keys [tree selection]} @editor
         {:keys [viz canvas]} @local
-        path (mg/child-path selection)
+        path (tree/child-path selection)
         mg-op (config/op-aliases op)
         listeners (init-op-slider editor bus path op slider)]
     (swap!

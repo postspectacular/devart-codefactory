@@ -24,9 +24,11 @@
   [id node default]
   (:args (if (= id (:op node)) node default)))
 
+(def child-path (memoize mg/child-path))
+
 (defn node-at
   [tree path]
-  (if (seq path) (get-in tree (mg/child-path path)) tree))
+  (if (seq path) (get-in tree (child-path path)) tree))
 
 (defn num-children-at
   [tree path]
@@ -34,11 +36,11 @@
 
 (defn set-node-at
   [tree path node]
-  (if (seq path) (assoc-in tree (mg/child-path path) node) node))
+  (if (seq path) (assoc-in tree (child-path path) node) node))
 
 (defn delete-node-at
   [tree path]
-  (if (seq path) (assoc-in tree (mg/child-path path) nil) {}))
+  (if (seq path) (assoc-in tree (child-path path) nil) {}))
 
 (defn node-operator
   [n] (cond (:op n) (:op n), n :leaf, :else :delete))
