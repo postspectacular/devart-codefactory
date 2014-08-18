@@ -286,7 +286,7 @@
       :node node
       :orig orig
       :slider (->SliderSpec
-               "length" 0.02 2.0 (-> node :args :len) 0.001
+               "length" 0.0 2.0 (-> node :args :len) 0.001
                (fn [n _] (assoc-in node [:args :len] n))
                float-label)})))
 
@@ -302,7 +302,7 @@
       :bus bus
       :op op
       :slider (->SliderSpec
-               "shift length" 0.0 1.0 (-> node :args :offset) 0.001
+               "shift length" -1.0 1.0 (-> node :args :offset) 0.001
                (fn [n _] (assoc-in node [:args :offset] n))
                float-label)
       :node node
@@ -321,7 +321,7 @@
       :bus bus
       :op op
       :slider (->SliderSpec
-               "offset" 0.0 2.0 (-> node :args :offset) 0.001
+               "offset" -1.0 1.0 (-> node :args :offset) 0.001
                (fn [n _] (assoc-in node [:args :offset] n))
                float-label)
       :node node
