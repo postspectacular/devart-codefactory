@@ -32,7 +32,9 @@ At the heart of the app's functionality are two libraries: [thi.ng/geom](http://
 
 This folder contains a complete Leiningen project and the source code to generate 3d models & render scenes (for [LuxRender](http://luxrender.net)) of the physical exhibit plan, as well as the generator for the 446 3D printed tiles used to create the 2.4 x 3.0 metres large flute structure and the cladding for the plinths holding the Nexus 10 tablets in the gallery. The generated 3D STL files and technical drawings for these structures are located in the `/assets` folder.
 
-![structure render](assets/renders/20140415-panels-1290spp.jpg)
+![structure](assets/renders/20140415-panels-1290spp.jpg)
+
+![panels](assets/renders/20140417-panel0-7-255spp.jpg)
 
 #### src-gae
 
@@ -74,16 +76,22 @@ Python source code for the Raspberry PI to control the DMX gallery lighting & LC
 * Clojure 1.6.0
 * ClojureScript 0.0-2280
 * lein-cljsbuild 1.0.3
-* Grunt 0.4.5
+* NPM 1.4.x
+* Grunt 0.4.x
 
 ### Running locally
 
 ```bash
+cd devart-codefactory
+
 # download & install AppEngine dependencies into local /lib dir
 ./install-dependencies.sh
 
+# install grunt dependencies
+npm install
+
 # build & compress HTML & CSS
-grunt less:prod htmlmin:prod replace
+grunt less htmlmin:prod replace
 
 # compile ClojureScript/JS app
 lein do cljsbuild clean, cljsbuild once prod
