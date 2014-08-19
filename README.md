@@ -4,9 +4,11 @@
 
 Photo credit: [Andrew Meredith](http://meredithphoto.com)
 
-Visit http://devartcodefactory.com/ to view the live project, learn more about it, browse the online gallery & create your own piece...
+This project was commissioned by Google & Barbican as part of the DevArt section at the Digital Revolutions exhibition.
 
-This repository contains all source code and other assets which might be valuable for further study. You're very welcome to submit bugfixes & patches, but this release is primarily meant for educational purposes.
+Visit [devartcodefactory.com](http://devartcodefactory.com) to view the live project, learn more about it, browse the online gallery & create your own piece...
+
+This repository contains all source code and other assets created from January - August 2014 and which I hope might be valuable for others interested in studying a complete & non-trivial Clojure/ClojureScript project (5000+ LOC). Furthermore, this project serves as the first public realworld use case of the various libraries of the [thi.ng](http://thi.ng) collection. You're very welcome to submit bug fixes & patches, but this release is primarily meant for educational purposes.
 
 ## Building this project
 
@@ -42,7 +44,7 @@ curl -X GET http://devartcodefactory.com/api/1.0/objects/{{OBJECT-UUID}}/lux > f
 
 #### src-html
 
-The source versions of the various HTML files used for the online version, Barbican gallery kiosks & workshops run with teenages as part of Google's & Barbican's Young Creators initiative. There're only minor differences between each version (mainly config settings). All development is supposed to only happen with the `staging.html` file and then changes applied to others later.
+The source versions of the various HTML files used for the online version, Barbican gallery kiosks & workshops run with teenagers as part of Google & Barbican's Young Creators initiative. There're only minor differences between each version (mainly config settings). All development is supposed to only happen with the `staging.html` file and then changes applied to others later.
 
 #### src-less
 
