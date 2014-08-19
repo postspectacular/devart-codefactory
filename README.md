@@ -20,7 +20,7 @@ This folder contains the entire frontend source code, written in ClojureScript. 
 
 The frontend is a single page application and makes heavy use of [core.async's](https://github.com/clojure/core.async) pub-sub bus/mechanism to deal with event handling and communicate between its various modules. Each module stores its state in a local atom. Furthermore, there's an extensive configuration to customize module & routing behavior. See `codefactory.config` namespace for further details.
 
-At the heart of the app's functionality are two libraries: [thi.ng/geom](http://thi.ng/geom) & [thi.ng/morphogen](http://thi.ng/morphogen). All WebGL functionality is provided by the [geom-webgl](https://github.com/thi-ng/geom/tree/develop/geom-webgl/index.org) module, whereas the actual shape operations are realized by the core Morphogen DSL.
+At the heart of the app's functionality are two libraries: [thi.ng/geom](http://thi.ng/geom) & [thi.ng/morphogen](http://thi.ng/morphogen). All WebGL functionality is provided by the [geom-webgl](https://github.com/thi-ng/geom/blob/develop/geom-webgl/src/index.org) module, whereas the actual shape operations are realized by the core Morphogen DSL.
 
 #### src-fabricate
 
@@ -30,7 +30,7 @@ This folder contains a complete Leiningen project and the source code to generat
 
 Contains the complete Clojure backend and wrapper for the Google AppEngine API & core services. The main app itself is written as a standard [Ring](https://github.com/ring-clojure/ring) handler using [Compojure](https://github.com/weavejester/compojure). The AppEngine wrapper started out using some ideas & snippets from the outdated [appengine-magic](https://github.com/gcv/appengine-magic) project, but ended up differing quite substantially and might be developed further...
 
-3D objects created with the Co(de)Factory UI are only stored as abstract syntax trees (ASTs). However, as part of the object submission process, the backend is generating 3D STL files of the uploaded code structures (ASTs) and uses the [geom-svg](https://github.com/thi-ng/geom/tree/develop/geom-svg/index.org) module to render 3D SVG previews and uses [thi.ng/luxor](http://thi.ng/luxor) to create a render scene bundle for LuxRender. Only selected objects will receive fully LuxRender-rendered asset, which will be featured on the website's homepage. All generated assets can be downloaded via these REST API handlers:
+3D objects created with the Co(de)Factory UI are only stored as abstract syntax trees (ASTs). However, as part of the object submission process, the backend is generating 3D STL files of the uploaded code structures (ASTs) and uses the [geom-svg](https://github.com/thi-ng/geom/blob/develop/geom-svg/src/index.org) module to render 3D SVG previews and [thi.ng/luxor](http://thi.ng/luxor) to create a render scene bundle incl. camera, lights & materials for LuxRender. Only selected objects will receive fully LuxRender-rendered asset (generated on Google Compute Engine instances), which will be featured on the website's homepage. All generated assets can be downloaded via these REST API handlers:
 
 ```bash
 curl -X GET http://devartcodefactory.com/api/1.0/objects/{{OBJECT-UUID}}/stl > foo.stl
