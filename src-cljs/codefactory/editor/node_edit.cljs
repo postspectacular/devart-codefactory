@@ -166,33 +166,18 @@
               acc))
           acc)))))
 
-(defn compute-layout
-  [tree nodes min-size]
-  (let [paths     (keys nodes)
-        weights   (layout/compute-node-weights tree paths)
-        sizes     (layout/compute-node-sizes weights 1)
-        width     (layout/viewport-width)
-        min-size' (* (reduce min (vals sizes)) width)
-        total     (if (< min-size' min-size)
-                    (* width (/ min-size min-size'))
-                    width)
-        sizes     (layout/scale-nodes sizes total)]
-    ;;(debug :total total width min-size')
-    ;;(debug :sizes sizes)
-    [total sizes]))
-
 (defn regenerate-viz
   [editor local bus]
   (tree/update-stats editor)
   (let [{:keys [viz nodes width scroll]} @local
         {:keys [tree tree-depth node-cache selection intro-active?]} @editor
         {:keys [gap margin height min-size]} (:editor config/app)
-        [width' sizes] (compute-layout tree node-cache min-size)
+        [width' sizes] (layout/compute-layout tree node-cache min-size)
         scroll (if (< width' (m/abs (:x scroll))) (vec2) scroll)
         node-height (layout/cell-size height gap tree-depth)
         layout (generate-branch bus viz tree sizes tree-depth scroll selection intro-active?)]
     (-> viz
-        (dom/set-html! "")
+        (dom/clear!)
         (dom/set-attribs! {:class (str "depth" tree-depth)}))
     (swap!
      local assoc
@@ -205,35 +190,41 @@
       (center-node editor local))))
 
 (defn resize-branch
-  [nodes tree depth gap [offx offy]]
+  [nodes tree sizes depth gap [offx offy]]
   (fn resize-branch*
-    [path x y w h]
+    [path x y h]
     (let [el (:el (nodes (node-id path)))
           nc (tree/num-children-at tree path)
+          w  (sizes path)
           [x y w h] (if (and (== 1 depth) (empty? path))
-                      [x (- y 4) (- w 4) (- h 4)] [x y w h])
-          wc (layout/cell-size w gap nc)
+                      [x (- y 4) (- w 4) (- h 4)] [x y (- w gap) h])
           cy (mm/sub y h gap)]
       (dom/set-style!
        el #js {:left  (->px (+ x offx))
                :top   (->px (+ (- y h) offy))
                :width (->px w)})
       (if (pos? nc)
-        (loop [i 0]
-          (when (< i nc)
-            (resize-branch* (conj path i) (mm/madd i wc i gap x) cy wc h)
-            (recur (inc i))))))))
+        (loop [i 0, x x]
+          (if (< i nc)
+            (let [path' (conj path i)]
+              (resize-branch* path' x cy h)
+              (recur (inc i) (+ x (sizes path'))))))))))
 
 (defn resize-viz
   [editor local]
   (let [{:keys [viz nodes scroll]}           @local
         {:keys [node-cache tree tree-depth]} @editor
-        {:keys [gap margin height]}          (:editor config/app)
-        width       (layout/compute-required-width editor)
-        node-height (layout/cell-size height gap tree-depth)
-        offset      (layout/scroll-offset scroll viz)]
-    ((resize-branch nodes tree tree-depth gap offset) [] margin height width node-height)
-    (swap! local assoc :width width :node-height node-height)))
+        {:keys [gap margin height min-size]} (:editor config/app)
+        [width sizes] (layout/compute-layout tree node-cache min-size)
+        node-height   (layout/cell-size height gap tree-depth)
+        offset        (layout/scroll-offset scroll viz)]
+    ((resize-branch nodes tree sizes tree-depth gap offset)
+     [] margin height node-height)
+    (swap!
+     local assoc
+     :layout-nodes sizes
+     :width width
+     :node-height node-height)))
 
 (defn scroll-viewport
   [editor local x]
@@ -275,8 +266,8 @@
           (arcball/update-zoom-range arcball bounds)
           (regenerate-viz editor local bus)
           (overview/regenerate editor local)
-          (async/publish bus :render-scene nil))
-        (recur)))))
+          (async/publish bus :render-scene nil)
+          (recur))))))
 
 (defn handle-node-toggle
   [ch bus local]
@@ -460,8 +451,7 @@
                     (and (or down? (:touch? data))
                          (= :drag-move e)))
               (do
-                (scroll-viewport
-                 editor local (- (:x (:p data)) (.-offsetLeft canvas) 10))
+                (scroll-viewport editor local (- (:x (:p data)) (.-offsetLeft canvas) 10))
                 (async/publish bus :user-action nil)
                 (recur true))
               (recur false))))))))
@@ -505,7 +495,7 @@
     (<! ch)
     (let [{:keys [viz canvas op-triggers nodes subs ctrls]} @local]
       (debug :tedit-release)
-      (dom/set-html! viz "")
+      (dom/clear! viz)
       (ops/release-op-controls local)
       (dorun (map async/destroy-event-channel (:events @local)))
       (async/unsubscribe-and-close-many bus subs)

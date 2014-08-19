@@ -21,16 +21,6 @@
     (/ (- total (* (dec num) gap)) num)
     total))
 
-(defn cell-size-at
-  [tree path width gap]
-  (reduce
-   (fn [width n]
-     (->> path
-          (take n)
-          (tree/num-children-at tree)
-          (cell-size width gap)))
-   width (range (inc (count path)))))
-
 (defn viewport-width
   []
   (let [{:keys [margin map-width]} (:editor config/app)]
@@ -56,25 +46,6 @@
         w (m/map-interval w 0 viz-width  1 (- map-width 2))
         h (m/map-interval h 0 viz-height 1 (- map-height 2))]
     [x y w h]))
-
-(defn compute-required-width
-  [editor]
-  (let [{:keys [max-nodes-path tree]} @editor
-        {:keys [gap margin min-size]} (:editor config/app)
-        width  (viewport-width)
-        cw     (cell-size-at tree max-nodes-path width gap)]
-    (if (< cw min-size)
-      (loop [path     max-nodes-path
-             num-sibs (tree/num-children-at tree max-nodes-path)
-             width    min-size]
-        (let [width'  (mm/madd width num-sibs gap (dec num-sibs))]
-          (if (seq path)
-            (let [path' (pop path)]
-              (recur path' (tree/num-children-at tree path') width'))
-            width')))
-      width)))
-
-;; new layout...
 
 (defn init-node-weights
   [paths] (zipmap paths (repeat 0)))
@@ -120,3 +91,16 @@
   (let [min (reduce min (vals index))
         scale (/ min-size min)]
     (scale-nodes index scale)))
+
+(defn compute-layout
+  [tree nodes min-size]
+  (let [paths     (keys nodes)
+        weights   (compute-node-weights tree paths)
+        sizes     (compute-node-sizes weights 1)
+        width     (viewport-width)
+        min-size' (* (reduce min (vals sizes)) width)
+        total     (if (< min-size' min-size)
+                    (* width (/ min-size min-size'))
+                    width)
+        sizes     (scale-nodes sizes total)]
+    [total sizes]))
