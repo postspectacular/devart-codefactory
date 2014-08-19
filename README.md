@@ -50,6 +50,8 @@ curl -X GET http://devartcodefactory.com/api/1.0/objects/{{OBJECT-UUID}}/lux > f
 
 Example SVG render & Luxrendered version of piece submitted by Mathew Boor:
 
+| SVG   | Luxrender   |
+| ----- | ----------- |
 | ![cell svg render](http://media.devartcodefactory.com/objects/caf9c405-6960-41b2-b83c-a04ef7057bf6/caf9c405-6960-41b2-b83c-a04ef7057bf6-480.svg) | ![cell lux render](http://media.devartcodefactory.com/objects/caf9c405-6960-41b2-b83c-a04ef7057bf6/caf9c405-6960-41b2-b83c-a04ef7057bf6-480.jpg) |
 
 #### src-html
