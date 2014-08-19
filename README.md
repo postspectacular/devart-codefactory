@@ -30,6 +30,8 @@ This folder contains a complete Leiningen project and the source code to generat
 
 Contains the complete Clojure backend and wrapper for the Google AppEngine API & core services. The main app itself is written as a standard [Ring](https://github.com/ring-clojure/ring) handler using [Compojure](https://github.com/weavejester/compojure). The AppEngine wrapper started out using some ideas & snippets from the outdated [appengine-magic](https://github.com/gcv/appengine-magic) project, but ended up differing quite substantially and might be developed further...
 
+At the heart of the backend is a simple REST style API, which supports both JSON and EDN formats (though the UI is only using EDN, since it's native for Clojure). Each API handler defines a number of validators which are defined in this file: `/src-gae/codefactory/config.clj` and executed via the [thi.ng/validate](http://thi.ng/validate) library.
+
 3D objects created with the Co(de)Factory UI are only stored as abstract syntax trees (ASTs). However, as part of the object submission process, the backend is generating 3D STL files of the uploaded code structures (ASTs) and uses the [geom-svg](https://github.com/thi-ng/geom/blob/develop/geom-svg/src/index.org) module to render 3D SVG previews and [thi.ng/luxor](http://thi.ng/luxor) to create a render scene bundle incl. camera, lights & materials for LuxRender. Only selected objects will receive fully LuxRender-rendered asset (generated on Google Compute Engine instances), which will be featured on the website's homepage. All generated assets can be downloaded via these REST API handlers:
 
 ```bash
@@ -86,7 +88,7 @@ lein do cljsbuild clean, cljsbuild auto dev
 
 #### Google API key
 
-For each submitted piece an unique URL is created, which due to the nature of UUIDs is not human readable. Therefore the API handler responsible makes use of Google's `goo.gl` URL shortener to create shorter versions, but requires a valid Google API key to do so. You can run the app without such a key, though in this case your objects can only be accessed via their original long URL.
+The backend generates an unique URL for each submitted piece, which due to the nature of UUIDs is not human readable. Therefore the API handler responsible makes use of Google's `goo.gl` URL shortener to create shorter versions, but requires a valid Google API key to do so. This key needs to be inserted at the bottom of the `/src-gae/codefactory/config.clj` file before launching the server. You can run the app without such a key, though in this case your objects can only be accessed via their original long URL.
 
 ## License
 
