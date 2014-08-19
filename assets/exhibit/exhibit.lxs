@@ -1,0 +1,223 @@
+# exhibit.lxs
+# generated Tue Aug 19 17:51:22 BST 2014 by luxor v0.3.0-SNAPSHOT
+
+Renderer "sampler"
+
+Accelerator "qbvh"
+
+Sampler "lowdiscrepancy"
+  "bool noiseaware" ["true"]
+  "string pixelsampler" ["lowdiscrepancy"]
+  "integer pixelsamples" [4]
+
+SurfaceIntegrator "bidirectional"
+  "integer eyedepth" [16]
+  "integer lightdepth" [16]
+  "string lightpathstrategy" ["auto"]
+  "integer lightraycount" [1]
+  "string lightstrategy" ["auto"]
+  "integer shadowraycount" [1]
+
+VolumeIntegrator "multi"
+
+PixelFilter "mitchell"
+  "float B" [0.3333333433]
+  "float C" [0.3333333433]
+  "bool supersample" ["true"]
+  "float xwidth" [2.0000000000]
+  "float ywidth" [2.0000000000]
+
+Film "fleximage"
+  "string cameraresponse" ["Agfachrome_rsx2_200CD"]
+  "float colorspace_blue" [0.1550000012 0.0700000003]
+  "float colorspace_green" [0.3100000024 0.5950000286]
+  "float colorspace_red" [0.6299999952 0.3400000036]
+  "float colorspace_white" [0.3142749965 0.3294110000]
+  "integer displayinterval" [5]
+  "string filename" ["out"]
+  "integer flmwriteinterval" [180]
+  "float gamma" [2.2000000477]
+  "integer haltspp" [1000]
+  "string ldr_clamp_method" ["cut"]
+  "float linear_exposure" [0.5000000000]
+  "float linear_fstop" [8.0000000000]
+  "float linear_gamma" [2.2000000477]
+  "float linear_sensitivity" [100.0000000000]
+  "integer outlierrejection_k" [2]
+  "bool premultiplyalpha" ["false"]
+  "bool restart_resume_flm" ["true"]
+  "string tonemapkernel" ["linear"]
+  "bool write_exr" ["false"]
+  "bool write_exr_ZBuf" ["true"]
+  "bool write_exr_applyimaging" ["true"]
+  "string write_exr_channels" ["RGBA"]
+  "bool write_png" ["true"]
+  "bool write_png_16bit" ["false"]
+  "string write_png_channels" ["RGB"]
+  "bool write_resume_flm" ["true"]
+  "bool write_tga" ["false"]
+  "string write_tga_channels" ["RGB"]
+  "integer writeinterval" [180]
+  "integer xresolution" [640]
+  "integer yresolution" [360]
+
+LookAt -2.5000000000 -4.0000000000 1.8000000000 0.0000000000 0.5000000000 1.5000000000 0.0000000000 0.0000000000 1.0000000000 
+
+Camera "perspective"
+  "bool autofocus" ["true"]
+  "integer blades" [0]
+  "string distribution" ["uniform"]
+  "float fov" [50.0000000000]
+  "float lensradius" [0.0000000000]
+  "integer power" [1]
+  "float screenwindow" [-1.0000000000 1.0000000000 -0.5625000000 0.5625000000]
+  "float shutterclose" [1.0000000000]
+  "float shutteropen" [0.0000000000]
+
+WorldBegin
+
+MakeNamedVolume "glass" "clear"
+  "color absorption" [0.0000000000 9.9820335282 188.3874758136]
+  "float fresnel" [1.4880000353]
+
+MakeNamedMaterial "__yellow__"
+  "color Kd" [0.8000000119 0.8000000119 0.5000000000]
+  "float sigma" [0.0000000000]
+  "string type" ["matte"]
+
+MakeNamedMaterial "__hidden__"
+  "string type" ["null"]
+
+MakeNamedMaterial "yellow__"
+  "float amount" [0.2000000030]
+  "string namedmaterial1" ["__hidden__"]
+  "string namedmaterial2" ["__yellow__"]
+  "string type" ["mix"]
+
+MakeNamedMaterial "yellow"
+  "bool architectural" ["false"]
+  "bool dispersion" ["false"]
+  "string type" ["glass2"]
+
+MakeNamedMaterial "blue"
+  "color Kd" [0.0250000004 0.0199999996 0.2000000030]
+  "float sigma" [0.0000000000]
+  "string type" ["matte"]
+
+MakeNamedMaterial "black"
+  "color Kd" [0.1000000015 0.1000000015 0.1000000015]
+  "float sigma" [0.0000000000]
+  "string type" ["matte"]
+
+MakeNamedMaterial "white"
+  "color Kd" [0.8000000119 0.8000000119 0.8000000119]
+  "float sigma" [0.0000000000]
+  "string type" ["matte"]
+
+# -------- shape-start: ilios --------
+AttributeBegin
+NamedMaterial "white"
+Shape "stlmesh"
+  "string filename" ["ilios.stl"]
+  "string name" ["ilios"]
+
+AttributeEnd
+# -------- shape-end: ilios --------
+
+# -------- shape-start: canopy --------
+AttributeBegin
+NamedMaterial "yellow"
+Interior "glass"
+Shape "stlmesh"
+  "string filename" ["canopy.stl"]
+  "string name" ["canopy"]
+
+AttributeEnd
+# -------- shape-end: canopy --------
+
+# -------- shape-start: walls --------
+AttributeBegin
+NamedMaterial "blue"
+Shape "stlmesh"
+  "string filename" ["walls.stl"]
+  "string name" ["walls"]
+
+AttributeEnd
+# -------- shape-end: walls --------
+
+# -------- shape-start: black --------
+AttributeBegin
+NamedMaterial "white"
+Shape "stlmesh"
+  "string filename" ["black.stl"]
+  "string name" ["black"]
+
+AttributeEnd
+# -------- shape-end: black --------
+
+# -------- shape-start: metal --------
+AttributeBegin
+NamedMaterial "black"
+Shape "stlmesh"
+  "string filename" ["metal.stl"]
+  "string name" ["metal"]
+
+AttributeEnd
+# -------- shape-end: metal --------
+
+# -------- light-start: lcd --------
+AttributeBegin
+LightGroup "default"
+AreaLightSource "area"
+  "color L" [1.0000000000 0.1299999952 0.0799999982]
+  "float efficacy" [17.0000000000]
+  "float gain" [0.1000000015]
+  "float importance" [1.0000000000]
+  "integer nsamples" [1]
+  "float power" [1.0000000000]
+
+Shape "stlmesh"
+  "string filename" ["light-lcd.stl"]
+  "string name" ["light-lcd"]
+
+AttributeEnd
+# -------- light-end: lcd --------
+
+# -------- light-start: spot --------
+AttributeBegin
+Transform [1.0000000000 0.0000000000 0.0000000000 0.0000000000 0.0000000000 -1.0000000000 0.0000000000 0.0000000000 0.0000000000 -0.0000000000 -1.0000000000 0.0000000000 0.0000000000 -0.5000000000 0.4600000000 1.0000000000]
+LightGroup "default"
+LightSource "spot"
+  "color L" [1.0000000000 1.0000000000 1.0000000000]
+  "float coneangle" [22.5000000000]
+  "float conedeltaangle" [2.5000000000]
+  "float efficacy" [17.0000000000]
+  "point from" [0.0000000000 0.0000000000 0.0000000000]
+  "float gain" [1.0000000000]
+  "float importance" [1.0000000000]
+  "float power" [100.0000000000]
+  "point to" [0.0000000000 0.0000000000 -1.0000000000]
+
+AttributeEnd
+# -------- light-end: spot --------
+
+# -------- light-start: tablets --------
+AttributeBegin
+LightGroup "default"
+AreaLightSource "area"
+  "color L" [1.0000000000 1.0000000000 1.0000000000]
+  "float efficacy" [17.0000000000]
+  "float gain" [1.0000000000]
+  "float importance" [1.0000000000]
+  "integer nsamples" [1]
+  "float power" [1.0000000000]
+
+Shape "stlmesh"
+  "string filename" ["light-tablets.stl"]
+  "string name" ["light-tablets"]
+
+AttributeEnd
+# -------- light-end: tablets --------
+
+
+WorldEnd
