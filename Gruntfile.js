@@ -1,20 +1,9 @@
 /*global module:false*/
 module.exports = function(grunt) {
 
-  // Project configuration.
   grunt.initConfig({
-    // Metadata.
     pkg: grunt.file.readJSON('package.json'),
     less: {
-      dev: {
-        options: {
-          paths: "src-less",
-          compress: true
-        },
-        files: {
-          "war/staging/css/app.css": "src-less/main.less"
-        }
-      },
       prod: {
         options: {
           paths: "src-less",
@@ -58,16 +47,15 @@ module.exports = function(grunt) {
     watch: {
       dev: {
         files: ['src-less/*.less','src-html/*.html'],
-        tasks: ['less:dev','htmlmin:dev']
+        tasks: ['less','htmlmin:dev']
       },
-
       prod: {
         files: ['src-less/*.less','src-html/*.html'],
-        tasks: ['less:prod','htmlmin:prod']
+        tasks: ['less','htmlmin:prod']
       }
     },
     replace: {
-      dist: {
+      prod: {
         options: {
           patterns: [
             {
@@ -87,14 +75,11 @@ module.exports = function(grunt) {
     }
   });
 
-  // These plugins provide necessary tasks.
-  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-less');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-htmlmin');
-  //grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-replace');
 
   // Default task.
-  grunt.registerTask('default', ['less:dev','htmlmin:dev','watch:dev']);
+  grunt.registerTask('default', ['less','htmlmin:dev','watch:dev']);
 };
