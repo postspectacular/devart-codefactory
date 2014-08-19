@@ -20,14 +20,6 @@
    [thi.ng.cljs.utils :as utils :refer [->px]]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.gestures :as gest]
-   [thi.ng.cljs.detect :as detect]
-   [thi.ng.geom.webgl.core :as gl]
-   [thi.ng.geom.webgl.animator :as anim]
-   [thi.ng.geom.webgl.buffers :as buf]
-   [thi.ng.geom.core :as g]
-   [thi.ng.geom.core.matrix :as mat :refer [M44]]
-   [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
-   [thi.ng.geom.rect :as r]
    [thi.ng.geom.ui.arcball :as arcball]
    [thi.ng.common.math.core :as m]))
 
@@ -58,7 +50,7 @@
         [cancel]   (async/event-channel "#edit-cancel" "click")]
     (go
       (loop []
-        (let [delay (- module-timeout (- (utils/now) (:last-action @local)))
+        (let [delay  (- module-timeout (- (utils/now) (:last-action @local)))
               [_ ch] (alts! [continue cancel (timeout delay)])]
           (cond
            (= continue ch)
@@ -67,7 +59,8 @@
            (= cancel ch)
            (relaunch-selector bus local)
 
-           (>= (- (utils/now) (:last-action @local)) module-timeout)
+           (and (:active? @local)
+                (>= (- (utils/now) (:last-action @local)) module-timeout))
            (route/set-route! "home")
 
            :else (recur)))))))
@@ -162,10 +155,8 @@
     (go
       (loop []
         (let [[_ [_ params]] (<! init)
-              subs     (async/subscription-channels
-                        bus [:window-resize
-                             :user-action
-                             :camera-update])
+              subs    (async/subscription-channels
+                       bus [:window-resize :user-action :camera-update])
               c-specs (mapv
                        #(apply async/event-channel %)
                        [[canvas "mousedown" gest/mouse-gesture-start]
@@ -193,7 +184,6 @@
               axes     (webgl/axis-meshes (:gl state) (:radius aconf) (:length aconf))
               t-offset (-> config/app :editor :toolbar-margin-left)
               intro?   (not (:tree @local))]
-          (debug :init-editor params)
           (reset!
            local
            (-> state
