@@ -26,7 +26,7 @@ This folder contains the entire frontend source code, written in ClojureScript. 
 
 The frontend is a single page application and makes heavy use of [core.async's](https://github.com/clojure/core.async) pub-sub bus/mechanism to deal with event handling and communicate between its various modules. Each module stores its state in a local atom. Furthermore, there's an extensive configuration to customize module & routing behavior. See `codefactory.config` namespace for further details.
 
-At the heart of the app's functionality are two libraries: [thi.ng/geom](http://thi.ng/geom) & [thi.ng/morphogen](http://thi.ng/morphogen). All WebGL functionality is provided by the [geom-webgl](https://github.com/thi-ng/geom/blob/develop/geom-webgl/src/index.org) module, whereas the actual shape operations are realized by the core Morphogen DSL.
+At the heart of the app's functionality are two libraries: [thi.ng/geom](http://thi.ng/geom) & [thi.ng/morphogen](http://thi.ng/morphogen). All WebGL related functionality is provided by the [geom-webgl](https://github.com/thi-ng/geom/blob/develop/geom-webgl/src/index.org) module, whereas the actual shape operations are realized by the Morphogen DSL on top of the geom-core libs.
 
 #### src-fabricate
 
@@ -47,6 +47,10 @@ curl -X GET http://devartcodefactory.com/api/1.0/objects/{{OBJECT-UUID}}/stl > f
 curl -X GET http://devartcodefactory.com/api/1.0/objects/{{OBJECT-UUID}}/preview > foo.svg
 curl -X GET http://devartcodefactory.com/api/1.0/objects/{{OBJECT-UUID}}/lux > foo.zip
 ```
+
+Example SVG render & Luxrendered version of piece submitted by Mathew Boor:
+
+| ![cell svg render](http://media.devartcodefactory.com/objects/caf9c405-6960-41b2-b83c-a04ef7057bf6/caf9c405-6960-41b2-b83c-a04ef7057bf6-480.svg) | ![cell lux render](http://media.devartcodefactory.com/objects/caf9c405-6960-41b2-b83c-a04ef7057bf6/caf9c405-6960-41b2-b83c-a04ef7057bf6-480.jpg) |
 
 #### src-html
 
