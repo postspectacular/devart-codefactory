@@ -18,7 +18,7 @@ The project uses multiple source folders to group its various modules:
 
 #### assets
 
-Contains sketches, renders, 3d models and technical drawings created during development.
+Contains sketches, renders, 3d models and technical drawings created during development. The `/lcd` subdir contains the [Fritzing](http://fritzing.org) source file for the daisy chaining LCD PCB, controlled via Raspberry PI.
 
 #### src-cljs
 
