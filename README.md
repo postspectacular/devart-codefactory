@@ -4,17 +4,21 @@
 
 Photo credit: [Andrew Meredith](http://meredithphoto.com)
 
-This project was commissioned by Google & Barbican as part of the DevArt section at the Digital Revolutions exhibition.
+This project was commissioned by Google & Barbican as part of [DevArt](http://devart.withgoogle.com) at the [Digital Revolutions](http://www.barbican.org.uk/digital-revolution) exhibition.
 
 Visit [devartcodefactory.com](http://devartcodefactory.com) to view the live project, learn more about it, browse the online gallery & create your own piece...
 
-This repository contains all source code and other assets created from January - August 2014 and which I hope might be valuable for others interested in studying a complete & non-trivial Clojure/ClojureScript project (5000+ LOC). Furthermore, this project serves as the first public realworld use case of the various libraries of the [thi.ng](http://thi.ng) collection. You're very welcome to submit bug fixes & patches, but this release is primarily meant for educational purposes.
+This repository contains all source code and relevant assets created between January - August 2014, which I hope might be valuable for others interested in studying a complete & non-trivial Clojure/ClojureScript project (5000+ LOC). Furthermore, this project serves as the first public realworld use case of the various libraries of the [thi.ng](http://thi.ng) collection. You're very welcome to submit bug fixes & patches, but this release is primarily meant for educational purposes.
 
 ## Building this project
 
 ### Module overview
 
 The project uses multiple source folders to group its various modules:
+
+#### assets
+
+Contains sketches, renders, 3d models and technical drawings created during development.
 
 #### src-cljs
 
