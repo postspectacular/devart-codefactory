@@ -2,7 +2,11 @@
 
 ![CodeFactory @ Barbican](assets/codefactory.jpg)
 
-To view the live project and create your own piece, visit: http://devartcodefactory.com/
+Photo credit: [Andrew Meredith](http://meredithphoto.com)
+
+Visit http://devartcodefactory.com/ to view the live project, learn more about it, browse the online gallery & create your own piece...
+
+This repository contains all source code and other assets which might be valuable for further study. You're very welcome to submit bugfixes & patches, but this release is primarily meant for educational purposes.
 
 ## Building this project
 
@@ -14,17 +18,29 @@ The project uses multiple source folders to group its various modules:
 
 This folder contains the entire frontend source code, written in ClojureScript. It requires no 3rd party libraries apart from those listed (and automatically downloaded by Leiningen) in `project.clj`. The main application and entry point is in the `codefactory.app` namespace.
 
+The frontend is a single page application and makes heavy use of [core.async's](https://github.com/clojure/core.async) pub-sub bus/mechanism to deal with event handling and communicate between its various modules. Each module stores its state in a local atom. Furthermore, there's an extensive configuration to customize module & routing behavior. See `codefactory.config` namespace for further details.
+
+At the heart of the app's functionality are two libraries: [thi.ng/geom](http://thi.ng/geom) & [thi.ng/morphogen](http://thi.ng/morphogen). All WebGL functionality is provided by the [geom-webgl](https://github.com/thi-ng/geom/tree/develop/geom-webgl/index.org) module, whereas the actual shape operations are realized by the core Morphogen DSL.
+
 #### src-fabricate
 
-This folder contains a complete Leiningen project and the source code to generate 3d models & render scenes (for [LuxRender](http://luxrender.net)) of the physical exhibit plan, as well as the generator for the 446 3D printed tiles used to create the 2.4 x 3.0 meter large flute structure and the cladding for the plinths holding the Nexus 10 tablets in the gallery. The 3D STL files and technical drawings for these structures are located in the `/assets` folder.
+This folder contains a complete Leiningen project and the source code to generate 3d models & render scenes (for [LuxRender](http://luxrender.net)) of the physical exhibit plan, as well as the generator for the 446 3D printed tiles used to create the 2.4 x 3.0 metres large flute structure and the cladding for the plinths holding the Nexus 10 tablets in the gallery. The generated 3D STL files and technical drawings for these structures are located in the `/assets` folder.
 
 #### src-gae
 
 Contains the complete Clojure backend and wrapper for the Google AppEngine API & core services. The main app itself is written as a standard [Ring](https://github.com/ring-clojure/ring) handler using [Compojure](https://github.com/weavejester/compojure). The AppEngine wrapper started out using some ideas & snippets from the outdated [appengine-magic](https://github.com/gcv/appengine-magic) project, but ended up differing quite substantially and might be developed further...
 
+3D objects created with the Co(de)Factory UI are only stored as abstract syntax trees (ASTs). However, as part of the object submission process, the backend is generating 3D STL files of the uploaded code structures (ASTs) and uses the [geom-svg](https://github.com/thi-ng/geom/tree/develop/geom-svg/index.org) module to render 3D SVG previews and uses [thi.ng/luxor](http://thi.ng/luxor) to create a render scene bundle for LuxRender. Only selected objects will receive fully LuxRender-rendered asset, which will be featured on the website's homepage. All generated assets can be downloaded via these REST API handlers:
+
+```bash
+curl -X GET http://devartcodefactory.com/api/1.0/objects/{{OBJECT-UUID}}/stl > foo.stl
+curl -X GET http://devartcodefactory.com/api/1.0/objects/{{OBJECT-UUID}}/preview > foo.svg
+curl -X GET http://devartcodefactory.com/api/1.0/objects/{{OBJECT-UUID}}/lux > foo.zip
+```
+
 #### src-html
 
-The source versions of the various HTML files used for the online version, Barbican gallery kiosks & workshops run. There're only minor differences between each (mainly config settings). All development is supposed to only happen with the `staging.html` file.
+The source versions of the various HTML files used for the online version, Barbican gallery kiosks & workshops run with teenages as part of Google's & Barbican's Young Creators initiative. There're only minor differences between each version (mainly config settings). All development is supposed to only happen with the `staging.html` file and then changes applied to others later.
 
 #### src-less
 
@@ -74,6 +90,8 @@ For each submitted piece an unique URL is created, which due to the nature of UU
 
 ## License
 
-This project is licensed under the [Apache Software License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+The source code of this project is licensed under the [Apache Software License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+
+All non-code assets are published under the [Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0).
 
 (c) 2014 Karsten Schmidt
