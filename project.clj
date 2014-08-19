@@ -1,8 +1,8 @@
 (defproject com.postspectacular/codefactory "0.1.0-SNAPSHOT"
   :description "Google DevArt Co(de)Factory"
-  :url "http://example.com/FIXME"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :url "https://github.com/postspectacular/devart-codefactory"
+  :license {:name "Apache Software License 2.0"
+            :url "http://www.apache.org/licenses/LICENSE-2.0"}
 
   :source-paths ["src-gae"]
 
