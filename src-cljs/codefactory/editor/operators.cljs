@@ -22,7 +22,7 @@
   (when spec
     (let [cls      (str "op-" (name op))
           parent   (config/dom-component :slider)
-          wrapper  (-> (config/dom-component :slider-wrapper) (dom/set-html! ""))
+          wrapper  (dom/clear! (config/dom-component :slider-wrapper))
           slider   (dom/create!
                     "input" wrapper
                     {:id "slider-val" :type "range" :class cls

@@ -53,7 +53,6 @@
     (go
       (loop []
         (<! toggle)
-        (debug :nav-state @state)
         (if (:nav-active? @state)
           (async/publish bus :nav-hide nil)
           (do
