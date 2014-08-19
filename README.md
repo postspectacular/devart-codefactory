@@ -6,9 +6,9 @@ Photo credit: [Andrew Meredith](http://meredithphoto.com)
 
 This project was commissioned by Google & Barbican as part of [DevArt](http://devart.withgoogle.com) at the [Digital Revolutions](http://www.barbican.org.uk/digital-revolution) exhibition.
 
-Visit [devartcodefactory.com](http://devartcodefactory.com) to view the live project, learn more about it, browse the online gallery & create your own piece...
+Visit [devartcodefactory.com](http://devartcodefactory.com) to view the live project, [learn more about it](http://devartcodefactory.com/#/about), [browse the online gallery](http://devartcodefactory.com/#/gallery) and create your own piece...
 
-This repository contains all source code and relevant assets created between January - August 2014, which I hope might be valuable for others interested in studying a complete & non-trivial Clojure/ClojureScript project (5000+ LOC). Furthermore, this project serves as the first public realworld use case of the various libraries of the [thi.ng](http://thi.ng) collection. You're very welcome to submit bug fixes & patches, but this release is primarily meant for educational purposes.
+This repository contains all source code and relevant assets created between January - August 2014, which I hope might be valuable for others interested in studying a complete & non-trivial Clojure/ClojureScript project (6200+ LOC). Furthermore, this project serves as the first public realworld use case of the various libraries of the [thi.ng](http://thi.ng) collection. You're very welcome to submit bug fixes & patches, but this release is primarily meant for educational purposes.
 
 ## Building this project
 
@@ -32,13 +32,15 @@ At the heart of the app's functionality are two libraries: [thi.ng/geom](http://
 
 This folder contains a complete Leiningen project and the source code to generate 3d models & render scenes (for [LuxRender](http://luxrender.net)) of the physical exhibit plan, as well as the generator for the 446 3D printed tiles used to create the 2.4 x 3.0 metres large flute structure and the cladding for the plinths holding the Nexus 10 tablets in the gallery. The generated 3D STL files and technical drawings for these structures are located in the `/assets` folder.
 
+![structure render](assets/renders/20140415-panels-1290spp.jpg)
+
 #### src-gae
 
 Contains the complete Clojure backend and wrapper for the Google AppEngine API & core services. The main app itself is written as a standard [Ring](https://github.com/ring-clojure/ring) handler using [Compojure](https://github.com/weavejester/compojure). The AppEngine wrapper started out using some ideas & snippets from the outdated [appengine-magic](https://github.com/gcv/appengine-magic) project, but ended up differing quite substantially and might be developed further...
 
-At the heart of the backend is a simple REST style API, which supports both JSON and EDN formats (though the UI is only using EDN, since it's native for Clojure). Each API handler defines a number of validators which are defined in this file: `/src-gae/codefactory/config.clj` and executed via the [thi.ng/validate](http://thi.ng/validate) library.
+At the heart of the backend is a simple REST style API, which supports both JSON and EDN formats (though the UI is only using EDN, since it's native for Clojure). Each API handler defines a number of validators which are defined in this file: `/src-gae/codefactory/config.clj` and executed via the [thi.ng/validate](http://thi.ng/validate) library (similarily this library is also used by the frontend router).
 
-3D objects created with the Co(de)Factory UI are only stored as abstract syntax trees (ASTs). However, as part of the object submission process, the backend is generating 3D STL files of the uploaded code structures (ASTs) and uses the [geom-svg](https://github.com/thi-ng/geom/blob/develop/geom-svg/src/index.org) module to render 3D SVG previews and [thi.ng/luxor](http://thi.ng/luxor) to create a render scene bundle incl. camera, lights & materials for LuxRender. Only selected objects will receive fully LuxRender-rendered asset (generated on Google Compute Engine instances), which will be featured on the website's homepage. All generated assets can be downloaded via these REST API handlers:
+3D objects created with the Co(de)Factory UI are only defined & stored as abstract syntax trees (ASTs). However, as part of the object submission process, the backend is generating 3D STL files of the uploaded code structures (ASTs) and uses the [geom-svg](https://github.com/thi-ng/geom/blob/develop/geom-svg/src/index.org) module to render 3D SVG previews and [thi.ng/luxor](http://thi.ng/luxor) to create a render scene bundle incl. camera, lights & materials for LuxRender. Only selected objects will receive an HD LuxRender-rendered asset (generated on Google Compute Engine instances), which will be featured on the website's homepage. All generated assets can be downloaded via these REST API handlers:
 
 ```bash
 curl -X GET http://devartcodefactory.com/api/1.0/objects/{{OBJECT-UUID}}/stl > foo.stl
