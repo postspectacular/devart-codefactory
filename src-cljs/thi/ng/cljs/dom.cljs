@@ -25,6 +25,9 @@
 (defn set-text!
   [el s] (dom/setTextContent el s) el)
 
+(defn clear!
+  [el] (set-html! el ""))
+
 (defn set-class! [el name]
   (classes/set el name) el)
 
@@ -81,9 +84,6 @@
 
 (defn size
   [el] [(.-clientWidth el) (.-clientHeight el)])
-
-(defn remove-children
-  [el] (while (.-lastChild el) (.removeChild el (.-lastChild el))))
 
 (defn request-fullscreen
   []
