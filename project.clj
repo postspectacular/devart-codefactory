@@ -52,9 +52,7 @@
                  [thi.ng/geom-webgl "0.3.0-SNAPSHOT"]]
 
   :profiles {:dev {:dependencies [[org.clojure/clojurescript "0.0-2280"]]
-                   :plugins [[lein-cljsbuild "1.0.3"]
-                             ;;[lein-cooper "0.0.1"]
-                             ]}}
+                   :plugins [[lein-cljsbuild "1.0.3"]]}}
 
   :cljsbuild {:builds
               [{:source-paths ["src-cljs"]
@@ -65,13 +63,6 @@
                  :optimizations :whitespace}
                 :jar false}
                {:source-paths ["src-cljs"]
-                :id "stage"
-                :compiler
-                {:pretty-print false
-                 :output-to "war/staging/js/app.js"
-                 :optimizations :advanced}
-                :jar false}
-               {:source-paths ["src-cljs"]
                 :id "prod"
                 :compiler
                 {:pretty-print false
@@ -79,5 +70,4 @@
                  :optimizations :advanced}
                 :jar false}]}
 
-  :aot :all ;;[thi.ng.gae.servlet]
-  )
+  :aot :all)
