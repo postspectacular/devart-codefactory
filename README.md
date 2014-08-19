@@ -100,6 +100,8 @@ lein do cljsbuild clean, cljsbuild once prod
 ./launch.sh
 ```
 
+> Note: `install-dependencies.sh` first uses Leining to download all required dependencies and then copies the required jar files from your local Maven repo into this dir: `/war/WEB-INF/lib`. It assumes the local Maven repo cache (used by Leiningen) is the default `~/.m2/repository`. If that's not the case, please edit the path first before running the script...
+
 Then open your browser and navigate to http://localhost:8080/staging/
 
 If you end up hacking the ClojureScript source (in `/src-cljs`) and want (almost) instant automatic recompilation, open a separate terminal and use this invocation of `cljsbuild` instead:
@@ -110,7 +112,7 @@ lein do cljsbuild clean, cljsbuild auto dev
 
 #### Google API key
 
-The backend generates an unique URL for each submitted piece, which due to the nature of UUIDs is not human readable. Therefore the API handler responsible makes use of Google's `goo.gl` URL shortener to create shorter versions, but requires a valid Google API key to do so. This key needs to be inserted at the bottom of the `/src-gae/codefactory/config.clj` file before launching the server. You can run the app without such a key, though in this case your objects can only be accessed via their original long URL.
+The backend generates an unique URL for each submitted piece, which due to the nature of UUIDs is not human readable. Therefore the API handler responsible makes use of Google's `goo.gl` URL shortener to create shorter versions, but requires a valid Google API key to do so. This key needs to be inserted at the bottom of the `/src-gae/codefactory/config.clj` file before launching the server. You can run the app without such a key, though in this case your objects can of course only be accessed via their original long URL.
 
 ## License
 
@@ -118,4 +120,4 @@ The source code of this project is licensed under the [Apache Software License 2
 
 All non-code assets are published under the [Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0).
 
-(c) 2014 Karsten Schmidt
+&copy; 2014 Karsten Schmidt
