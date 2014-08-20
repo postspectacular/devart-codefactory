@@ -114,7 +114,7 @@ cd devart-codefactory
 npm install
 
 # build & compress HTML & CSS
-grunt less htmlmin:prod replace
+grunt prod
 
 # compile ClojureScript/JS app
 lein do cljsbuild clean, cljsbuild once prod
@@ -132,6 +132,8 @@ If you end up hacking the ClojureScript source (in `/src-cljs`) and want (almost
 ```bash
 lein do cljsbuild clean, cljsbuild auto dev
 ```
+
+Likewise, for HTML/LESS editing, it's recommended to use the `grunt` default target, which will autocompile changes into the staging directory...
 
 #### Google API key
 

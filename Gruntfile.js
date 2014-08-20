@@ -4,13 +4,23 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     less: {
+      dev: {
+        options: {
+          paths: "src-less",
+          compress: true,
+        },
+        files: {
+          "war/staging/css/app.css": "src-less/main.less"
+        }
+      },
       prod: {
         options: {
           paths: "src-less",
           compress: true,
         },
         files: {
-          "war/css/app.css": "src-less/main.less"
+          "war/css/app.css": "src-less/main.less",
+          "war/staging/css/app.css": "src-less/main.less"
         }
       }
     },
@@ -81,5 +91,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-replace');
 
   // Default task.
-  grunt.registerTask('default', ['less','htmlmin:dev','watch:dev']);
+  grunt.registerTask('default', ['less:dev','htmlmin:dev','watch:dev']);
+  grunt.registerTask('prod', ['less:prod','htmlmin:prod','replace:prod']);
 };
