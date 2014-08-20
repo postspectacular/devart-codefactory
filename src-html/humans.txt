@@ -1,0 +1,18 @@
+/* TEAM */
+	Author: Karsten Schmidt
+	Contact: info [at] postspectacular [dot] com
+	Twitter: @toxi
+  Site: http://postspectacular.com/
+	From: London, UK
+
+/* THANKS */
+
+  UI design help: Kaspar & Petter Prinz
+  UI art direction: David Bruno
+  Project management: Olaya de Marcos
+
+/* SITE */
+	Last update: @@date
+	Language: English
+	Doctype: HTML5
+	IDE: Emacs
