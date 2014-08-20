@@ -81,6 +81,8 @@ Here's also an example how to use the API to download the AST of an object and u
 
 ![meshlab](assets/sketches/meshlab-788ecd4a-712c-4eee-9014-b1ed99ad6708.jpg)
 
+Amazing object submitted by Dianne N., transformed from a single cube...
+
 #### /src-html
 
 The source versions of the various HTML files used for the online version, Barbican gallery kiosks & workshops run with teenagers as part of Google & Barbican's Young Creators initiative. There're only minor differences between each version (mainly config settings). All development is supposed to only happen with the `staging.html` file and then changes applied to others later.
