@@ -50,6 +50,12 @@ curl -X GET http://devartcodefactory.com/api/1.0/objects/{{OBJECT-UUID}}/preview
 curl -X GET http://devartcodefactory.com/api/1.0/objects/{{OBJECT-UUID}}/lux > foo.zip
 ```
 
+Example SVG render & Luxrendered version of piece submitted by Mathew Boor:
+
+| SVG   | Luxrender   |
+| ----- | ----------- |
+| ![cell svg render](http://media.devartcodefactory.com/objects/caf9c405-6960-41b2-b83c-a04ef7057bf6/caf9c405-6960-41b2-b83c-a04ef7057bf6-480.svg) | ![cell lux render](http://media.devartcodefactory.com/objects/caf9c405-6960-41b2-b83c-a04ef7057bf6/caf9c405-6960-41b2-b83c-a04ef7057bf6-480.jpg) |
+
 Here's also an example how to use the API to download the AST of an object and use it with Morphogen from the REPL to generate a PLY mesh file:
 
 ```clojure
@@ -73,11 +79,7 @@ Here's also an example how to use the API to download the AST of an object and u
 (codefactory-ply-mesh "788ecd4a-712c-4eee-9014-b1ed99ad6708")
 ```
 
-Example SVG render & Luxrendered version of piece submitted by Mathew Boor:
-
-| SVG   | Luxrender   |
-| ----- | ----------- |
-| ![cell svg render](http://media.devartcodefactory.com/objects/caf9c405-6960-41b2-b83c-a04ef7057bf6/caf9c405-6960-41b2-b83c-a04ef7057bf6-480.svg) | ![cell lux render](http://media.devartcodefactory.com/objects/caf9c405-6960-41b2-b83c-a04ef7057bf6/caf9c405-6960-41b2-b83c-a04ef7057bf6-480.jpg) |
+![meshlab](assets/sketches/meshlab-788ecd4a-712c-4eee-9014-b1ed99ad6708.jpg)
 
 #### /src-html
 
