@@ -30,7 +30,7 @@
       (do
         (set! (.-fillStyle ctx) col)
         (set! (.-strokeStyle ctx) "")
-        (.fillRect ctx x (inc (- y h)) w (dec h)))
+        (.fillRect ctx x (inc (- y h)) (dec w) (dec h)))
       (do
         (set! (.-fillStyle ctx) "")
         (set! (.-strokeStyle ctx) col)
