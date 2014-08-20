@@ -91,7 +91,7 @@ All stylesheets used by the webapp, defined using LESS. The file `minxins.less` 
 
 Python source code for the Raspberry PI to control the DMX gallery lighting & LCD panels displaying object credits.
 
-### Requirements
+### Build requirements
 
 * Google AppEngine 1.9.8
 * Java 1.7
@@ -125,7 +125,7 @@ lein do cljsbuild clean, cljsbuild once prod
 
 > Note: `install-dependencies.sh` first uses Leining to download all required dependencies and then copies the required jar files from your local Maven repo into this dir: `/war/WEB-INF/lib`. It assumes the local Maven repo cache (used by Leiningen) is the default `~/.m2/repository`. If that's not the case, please edit the path first before running the script...
 
-Then open your browser and navigate to http://localhost:8080/staging/
+Then open your browser and navigate to [http://localhost:8080/staging/](http://localhost:8080/staging/)
 
 If you end up hacking the ClojureScript source (in `/src-cljs`) and want (almost) instant automatic recompilation, open a separate terminal and use this invocation of `cljsbuild` instead:
 
