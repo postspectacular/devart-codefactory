@@ -50,7 +50,7 @@
                      [(pr-str body) edn]
 
                      (util/str-contains? accept json)
-                     [(json/write-str body) json]
+                     [(json/write-str body :escape-slash false) json]
 
                      :else [(pr-str body) text])]
     (-> (resp/response body)
