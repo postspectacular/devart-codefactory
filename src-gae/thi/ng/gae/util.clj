@@ -1,6 +1,8 @@
 (ns thi.ng.gae.util
   (:require
-   [camel-snake-kebab :as csk]))
+   [camel-snake-kebab :as csk])
+  (:import
+   [java.security NoSuchAlgorithmException MessageDigest]))
 
 (def ->kebab-case (memoize csk/->kebab-case))
 
@@ -50,3 +52,10 @@
 (defn get-filename
   [^String path]
   (subs path (inc (.lastIndexOf path "/"))))
+
+(defn sha-256
+  [input]
+  (let [md (MessageDigest/getInstance "SHA-256")]
+    (.update md (.getBytes input))
+    (let [digest (.digest md)]
+      (apply str (map #(format "%02x" (bit-and % 0xff)) digest)))))
