@@ -71,6 +71,14 @@ module.exports = function(grunt) {
             {
               match: 'timestamp',
               replacement: '<%= new Date().getTime() %>'
+            },
+            {
+              match: 'date',
+              replacement: function() {
+                var nf=function(x) { return (x<10) ? "0"+x : x; };
+                var d=new Date();
+                return d.getFullYear()+"/"+nf(d.getMonth()+1)+"/"+nf(d.getDate());
+              }
             }
           ]
         },
@@ -79,7 +87,8 @@ module.exports = function(grunt) {
           {src: ['war/barbican/index.html'], dest: 'war/barbican/index.html'},
           {src: ['war/workshop/index.html'], dest: 'war/workshop/index.html'},
           {src: ['war/staging/index.html'], dest: 'war/staging/index.html'},
-          {src: ['war/maintenance.html'], dest: 'war/maintenance.html'}
+          {src: ['war/maintenance.html'], dest: 'war/maintenance.html'},
+          {src: ['src-html/humans.txt'], dest: 'war/humans.txt'}
         ]
       }
     }
