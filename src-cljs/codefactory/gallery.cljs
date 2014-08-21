@@ -163,14 +163,15 @@
 (defn approve-item
   [bus local id]
   (io/request
-   :uri     (str (config/api-route :approve-item) id)
-   :data    {:status "approved" :token (:admin-token @local)}
-   :method  :post
-   :edn?    true
-   :success #(handle-page-change bus local 0)
-   :error   (fn [status data]
-              (warn :response status data)
-              (handle-page-change bus local 0))))
+   :uri      (str (config/api-route :approve-item) id)
+   :data     {:status "approved"}
+   :sign-key (:admin-token @local)
+   :method   :post
+   :edn?     true
+   :success  #(handle-page-change bus local 0)
+   :error    (fn [status data]
+               (warn :response status data)
+               (handle-page-change bus local 0))))
 
 (defn handle-approval
   [ch bus local]

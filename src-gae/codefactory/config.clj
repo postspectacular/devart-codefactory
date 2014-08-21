@@ -20,17 +20,12 @@
 
 (def api-prefix "/api/1.0")
 
+(def api-sign-key "") ;; NOGIT
+
 (def query-result-limit 50)
 
 (def app
-  {:author       "Karsten Schmidt"
-   :title-prefix "Co(de)Factory : "
-   :includes {:css    ["/css/app.css"
-                       "//fonts.googleapis.com/css?family=Abel"]
-              :js     ["/js/app.js"]
-              :js-ie9 ["https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"
-                       "https://oss.maxcdn.com/respond/1.4.2/respond.min.js"]}
-   :lux     {:width 480
+  {:lux     {:width 480
              :height 360
              :initial-view [0 0.85 2 0]
              :fov 60
@@ -52,14 +47,6 @@
            :height 720
            :formats [{:type "video/webm" :ext ".webm"}
                      {:type "video/mp4" :ext ".mp4"}]}
-   :operators [{:icon "split.svg" :label "split"}
-               {:icon "inset.svg" :label "inset"}
-               {:icon "mirror.svg" :label "mirror"}
-               {:icon "ext.svg" :label "pull"}
-               {:icon "tilt.svg" :label "tilt"}
-               {:icon "scale.svg" :label "scale"}
-               {:icon "shift.svg" :label "shift"}
-               {:icon "delete.svg" :label "delete"}]
 
    :validators
    {:api  {:new-object
@@ -77,7 +64,7 @@
            :update-object
            {"id"     [(v/required) (v/uuid4)]
             "status" [(v/member-of #{"approved" "unapproved"})]
-            "token"  [(v/equals "")]}
+            "sig"    [(v/fixed-length 64)]}
 
            :get-object
            {:id [(v/required) (v/uuid4)]}
@@ -87,10 +74,11 @@
                      (v/optional (v/in-range 1 query-result-limit))]
             "offset" [(v/optional (v/number (fn [_ v] (util/parse-int v 0))))
                       (v/optional (v/greater-than -1))]
-            "filter" [(v/member-of #{"approved" "unapproved" "all"})]}
+            "filter" [(v/member-of #{"approved" "unapproved" "all"})]
+            "include-ast" [(v/optional (v/boolean (fn [_ v] (not= v "false"))))]}
 
            :exec-task
-           {"token" [(v/equals "")]
+           {"sig"   [(v/fixed-length 64)]
             "task"  [(v/member-of #{"process-object"
                                     "regenerate-assets"
                                     "delete-simple-objects"})]}
@@ -117,5 +105,5 @@
    :storage {:scheme :https
              :bucket "media.devartcodefactory.com"}
 
-   :google {:api-key ""
+   :google {:api-key "" ;; NOGIT
             :tracking ["UA-51939449-1" "devartcodefactory.com"]}})

@@ -136,9 +136,11 @@
 
    :gallery
    {:query       {:filter "approved"
-                  :limit  20}
+                  :limit  20
+                  :include-ast false}
     :admin-query {:filter "unapproved"
-                  :limit 20}
+                  :limit 20
+                  :include-ast false}
     :buttons     {:edit     true
                   :download true}}
 

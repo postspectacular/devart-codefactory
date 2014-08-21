@@ -3,6 +3,7 @@
    [codefactory.config :as config]
    [codefactory.model :as model]
    [codefactory.validate :as cv]
+   [codefactory.request :as request]
    [codefactory.handlers.shared :as shared]
    [thi.ng.gae.services.datastore :as ds]
    [thi.ng.gae.services.url-shortener :as shortener]
@@ -26,6 +27,12 @@
 
 (defn valid-api-accept?
   [req] (cv/valid-accept? req config/api-mime-types))
+
+(defn valid-signature?
+  [{:keys [uri form-params]}]
+  (let [hash (request/request-signature uri (dissoc form-params "sig"))
+        sig  (form-params "sig")]
+    (= sig hash)))
 
 (defn basic-api-response-body
   [data status]
@@ -57,6 +64,12 @@
              (interpose ", " config/api-mime-types))
       (resp/response)
       (resp/status 406)
+      (resp/content-type (:text config/mime-types))))
+
+(defn invalid-signature-response
+  []
+  (-> (resp/response "Request signature check failed")
+      (resp/status 403)
       (resp/content-type (:text config/mime-types))))
 
 (defn new-entity-request
@@ -105,24 +118,26 @@
           (invalid-api-response)))
 
    (POST "/jobs" [:as req]
-         (new-entity-request
-          req :new-job
-          (fn [req {:strs [object-id]}]
-            (let [job (model/make-print-job
-                       {:id        (str (java.util.UUID/randomUUID))
-                        :object-id object-id
-                        :status    "complete" ;; FIXME "created"
-                        :created   (time/datetime->epoch (time/utc-now))})]
-              (prn :created-job job)
-              (ds/save! job)
-              (api-response
-               req (model/public-entity job :public-job-keys) 201)))))
+         (if (valid-signature? req)
+           (new-entity-request
+            req :new-job
+            (fn [req {:strs [object-id]}]
+              (let [job (model/make-print-job
+                         {:id        (str (java.util.UUID/randomUUID))
+                          :object-id object-id
+                          :status    "complete" ;; FIXME "created"
+                          :created   (time/datetime->epoch (time/utc-now))})]
+                (prn :created-job job)
+                (ds/save! job)
+                (api-response
+                 req (model/public-entity job :public-job-keys) 201))))
+           (invalid-signature-response)))
 
    (GET "/objects" [:as req]
         (if (valid-api-accept? req)
           (let [[params err] (validate-params (:params req) :query-objects)]
             (if (nil? err)
-              (let [{:strs [limit offset filter] :or {limit 25 offset 0}} params
+              (let [{:strs [limit offset filter include-ast] :or {limit 25 offset 0}} params
                     [sort filter] (object-query-opts filter)
                     objects (->> (ds/query
                                   CodeTree
@@ -131,7 +146,10 @@
                                   :limit  limit
                                   :offset offset)
                                  (clojure.core/filter :preview-uri)
-                                 (mapv #(model/public-entity % :public-codetree-keys)))]
+                                 (mapv #(model/public-entity % :public-codetree-keys)))
+                    objects (if-not include-ast
+                              (map #(dissoc % :tree) objects)
+                              objects)]
                 (api-response req objects 200))
               (api-response req err 400)))
           (invalid-api-response)))
@@ -169,18 +187,20 @@
                req (model/public-entity entity :public-codetree-keys) 201)))))
 
    (POST "/objects/:id" [id :as req]
-         (if (valid-api-accept? req)
-           (let [[params err] (validate-params (assoc (:params req) "id" id) :update-object)]
-             (if (nil? err)
-               (if-let [entity (ds/retrieve CodeTree id)]
-                 (let [{:strs [status]} params
-                       entity (assoc entity :status status)]
-                   (ds/save! entity)
-                   (api-response
-                    req (model/public-entity entity :public-codetree-keys) 200))
-                 (api-response req {:reason (str "Unknown ID: " id)} 404))
-               (api-response req (dissoc err "token") 400)))
-           (invalid-api-response)))
+         (if (valid-signature? req)
+           (if (valid-api-accept? req)
+             (let [[params err] (validate-params (assoc (:params req) "id" id) :update-object)]
+               (if (nil? err)
+                 (if-let [entity (ds/retrieve CodeTree id)]
+                   (let [{:strs [status]} params
+                         entity (assoc entity :status status)]
+                     (ds/save! entity)
+                     (api-response
+                      req (model/public-entity entity :public-codetree-keys) 200))
+                   (api-response req {:reason (str "Unknown ID: " id)} 404))
+                 (api-response req err 400)))
+             (invalid-api-response))
+           (invalid-signature-response)))
 
    (GET "/objects/:id" [id :as req]
         (if (valid-api-accept? req)
@@ -219,14 +239,16 @@
             (api-response req err 400))))
 
    (POST "/exec-task" [:as req]
-         (prn (:params req))
-         (let [[params err] (validate-params (:params req) :exec-task)]
-           (if (nil? err)
-             (try
-               (task/queue!
-                nil {:url (str "/tasks/" (get params "task"))
-                     :params (dissoc params "token" "task")})
-               (resp/response "ok")
-               (catch Exception e
-                 (prn :warn "couldn't initiate object processing" (.getMessage e))))
-             {:status 403 :body (pr-str (dissoc err "token"))})))))
+         (if (valid-signature? req)
+           (let [[params err] (validate-params (:params req) :exec-task)]
+             (prn (:params req))
+             (if (nil? err)
+               (try
+                 (task/queue!
+                  nil {:url (str "/tasks/" (get params "task"))
+                       :params (dissoc params "sig" "task")})
+                 (resp/response "ok")
+                 (catch Exception e
+                   (prn :warn "couldn't initiate object processing" (.getMessage e))))
+               {:status 400 :body (pr-str err)}))
+           (invalid-signature-response)))))
