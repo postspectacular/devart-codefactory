@@ -31,14 +31,14 @@
 (def seeds
   (let [c     #(cub/cuboid (apply mg/circle-lattice-seg %))
         s     #(seed-3d (apply mg/sphere-lat %))
-        seeds {:box   {:seed (a/aabb 1)}
-               :pent3 {:seed (s [5 5 0.25])}
-               :hex3  {:seed (s [6 12 0.25])}
-               :oct3  {:seed (s [8 8 0.25])}
-               :pent2 {:seed (c [5 1 0.5])}
-               :hex2  {:seed (c [6 1 0.5])}
-               :oct2  {:seed (c [8 1 0.5])}
-               :tri2  {:seed (c [3 1 0.4])}}]
+        seeds {:box    {:seed (a/aabb 1)}
+               :pent3b {:seed (s [5 5 0.25])}
+               :hex3b  {:seed (s [6 12 0.25])}
+               :oct3b  {:seed (s [8 8 0.25])}
+               :pent2  {:seed (c [5 1 0.5])}
+               :hex2   {:seed (c [6 1 0.5])}
+               :oct2   {:seed (c [8 1 0.5])}
+               :tri2   {:seed (c [3 1 0.4])}}]
     (reduce-kv
      (fn [acc k _]
        (update-in acc [k :seed] #(-> % normalize-mesh mg/seed-box)))
