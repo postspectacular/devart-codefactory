@@ -102,7 +102,7 @@
                            :title :author :created
                            :short-uri :preview-uri :stl-uri]}
 
-   :storage {:scheme :https
+   :storage {:scheme :http
              :bucket "media.devartcodefactory.com"}
 
    :google {:api-key "" ;; NOGIT
