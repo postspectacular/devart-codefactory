@@ -146,7 +146,8 @@
 
    :about
    {:icon-size [64 64]
-    :links-clickable? true}
+    :links-clickable? true
+    :hero-img "http://media.devartcodefactory.com/static/img/codefactory.jpg"}
 
    :thanks
    {:link-clickable? true
