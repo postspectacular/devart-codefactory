@@ -83,3 +83,8 @@
   [router]
   (.addEventListener js/window "hashchange" router)
   (router))
+
+(defn local?
+  []
+  (let [host (.-hostname (.-location js/window))]
+    (re-find #"localhost|(192\.168\.)|(127\.0\.0\.1)" host)))
