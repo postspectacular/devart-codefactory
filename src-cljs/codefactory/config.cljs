@@ -319,12 +319,15 @@
     {:match ["about"] :controller :about}
     {:match ["gallery"] :controller :gallery}
     {:match ["admin" "gallery" :token]
-     :bindings {:token {:validate [(v/required)]}}
+     :bindings {:token {:validate [(v/min-length 16)]}}
      :controller :gallery}]
 
    :routes-fallback
    [{:match ["not-supported"] :hash "not-supported" :controller :upgrade-browser}
     {:match ["gallery"] :controller :gallery}
+    {:match ["admin" "gallery" :token]
+     :bindings {:token {:validate [(v/min-length 16)]}}
+     :controller :gallery}
     {:match ["about"] :controller :about}]
 
    :default-route 0
