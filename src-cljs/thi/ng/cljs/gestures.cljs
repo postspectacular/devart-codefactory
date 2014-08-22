@@ -2,7 +2,7 @@
   (:require
    [thi.ng.geom.core :as g]
    [thi.ng.geom.core.vector :refer [vec2]]
-   [cljs.core.async :refer [chan put! close!]]))
+   [cljs.core.async :refer [put!]]))
 
 (defn touch-gesture*
   [suffix]

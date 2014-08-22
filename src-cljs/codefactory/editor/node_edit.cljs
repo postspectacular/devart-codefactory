@@ -3,7 +3,7 @@
    [cljs.core.async.macros :refer [go]]
    [thi.ng.macromath.core :as mm])
   (:require
-   [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]
+   [cljs.core.async :refer [<! alts! timeout]]
    [codefactory.editor.tree :as tree]
    [codefactory.editor.operators :as ops]
    [codefactory.editor.toolbar :as tools]
@@ -19,10 +19,8 @@
    [thi.ng.cljs.gestures :as gest]
    [thi.ng.geom.ui.arcball :as arcball]
    [thi.ng.geom.core :as g]
-   [thi.ng.geom.core.matrix :as mat :refer [M44]]
-   [thi.ng.geom.core.vector :as v :refer [vec2 vec3]]
+   [thi.ng.geom.core.vector :as v :refer [vec2]]
    [thi.ng.geom.core.quaternion :as q]
-   [thi.ng.geom.rect :as r]
    [thi.ng.common.math.core :as m]))
 
 (def node-id

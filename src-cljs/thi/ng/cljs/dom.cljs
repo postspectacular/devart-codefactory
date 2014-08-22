@@ -2,8 +2,7 @@
   (:require
    [goog.style :as style]
    [goog.dom :as dom]
-   [goog.dom.classes :as classes]
-   [cljs.core.async :refer [chan put! close!]]))
+   [goog.dom.classes :as classes]))
 
 (def svg-ns "http://www.w3.org/2000/svg")
 

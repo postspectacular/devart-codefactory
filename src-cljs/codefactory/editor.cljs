@@ -3,7 +3,7 @@
    [cljs.core.async.macros :refer [go]]
    [thi.ng.macromath.core :as mm])
   (:require
-   [cljs.core.async :as cas :refer [>! <! alts! chan put! close! timeout]]
+   [cljs.core.async :refer [<! alts! timeout]]
    [codefactory.editor.tree :as tree]
    [codefactory.editor.operators :as ops]
    [codefactory.editor.node-edit :as nedit]

@@ -11,7 +11,7 @@
    [thi.ng.cljs.io :as io]
    [thi.ng.cljs.dom :as dom]
    [hiccups.runtime :as h]
-   [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
+   [cljs.core.async :refer [<! timeout]]))
 
 (def loader
   (h/render-html

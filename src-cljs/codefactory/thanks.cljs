@@ -7,7 +7,7 @@
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
    [thi.ng.cljs.dom :as dom]
-   [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
+   [cljs.core.async :refer [<! timeout]]))
 
 (defn init
   [bus]

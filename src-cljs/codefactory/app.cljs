@@ -22,7 +22,7 @@
    [thi.ng.cljs.detect :as detect]
    [goog.events :as events]
    [hiccups.runtime :as h]
-   [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
+   [cljs.core.async :refer [<! timeout]]))
 
 (def module-initializers
   {:home          home/init

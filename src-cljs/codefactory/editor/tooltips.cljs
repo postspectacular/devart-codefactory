@@ -3,7 +3,7 @@
    [cljs.core.async.macros :refer [go]]
    [thi.ng.macromath.core :as mm])
   (:require
-   [cljs.core.async :as cas :refer [<! alts! timeout]]
+   [cljs.core.async :refer [<! alts! timeout]]
    [codefactory.config :as config]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]

@@ -10,7 +10,7 @@
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.io :as io]
    [cljs.reader :refer [read-string]]
-   [cljs.core.async :as cas :refer [>! <! chan put! close! timeout]]))
+   [cljs.core.async :refer [<! timeout]]))
 
 (defn toggle-error
   [state]

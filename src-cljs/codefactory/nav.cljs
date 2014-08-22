@@ -7,7 +7,7 @@
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.dom :as dom]
    [hiccups.runtime :as h]
-   [cljs.core.async :as cas :refer [<! close! timeout]]))
+   [cljs.core.async :refer [<! timeout]]))
 
 (defn hide-active-section
   [ctrl nav-body]

@@ -5,7 +5,7 @@
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.dom :as dom]
    [goog.events :as events]
-   [cljs.core.async :as async :refer [>! <! chan put! close! timeout]]))
+   [cljs.core.async :as async :refer [<! chan put! close!]]))
 
 (defprotocol PubSub
   (bus [_])
