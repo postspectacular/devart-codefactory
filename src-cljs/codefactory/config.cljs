@@ -449,6 +449,8 @@
       (deep-merge
        {:gallery {:buttons {:download false}}
 
+        :home {:gallery-bt true}
+        
         :timeouts {:selector (* 30 1000)
                    :editor   (* 3 60 1000)
                    :thanks   (* 60 1000)
