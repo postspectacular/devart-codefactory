@@ -238,6 +238,26 @@
               (api-response req {:reason (str "Unknown ID: " id)} 404))
             (api-response req err 400))))
 
+   (GET "/ancestors/:id" [id :as req]
+        (if (valid-api-accept? req)
+          (let [[params err] (validate-params {:id id} :get-object)]
+            (if (nil? err)
+              (let [chain (loop [chain [], id id]
+                            (if id
+                              (if-let [e (ds/retrieve CodeTree id)]
+                                (recur
+                                 (conj
+                                  chain
+                                  (model/public-entity (dissoc e :tree) :public-codetree-keys))
+                                 (:parent-id e))
+                                chain)
+                              chain))]
+                (if (seq chain)
+                  (api-response req chain 200)
+                  (api-response req {:reason (str "Unknown ID: " id)} 404)))
+              (api-response req err 400)))
+          (invalid-api-response)))
+
    (POST "/exec-task" [:as req]
          (if (valid-signature? req)
            (let [[params err] (validate-params (:params req) :exec-task)]
