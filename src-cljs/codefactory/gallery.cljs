@@ -70,11 +70,17 @@
   [item q evt handler]
   [(dom/query item q) evt handler])
 
+(defn item-asset-url
+  [item type]
+  (if (route/local?)
+    (str (config/api-route :get-object) (:id item) "/" (name type))
+    (item (keyword (str (name type) "-uri")))))
+
 (defn gallery-item
-  [{:keys [id title author created preview-uri stl-uri] :as obj} parent bus token]
+  [{:keys [id title author created] :as obj} parent bus token]
   (let [{:keys [edit download]} (-> config/app :gallery :buttons)
-        img-url (str "/api/1.0/objects/" id "/preview")
-        stl-url (str "/api/1.0/objects/" id "/stl")
+        img-url (item-asset-url obj :preview)
+        stl-url (item-asset-url obj :stl)
         item    (dom/create! "div" parent {:id (str "obj-" id)})
         buttons (cond->
                  (list)
