@@ -11,7 +11,8 @@
    [thi.ng.cljs.io :as io]
    [thi.ng.cljs.dom :as dom]
    [hiccups.runtime :as h]
-   [cljs.core.async :refer [<! timeout]]))
+   [cljs.core.async :refer [<! timeout]]
+   [clojure.string :as str]))
 
 (def loader
   (h/render-html
@@ -74,7 +75,9 @@
   [item type]
   (if (route/local?)
     (str (config/api-route :get-object) (:id item) "/" (name type))
-    (item (keyword (str (name type) "-uri")))))
+    (str/replace-first
+     (item (keyword (str (name type) "-uri")))
+     "https://" "http://")))
 
 (defn gallery-item
   [{:keys [id title author created] :as obj} parent bus token]
