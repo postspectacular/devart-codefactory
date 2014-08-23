@@ -155,7 +155,7 @@
    :gallery-info
    {:width       100
     :item-height 240
-    :color       "#fff"
+    :color       "#ffd541"
     :font        "14px \"Abel\",sans-serif"
     :radius      5}
    

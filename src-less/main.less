@@ -183,7 +183,7 @@ svg.generic {
 
 .header {
     height: (@icon-size + @margin);
-    .flexbox(1 auto);
+    .flexbox(1 0 auto);
     padding: @margin;
     text-align: center;
 
@@ -271,22 +271,36 @@ svg.generic {
 
 #gallery-info-main {
     .flex(row nowrap);
+    .flexbox(1 auto);
 
-    div { max-width: none !important; }
+    >div {
+        max-width: none !important;
 
-    div.versions {
-        .flexbox(1 auto);
+        >div {
+            display: inline-block;
+            vertical-align: top;
+        }
     }
+
     div.item-version {
         margin: 0;
         padding: 0;
 
-        &>div {
-            display: inline-block;
+        >div {
             margin: 0;
-            vertical-align: top;
+            display: inline-block;
+            vertical-align: middle;
             text-align: left;
             text-transform: uppercase;
+            font-size: @app-font-size;
+        }
+
+        p { margin: 0; }
+
+        span {
+            display: inline-block;
+            width: 6em;
+            color: @col-bt-gallery;
         }
     }
 }

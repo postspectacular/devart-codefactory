@@ -251,7 +251,8 @@
                                   (model/public-entity (dissoc e :tree) :public-codetree-keys))
                                  (:parent-id e))
                                 chain)
-                              chain))]
+                              chain))
+                    chain (filter #(or (= id (:id %)) (= "approved" (:status %))) chain)]
                 (if (seq chain)
                   (api-response req chain 200)
                   (api-response req {:reason (str "Unknown ID: " id)} 404)))

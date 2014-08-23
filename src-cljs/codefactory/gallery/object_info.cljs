@@ -69,9 +69,10 @@
        [:div.item-version
         [:div [:img {:src (common/item-asset-url item :preview) :width 320}]]
         [:div
-         [:p
-          "title: " title [:br]
-          "author: " author]]])
+         [:p [:span "title:"] title]
+         [:p [:span "author:"] author]
+         [:p [:span "complexity:"] tree-depth]
+         ]])
      items))))
 
 (defn handle-refresh
@@ -81,7 +82,8 @@
       (let [[_ items] (<! ch)
             parent (->> :gallery-info-main
                         (config/dom-component)
-                        (dom/clear!))]
+                        (dom/clear!)
+                        (dom/create! "div"))]
         (debug :ancestors items)
         (generate-timeline (dom/create! "div" parent) items)
         (generate-item-details (dom/create! "div" parent {:class "versions"}) items)))))
