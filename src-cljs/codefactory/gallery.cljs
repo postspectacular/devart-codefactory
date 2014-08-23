@@ -80,8 +80,9 @@
      "https://" "http://")))
 
 (defn gallery-item
-  [{:keys [id title author created] :as obj} parent bus token]
+  [{:keys [id title author created seed] :as obj} parent bus token]
   (let [{:keys [edit info download]} (-> config/app :gallery :buttons)
+        edit    (and edit (config/editable-seed? seed))
         info    (and info (not token))
         img-url (item-asset-url obj :preview)
         stl-url (item-asset-url obj :stl)

@@ -52,11 +52,14 @@
              :scale 0.71
              :initial-view {:view [0.1011 0.904 -0.3027 -0.284] :dist 2.5}}
     :pent3  {:seed (seed-3d-old (mg/sphere-lat 5 5 0.25))
-             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}
+             :edit? false}
     :hex3   {:seed (seed-3d-old (mg/sphere-lat 6 12 0.25))
-             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}
+             :edit? false}
     :oct3   {:seed (seed-3d-old (mg/sphere-lat 8 8 0.25))
-             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
+             :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}
+             :edit? false}
     :pent3b {:seed (seed-3d (mg/sphere-lat 5 5 0.25))
              :initial-view {:view [0.0893 0.9233 -0.2117 -0.3055] :dist 1.5}}
     :hex3b  {:seed (seed-3d (mg/sphere-lat 6 12 0.25))
@@ -83,6 +86,9 @@
                  g/center
                  mg/seed-box))))
     {})))
+
+(defn editable-seed?
+  [id] (not (false? (get-in seeds [(keyword id) :edit?]))))
 
 (def cam-views
   {:x  [0 (/ SQRT2) 0 (/ SQRT2)]
