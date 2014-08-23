@@ -152,6 +152,13 @@
                   :edit     true
                   :download true}}
 
+   :gallery-info
+   {:width       100
+    :item-height 240
+    :color       "#fff"
+    :font        "14px \"Abel\",sans-serif"
+    :radius      5}
+   
    :about
    {:icon-size [64 64]
     :links-clickable? true

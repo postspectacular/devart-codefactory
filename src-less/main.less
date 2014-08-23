@@ -269,6 +269,28 @@ svg.generic {
     }
 }
 
+#gallery-info-main {
+    .flex(row nowrap);
+
+    div { max-width: none !important; }
+
+    div.versions {
+        .flexbox(1 auto);
+    }
+    div.item-version {
+        margin: 0;
+        padding: 0;
+
+        &>div {
+            display: inline-block;
+            margin: 0;
+            vertical-align: top;
+            text-align: left;
+            text-transform: uppercase;
+        }
+    }
+}
+
 #about .body-wrapper {
     div { margin: auto; text-align: center; }
 
