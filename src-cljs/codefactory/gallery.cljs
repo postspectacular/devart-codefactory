@@ -14,19 +14,15 @@
    [cljs.core.async :refer [<! timeout]]
    [clojure.string :as str]))
 
-(def loader
-  (h/render-html
-   [:div.loading
-    [:p "loading objects..."]
-    [:img {:src "/img/loading.gif" :alt "loading"}]]))
-
 (defn load-page
   [bus page token]
   (let [q-conf (if token
                  (-> config/app :gallery :admin-query)
                  (-> config/app :gallery :query))
         offset (* page (:limit q-conf))]
-    (dom/set-html! (config/dom-component :gallery-main) loader)
+    (dom/set-html!
+     (config/dom-component :gallery-main)
+     (common/loader-html "loading objects..."))
     (io/request
      :uri     (config/api-route :gallery)
      :params  (assoc q-conf :offset offset)
@@ -71,21 +67,13 @@
   [item q evt handler]
   [(dom/query item q) evt handler])
 
-(defn item-asset-url
-  [item type]
-  (if (route/local?)
-    (str (config/api-route :get-object) (:id item) "/" (name type))
-    (str/replace-first
-     (item (keyword (str (name type) "-uri")))
-     "https://" "http://")))
-
 (defn gallery-item
   [{:keys [id title author created seed] :as obj} parent bus token]
   (let [{:keys [edit info download]} (-> config/app :gallery :buttons)
         edit    (and edit (config/editable-seed? seed))
         info    (and info (not token))
-        img-url (item-asset-url obj :preview)
-        stl-url (item-asset-url obj :stl)
+        img-url (common/item-asset-url obj :preview)
+        stl-url (common/item-asset-url obj :stl)
         item    (dom/create! "div" parent {:id (str "obj-" id)})
         buttons (cond->
                  (list)
@@ -127,7 +115,7 @@
                         (fn [e] (.stopPropagation e) (route/set-location! stl-url))))
         info     (conj (item-listener
                         item ".obj-info" "click"
-                        (fn [e] (.stopPropagation e) (async/publish bus :gallery-item-info id))))
+                        (fn [e] (.stopPropagation e) (route/set-route! "gallery" id))))
         token    (conj (item-listener
                         item ".obj-approve" "click"
                         (fn [e] (.stopPropagation e) (async/publish bus :approve-gallery-item id)))))))))

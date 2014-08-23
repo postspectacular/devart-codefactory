@@ -116,6 +116,7 @@
   {:modules
    {:home          true
     :gallery       true
+    :gallery-info  true
     :selector      true
     :editor        true
     :submit        true
@@ -326,6 +327,9 @@
     {:match ["thanks"] :controller :submit-confirm}
     {:match ["about"] :controller :about}
     {:match ["gallery"] :controller :gallery}
+    {:match ["gallery" :id]
+     :bindings {:id {:validate [(v/uuid4)]}}
+     :controller :gallery-info}
     {:match ["admin" "gallery" :token]
      :bindings {:token {:validate [(v/min-length 16)]}}
      :controller :gallery}]
@@ -333,6 +337,9 @@
    :routes-fallback
    [{:match ["not-supported"] :hash "not-supported" :controller :upgrade-browser}
     {:match ["gallery"] :controller :gallery}
+    {:match ["gallery" :id]
+     :bindings {:id {:validate [(v/uuid4)]}}
+     :controller :gallery-info}
     {:match ["admin" "gallery" :token]
      :bindings {:token {:validate [(v/min-length 16)]}}
      :controller :gallery}
@@ -361,6 +368,8 @@
     [:gallery :home] 1
     [:gallery :about] 1
     [:gallery :object-loader] -1
+    [:gallery :gallery-info] -1
+    [:gallery-info :gallery] 1
     [:editor :gallery] 1
     [:editor :about] 1
     }
@@ -395,6 +404,8 @@
     :gallery-main     "gallery-items"
     :gallery-prev     "gallery-prev"
     :gallery-next     "gallery-next"
+    :gallery-info-cancel "gallery-info-cancel"
+    :gallery-info-main "gallery-info-main"
     :nav-toggle       "nav-toggle"
     :nav-body         "nav-body"
     }
@@ -414,6 +425,7 @@
           :submit-object "objects"
           :credits "jobs/current"
           :gallery "objects"
+          :gallery-info "ancestors/"
           :approve-item "objects/"}
          (reduce-kv
           (fn [acc k v] (assoc acc k (str api-prefix v)))
