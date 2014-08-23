@@ -141,7 +141,8 @@
     :admin-query {:filter "unapproved"
                   :limit 20
                   :include-ast false}
-    :buttons     {:edit     true
+    :buttons     {:info     true
+                  :edit     true
                   :download true}}
 
    :about

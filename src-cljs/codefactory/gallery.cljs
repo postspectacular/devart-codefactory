@@ -81,7 +81,8 @@
 
 (defn gallery-item
   [{:keys [id title author created] :as obj} parent bus token]
-  (let [{:keys [edit download]} (-> config/app :gallery :buttons)
+  (let [{:keys [edit info download]} (-> config/app :gallery :buttons)
+        info    (and info (not token))
         img-url (item-asset-url obj :preview)
         stl-url (item-asset-url obj :stl)
         item    (dom/create! "div" parent {:id (str "obj-" id)})
@@ -89,6 +90,7 @@
                  (list)
                  download (conj [:input.obj-download {:type "button" :value "download 3d"}])
                  edit     (conj [:input.obj-edit {:type "button" :value "edit"}])
+                 info     (conj [:input.obj-info {:type "button" :value "details"}])
                  token    (conj [:input.obj-approve {:type "button" :value "approve"}]))]
     (-> item
         (dom/set-html!
@@ -122,6 +124,9 @@
         download (conj (item-listener
                         item ".obj-download" "click"
                         (fn [e] (.stopPropagation e) (route/set-location! stl-url))))
+        info     (conj (item-listener
+                        item ".obj-info" "click"
+                        (fn [e] (.stopPropagation e) (async/publish bus :gallery-item-info id))))
         token    (conj (item-listener
                         item ".obj-approve" "click"
                         (fn [e] (.stopPropagation e) (async/publish bus :approve-gallery-item id)))))))))
