@@ -13,7 +13,8 @@
    [compojure.core :refer [routes GET POST]]
    [ring.util.response :as resp]
    [simple-time.core :as time]
-   [clojure.java.io :as io])
+   [clojure.java.io :as io]
+   [clojure.string :as str])
   (:import
    [codefactory.model CodeTree PrintJob]))
 
@@ -131,6 +132,18 @@
                  (.printStackTrace e)
                  (resp/response (str "error: " (.getMessage e)))))
              (resp/response (pr-str err)))))
+
+   (POST "/update-asset-urls" [:as req]
+         (let [objects  (ds/query CodeTree)
+               _ (prn :retrieved (count objects))
+               update-uri (fn [o id] (update-in o [id] str/replace-first "https://" "http://"))]
+           (doseq [o objects]
+             (try
+               (ds/save! (reduce update-uri o [:preview-uri :stl-uri :lux-uri]))
+               (catch Exception e (prn (.getMessage e)))))
+           (-> (pr-str {:processed (count objects)})
+               (resp/response)
+               (resp/content-type (:edn config/mime-types)))))
 
    (POST "/delete-simple-objects" [:as req]
          (let [[params err] (validate-params (:params req) :delete-simple-objects)]
