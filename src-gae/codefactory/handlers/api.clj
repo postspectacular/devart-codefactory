@@ -131,7 +131,7 @@
 
 (defn object-descendant-graph
   [e]
-  (loop [graph {:root (public-object-no-tree e)}
+  (loop [graph {:root [(public-object-no-tree e)]}
          queue (conj clojure.lang.PersistentQueue/EMPTY (:id e))]
     (if (seq queue)
       (let [id (peek queue)
