@@ -12,17 +12,18 @@
    [thi.ng.cljs.io :as io]
    [thi.ng.cljs.dom :as dom]
    [thi.ng.common.math.core :as m :refer [TWO_PI]]
+   [thi.ng.geom.core.vector :refer [vec2]]
    [hiccups.runtime :as h]
    [cljs.core.async :refer [<! timeout]]
    [clojure.string :as str]))
 
-(defn load-info
+(defn load-graph
   [bus id]
   (dom/set-html!
    (config/dom-component :gallery-info-main)
    (common/loader-html "Loading artwork details..."))
   (io/request
-   :uri     (config/api-route :gallery-info id)
+   :uri     (config/api-route :object-graph id)
    :method  :get
    :edn?    true
    :success (fn [_ data]
@@ -30,34 +31,108 @@
    :error   (fn [status data]
               (warn :response status data))))
 
+(defn graph-nodes
+  [graph]
+  (->> graph
+       vals
+       (apply concat)
+       (reduce (fn [acc n] (assoc acc (:id n) n)) {})))
+
+(defn extract-branch
+  [graph nodes id]
+  (debug :new-branch id)
+  (loop [branch [id], parent (:parent-id (nodes id))]
+    (debug :id id :parent parent)
+    (if parent
+      (recur (conj branch parent) (:parent-id (nodes parent)))
+      branch)))
+
+(defn graph-branches
+  [graph nodes heads]
+  (mapv (fn [id] (extract-branch graph nodes id)) heads))
+
+(defn sort-nodes
+  [nodes] (sort-by (comp - :created val) nodes))
+
+(defn compute-node-positions
+  [nodes item-height]
+  (let [offset (/ item-height 2)]
+    (->> nodes
+         (map-indexed (fn [i [id]] [id (mm/madd i item-height offset)]))
+         (into {}))))
+
+(defn draw-branch
+  [ctx x ypos height nodes visited branch]
+  (set! (.-strokeStyle ctx) "white")
+  (.beginPath ctx)
+  (loop [visited visited, branch branch, last nil]
+    (if branch
+      (let [id     (first branch)
+            parent (visited id)
+            pos    (ypos id)]
+        (prn :last last)
+        (if last
+          (if parent
+            (let [by1 (- (:y parent) (* height 0.3))
+                  by2 (- (:y parent) (* height 0.2))]
+              (.lineTo ctx x by1)
+              (.bezierCurveTo ctx x by2, (:x parent) by2, (:x parent) (:y parent))
+              (.stroke ctx)
+              visited)
+            (let [p' (vec2 x pos)]
+              (.lineTo ctx x pos)
+              (recur (assoc visited id p') (next branch) p')))
+          (let [p' (vec2 x pos)]
+            (.moveTo ctx x pos)
+            (recur (assoc visited id p') (next branch) p'))))
+      (do
+        (.stroke ctx)
+        visited))))
+
+(defn draw-node-label
+  [ctx node-pos id {:keys [created]} radius lx]
+  (let [[x y]   (node-pos id)
+        created (js/Date. created)
+        date    (utils/format-date created)
+        time    (utils/format-time created)]
+    (doto ctx
+      (.beginPath)
+      (.arc x y radius 0 TWO_PI true)
+      (.fill)
+      (.fillText date lx (- y 8))
+      (.fillText time lx (+ y 8)))))
+
 (defn generate-timeline
-  [parent items]
-  (let [{:keys [width item-height color font radius]} (-> config/app :gallery-info)
-        height  (* (count items) item-height)
-        canvas  (dom/create! "canvas" parent {:width width :height height})
-        ctx     (.getContext canvas "2d")
-        cx      (- width radius)
-        start-y (/ item-height 2)
-        lx      (mm/sub cx radius 10)]
+  [parent graph]
+  (let [{:keys [item-height color font radius branch-width]} (-> config/app :gallery-info)
+        heads      (map key (filter #(empty? (val %)) graph))
+        num-heads  (count heads)
+        nodes      (graph-nodes graph)
+        branches   (sort-by (comp - count) (graph-branches graph nodes heads))
+        sorted     (sort-nodes nodes)
+        nodes-ypos (compute-node-positions sorted item-height)
+        width      (mm/madd num-heads branch-width 80)
+        height     (* (count nodes) item-height)
+        canvas     (dom/create! "canvas" parent {:width width :height height})
+        ctx        (.getContext canvas "2d")
+        x          (- width radius)
+        lx         (mm/madd (dec num-heads) (- branch-width) radius -2 x)
+        node-pos   (->> branches
+                        (reduce
+                         (fn [[visited i] branch]
+                           (let [x (mm/madd branch-width (- i) x)]
+                             [(draw-branch ctx x nodes-ypos item-height nodes visited branch)
+                              (inc i)]))
+                         [{} 0])
+                        (first))]
     (set! (.-fillStyle ctx) color)
-    (set! (.-strokeStyle ctx) "")
+    (set! (.-strokeStyle ctx) color)
     (set! (.-font ctx) font)
     (set! (.-textAlign ctx) "right")
     (set! (.-textBaseline ctx) "middle")
-    (.fillRect ctx (dec cx) start-y 2 (- height item-height))
-    (loop [items items, y start-y]
-      (when items
-        (let [{:keys [created]} (first items)
-              created (js/Date. created)
-              date    (utils/format-date created)
-              time    (utils/format-time created)]
-          (doto ctx
-            (.beginPath)
-            (.arc cx y radius 0 TWO_PI true)
-            (.fill)
-            (.fillText date lx (- y 8))
-            (.fillText time lx (+ y 8)))
-          (recur (next items) (+ y item-height)))))))
+    (doseq [[id n] nodes]
+      (draw-node-label ctx node-pos id n radius lx))
+    sorted))
 
 (defn generate-item-details
   [parent items]
@@ -79,14 +154,14 @@
   [ch bus local]
   (go
     (while true
-      (let [[_ items] (<! ch)
+      (let [[_ graph] (<! ch)
             parent (->> :gallery-info-main
                         (config/dom-component)
                         (dom/clear!)
-                        (dom/create! "div"))]
-        (debug :ancestors items)
-        (generate-timeline (dom/create! "div" parent) items)
-        (generate-item-details (dom/create! "div" parent {:class "versions"}) items)))))
+                        (dom/create! "div"))
+            sorted (generate-timeline (dom/create! "div" parent) graph)]
+        ;;(debug :graph sorted)        
+        (generate-item-details (dom/create! "div" parent {:class "versions"}) (vals sorted))))))
 
 (defn init-button-bar
   [bus local]
@@ -110,4 +185,4 @@
            local assoc
            :id       id
            :loading? true)
-          (load-info bus id))))))
+          (load-graph bus id))))))

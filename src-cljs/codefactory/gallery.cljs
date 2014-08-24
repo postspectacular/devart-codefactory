@@ -71,7 +71,7 @@
   [{:keys [id title author created seed parent-id] :as obj} parent bus token]
   (let [{:keys [edit info download]} (-> config/app :gallery :buttons)
         edit    (and edit (config/editable-seed? seed))
-        info    (and info parent-id (not token))
+        info    (and info (not token))
         img-url (common/item-asset-url obj :preview)
         stl-url (common/item-asset-url obj :stl)
         item    (dom/create! "div" parent {:id (str "obj-" id)})
