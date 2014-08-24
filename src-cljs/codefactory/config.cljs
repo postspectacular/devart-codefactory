@@ -433,7 +433,7 @@
      :object-asset (fn [id type] (str api-prefix "objects/" id "/" (name type)))
      :credits (constantly (str api-prefix "jobs/current"))
      :gallery (constantly (str api-prefix "objects"))
-     :gallery-info (fn [id] (str api-prefix "objects/" id "ancestors"))
+     :gallery-info (fn [id] (str api-prefix "objects/" id "/ancestors"))
      :approve-item (fn [id] (str api-prefix "objects/" id))}}
    })
 
