@@ -428,15 +428,13 @@
    :api
    {:prefix api-prefix
     :routes
-    (->> {:get-object "objects/"
-          :submit-object "objects"
-          :credits "jobs/current"
-          :gallery "objects"
-          :gallery-info "ancestors/"
-          :approve-item "objects/"}
-         (reduce-kv
-          (fn [acc k v] (assoc acc k (str api-prefix v)))
-          {}))}
+    {:get-object (fn [id] (str api-prefix "objects/" id))
+     :submit-object (constantly (str api-prefix "objects"))
+     :object-asset (fn [id type] (str api-prefix "objects/" id "/" (name type)))
+     :credits (constantly (str api-prefix "jobs/current"))
+     :gallery (constantly (str api-prefix "objects"))
+     :gallery-info (fn [id] (str api-prefix "objects/" id "ancestors"))
+     :approve-item (fn [id] (str api-prefix "objects/" id))}}
    })
 
 (defn disable-routes
@@ -543,7 +541,7 @@
   [id] (-> app :dom-components id dom/by-id))
 
 (defn api-route
-  [id] (-> app :api :routes id))
+  [id & args] (apply (-> app :api :routes id) args))
 
 (defn inject-api-request-data
   [data]

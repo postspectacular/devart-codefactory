@@ -51,7 +51,7 @@
 (defn item-asset-url
   [item type]
   (if (route/local?)
-    (str (config/api-route :get-object) (:id item) "/" (name type))
+    (config/api-route :object-asset (:id item) type)
     (str/replace-first
      (item (keyword (str (name type) "-uri")))
      "https://" "http://")))

@@ -68,10 +68,10 @@
   [(dom/query item q) evt handler])
 
 (defn gallery-item
-  [{:keys [id title author created seed] :as obj} parent bus token]
+  [{:keys [id title author created seed parent-id] :as obj} parent bus token]
   (let [{:keys [edit info download]} (-> config/app :gallery :buttons)
         edit    (and edit (config/editable-seed? seed))
-        info    (and info (not token))
+        info    (and info parent-id (not token))
         img-url (common/item-asset-url obj :preview)
         stl-url (common/item-asset-url obj :stl)
         item    (dom/create! "div" parent {:id (str "obj-" id)})
@@ -166,7 +166,7 @@
 (defn approve-item
   [bus local id]
   (io/request
-   :uri      (str (config/api-route :approve-item) id)
+   :uri      (config/api-route :approve-item id)
    :data     {:status "approved"}
    :sign-key (:admin-token @local)
    :method   :post

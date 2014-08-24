@@ -22,7 +22,7 @@
    (config/dom-component :gallery-info-main)
    (common/loader-html "Loading artwork details..."))
   (io/request
-   :uri     (str (config/api-route :gallery-info) id)
+   :uri     (config/api-route :gallery-info id)
    :method  :get
    :edn?    true
    :success (fn [_ data]
