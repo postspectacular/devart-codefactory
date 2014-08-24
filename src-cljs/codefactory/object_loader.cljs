@@ -23,7 +23,7 @@
 (defn load-model
   [bus id]
   (io/request
-   :uri     (str (config/api-route :get-object) id)
+   :uri     (config/api-route :get-object id)
    :method  :get
    :edn?    true
    :success (fn [_ {{:keys [tree seed id]} :body :as data}]

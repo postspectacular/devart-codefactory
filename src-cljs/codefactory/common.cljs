@@ -1,6 +1,17 @@
 (ns codefactory.common
   (:require
-   [thi.ng.cljs.dom :as dom]))
+   [codefactory.config :as config]
+   [thi.ng.cljs.route :as route]
+   [thi.ng.cljs.dom :as dom]
+   [hiccups.runtime :as h]
+   [clojure.string :as str]))
+
+(defn loader-html
+  [msg]
+  (h/render-html
+   [:div.loading
+    [:p msg]
+    [:img {:src "/img/loading.gif" :alt "loading"}]]))
 
 (defn show-nav
   [] (dom/remove-class! (dom/query nil "nav") "hidden"))
@@ -36,3 +47,11 @@
       id
       (if-let [el (dom/parent el)]
         (recur el)))))
+
+(defn item-asset-url
+  [item type]
+  (if (route/local?)
+    (config/api-route :object-asset (:id item) type)
+    (str/replace-first
+     (item (keyword (str (name type) "-uri")))
+     "https://" "http://")))

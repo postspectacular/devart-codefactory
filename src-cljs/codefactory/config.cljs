@@ -116,6 +116,7 @@
   {:modules
    {:home          true
     :gallery       true
+    :gallery-info  true
     :selector      true
     :editor        true
     :submit        true
@@ -147,9 +148,17 @@
     :admin-query {:filter "unapproved"
                   :limit 20
                   :include-ast false}
-    :buttons     {:edit     true
+    :buttons     {:info     true
+                  :edit     true
                   :download true}}
 
+   :gallery-info
+   {:width       100
+    :item-height 240
+    :color       "#ffd541"
+    :font        "14px \"Abel\",sans-serif"
+    :radius      5}
+   
    :about
    {:icon-size [64 64]
     :links-clickable? true
@@ -325,6 +334,9 @@
     {:match ["thanks"] :controller :submit-confirm}
     {:match ["about"] :controller :about}
     {:match ["gallery"] :controller :gallery}
+    {:match ["gallery" :id]
+     :bindings {:id {:validate [(v/uuid4)]}}
+     :controller :gallery-info}
     {:match ["admin" "gallery" :token]
      :bindings {:token {:validate [(v/min-length 16)]}}
      :controller :gallery}]
@@ -332,6 +344,9 @@
    :routes-fallback
    [{:match ["not-supported"] :hash "not-supported" :controller :upgrade-browser}
     {:match ["gallery"] :controller :gallery}
+    {:match ["gallery" :id]
+     :bindings {:id {:validate [(v/uuid4)]}}
+     :controller :gallery-info}
     {:match ["admin" "gallery" :token]
      :bindings {:token {:validate [(v/min-length 16)]}}
      :controller :gallery}
@@ -360,6 +375,8 @@
     [:gallery :home] 1
     [:gallery :about] 1
     [:gallery :object-loader] -1
+    [:gallery :gallery-info] -1
+    [:gallery-info :gallery] 1
     [:editor :gallery] 1
     [:editor :about] 1
     }
@@ -394,6 +411,8 @@
     :gallery-main     "gallery-items"
     :gallery-prev     "gallery-prev"
     :gallery-next     "gallery-next"
+    :gallery-info-cancel "gallery-info-cancel"
+    :gallery-info-main "gallery-info-main"
     :nav-toggle       "nav-toggle"
     :nav-body         "nav-body"
     }
@@ -409,14 +428,13 @@
    :api
    {:prefix api-prefix
     :routes
-    (->> {:get-object "objects/"
-          :submit-object "objects"
-          :credits "jobs/current"
-          :gallery "objects"
-          :approve-item "objects/"}
-         (reduce-kv
-          (fn [acc k v] (assoc acc k (str api-prefix v)))
-          {}))}
+    {:get-object (fn [id] (str api-prefix "objects/" id))
+     :submit-object (constantly (str api-prefix "objects"))
+     :object-asset (fn [id type] (str api-prefix "objects/" id "/" (name type)))
+     :credits (constantly (str api-prefix "jobs/current"))
+     :gallery (constantly (str api-prefix "objects"))
+     :gallery-info (fn [id] (str api-prefix "objects/" id "/ancestors"))
+     :approve-item (fn [id] (str api-prefix "objects/" id))}}
    })
 
 (defn disable-routes
@@ -523,7 +541,7 @@
   [id] (-> app :dom-components id dom/by-id))
 
 (defn api-route
-  [id] (-> app :api :routes id))
+  [id & args] (apply (-> app :api :routes id) args))
 
 (defn inject-api-request-data
   [data]

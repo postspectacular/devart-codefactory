@@ -72,6 +72,9 @@
       (resp/status 403)
       (resp/content-type (:text config/mime-types))))
 
+(defn missing-entity-response
+  [req id] (api-response req {:reason (str "Unknown ID: " id)} 404))
+
 (defn new-entity-request
   [req validate-id handler]
   (if (valid-api-accept? req)
@@ -101,6 +104,48 @@
     :approved   [[[:status :desc] [:created :desc]] [:=  :status "approved"]]
     :unapproved [[[:status :desc] [:created :desc]] [:!= :status "approved"]]
     [[[:created :desc]] nil]))
+
+(defn public-object-no-tree
+  [e] (model/public-entity (dissoc e :tree) :public-codetree-keys))
+
+(defn object-ancestor-root
+  [id]
+  (loop [root nil, id id]
+    (if id
+      (let [e (ds/retrieve CodeTree id)]
+        (if (= (:status e) "approved")
+          (recur (:id e) (:parent-id e))
+          root))
+      root)))
+
+(defn object-ancestor-chain
+  [id]
+  (loop [chain [], id id]
+    (if id
+      (if-let [e (ds/retrieve CodeTree id)]
+        (recur
+         (conj chain (public-object-no-tree e))
+         (:parent-id e))
+        chain)
+      (filter #(or (= id (:id %)) (= "approved" (:status %))) chain))))
+
+(defn object-descendant-graph
+  [e]
+  (loop [graph {:root (public-object-no-tree e)}
+         queue (conj clojure.lang.PersistentQueue/EMPTY (:id e))]
+    (if (seq queue)
+      (let [id (peek queue)
+            children (ds/query
+                      CodeTree
+                      :filter [:and
+                               [:= :parent-id id]
+                               [:= :status "approved"]])
+            graph    (->> children
+                          (mapv public-object-no-tree)
+                          (assoc graph id))
+            queue    (into (pop queue) (mapv :id children))]
+        (recur graph queue))
+      graph)))
 
 (def handlers
   (routes
@@ -197,7 +242,7 @@
                      (ds/save! entity)
                      (api-response
                       req (model/public-entity entity :public-codetree-keys) 200))
-                   (api-response req {:reason (str "Unknown ID: " id)} 404))
+                   (missing-entity-response req id))
                  (api-response req err 400)))
              (invalid-api-response))
            (invalid-signature-response)))
@@ -209,7 +254,7 @@
               (if-let [entity (ds/retrieve CodeTree id)]
                 (api-response
                  req (model/public-entity entity :public-codetree-keys) 200)
-                (api-response req {:reason (str "Unknown ID: " id)} 404))
+                (missing-entity-response req id))
               (api-response req err 400)))
           (invalid-api-response)))
 
@@ -235,29 +280,50 @@
                                    (str "attachment; filename=\"" fname "\""))))
                 (catch Exception e
                   {:status 204}))
-              (api-response req {:reason (str "Unknown ID: " id)} 404))
+              (missing-entity-response req id))
             (api-response req err 400))))
 
-   (GET "/ancestors/:id" [id :as req]
+   (GET "/objects/:id/root" [id :as req]
         (if (valid-api-accept? req)
           (let [[params err] (validate-params {:id id} :get-object)]
             (if (nil? err)
-              (let [chain (loop [chain [], id id]
-                            (if id
-                              (if-let [e (ds/retrieve CodeTree id)]
-                                (recur
-                                 (conj
-                                  chain
-                                  (model/public-entity (dissoc e :tree) :public-codetree-keys))
-                                 (:parent-id e))
-                                chain)
-                              chain))]
+              (if-let [root (object-ancestor-root id)]
+                (api-response req {:root root} 200)
+                (missing-entity-response req id))
+              (api-response req err 400)))
+          (invalid-api-response)))
+   
+   (GET "/objects/:id/ancestors" [id :as req]
+        (if (valid-api-accept? req)
+          (let [[params err] (validate-params {:id id} :get-object)]
+            (if (nil? err)
+              (let [chain (object-ancestor-chain id)]
                 (if (seq chain)
                   (api-response req chain 200)
-                  (api-response req {:reason (str "Unknown ID: " id)} 404)))
+                  (missing-entity-response req id)))
               (api-response req err 400)))
           (invalid-api-response)))
 
+   (GET "/objects/:id/descendants" [id :as req]
+        (if (valid-api-accept? req)
+          (let [[params err] (validate-params {:id id} :get-object)]
+            (if (nil? err)
+              (if-let [e (ds/retrieve CodeTree id)]
+                (api-response req (object-descendant-graph e) 200)
+                (missing-entity-response req id))
+              (api-response req err 400)))
+          (invalid-api-response)))
+
+   (GET "/objects/:id/graph" [id :as req]
+        (if (valid-api-accept? req)
+          (let [[params err] (validate-params {:id id} :get-object)]
+            (if (nil? err)
+              (if-let [root (object-ancestor-root id)]
+                (api-response req (object-descendant-graph (ds/retrieve CodeTree root)) 200)
+                (missing-entity-response req id))
+              (api-response req err 400)))
+          (invalid-api-response)))
+   
    (POST "/exec-task" [:as req]
          (if (valid-signature? req)
            (let [[params err] (validate-params (:params req) :exec-task)]

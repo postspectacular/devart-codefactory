@@ -7,6 +7,7 @@
    [codefactory.nav :as nav]
    [codefactory.home :as home]
    [codefactory.gallery :as gallery]
+   [codefactory.gallery.object-info :as ginfo]
    [codefactory.editor :as editor]
    [codefactory.selector :as selector]
    [codefactory.object-loader :as obj]
@@ -27,6 +28,7 @@
 (def module-initializers
   {:home          home/init
    :gallery       gallery/init
+   :gallery-info  ginfo/init
    :selector      selector/init
    :editor        editor/init
    :object-loader obj/init
