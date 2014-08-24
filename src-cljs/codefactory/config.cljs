@@ -157,7 +157,8 @@
     :item-height 240
     :color       "#ffd541"
     :font        "14px \"Abel\",sans-serif"
-    :radius      5}
+    :radius      5
+    :branch-width 20}
    
    :about
    {:icon-size [64 64]
@@ -425,16 +426,15 @@
     :controller 900
     :tooltip  3000}
 
-   :api
-   {:prefix api-prefix
-    :routes
-    {:get-object (fn [id] (str api-prefix "objects/" id))
-     :submit-object (constantly (str api-prefix "objects"))
-     :object-asset (fn [id type] (str api-prefix "objects/" id "/" (name type)))
-     :credits (constantly (str api-prefix "jobs/current"))
-     :gallery (constantly (str api-prefix "objects"))
-     :gallery-info (fn [id] (str api-prefix "objects/" id "/ancestors"))
-     :approve-item (fn [id] (str api-prefix "objects/" id))}}
+   :api-routes
+   {:get-object    (fn [id] (str api-prefix "objects/" id))
+    :submit-object (constantly (str api-prefix "objects"))
+    :object-asset  (fn [id type] (str api-prefix "objects/" id "/" (name type)))
+    :credits       (constantly (str api-prefix "jobs/current"))
+    :gallery       (constantly (str api-prefix "objects"))
+    :gallery-info  (fn [id] (str api-prefix "objects/" id "/ancestors"))
+    :object-graph  (fn [id] (str api-prefix "objects/" id "/graph"))
+    :approve-item  (fn [id] (str api-prefix "objects/" id))}
    })
 
 (defn disable-routes
@@ -541,7 +541,7 @@
   [id] (-> app :dom-components id dom/by-id))
 
 (defn api-route
-  [id & args] (apply (-> app :api :routes id) args))
+  [id & args] (apply (-> app :api-routes id) args))
 
 (defn inject-api-request-data
   [data]
