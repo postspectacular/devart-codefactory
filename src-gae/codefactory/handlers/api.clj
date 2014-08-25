@@ -120,14 +120,15 @@
 
 (defn object-ancestor-chain
   [id]
-  (loop [chain [], id id]
-    (if id
-      (if-let [e (ds/retrieve CodeTree id)]
-        (recur
-         (conj chain (public-object-no-tree e))
-         (:parent-id e))
-        chain)
-      (filter #(or (= id (:id %)) (= "approved" (:status %))) chain))))
+  (let [chain (loop [chain [], id id]
+                (if id
+                  (if-let [e (ds/retrieve CodeTree id)]
+                    (recur
+                     (conj chain (public-object-no-tree e))
+                     (:parent-id e))
+                    chain)
+                  chain))]
+    (filter #(or (= id (:id %)) (= "approved" (:status %))) chain)))
 
 (defn object-descendant-graph
   [e]
@@ -292,7 +293,7 @@
                 (missing-entity-response req id))
               (api-response req err 400)))
           (invalid-api-response)))
-   
+
    (GET "/objects/:id/ancestors" [id :as req]
         (if (valid-api-accept? req)
           (let [[params err] (validate-params {:id id} :get-object)]
@@ -323,7 +324,7 @@
                 (missing-entity-response req id))
               (api-response req err 400)))
           (invalid-api-response)))
-   
+
    (POST "/exec-task" [:as req]
          (if (valid-signature? req)
            (let [[params err] (validate-params (:params req) :exec-task)]
