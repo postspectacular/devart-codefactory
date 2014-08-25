@@ -158,7 +158,8 @@
     :color       "#ffd541"
     :font        "14px \"Abel\",sans-serif"
     :radius      5
-    :branch-width 20}
+    :branch-width 20
+    :label-width  65}
    
    :about
    {:icon-size [64 64]

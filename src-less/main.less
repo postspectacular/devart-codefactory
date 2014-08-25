@@ -285,6 +285,7 @@ svg.generic {
     div.item-version {
         margin: 0;
         padding: 0;
+        height: 240px;
 
         >div {
             margin: 0;
@@ -302,6 +303,18 @@ svg.generic {
             width: 6em;
             color: @col-bt-gallery;
         }
+    }
+
+    svg {
+        fill: @col-bt-gallery;
+        stroke: @col-bt-gallery;
+        stroke-width: 2px;
+        text-anchor: end;
+        font-size: @app-font-size;
+
+        g { stroke: none; }
+        g.selected { fill: @op-col-sd; }
+        path { fill: none; }
     }
 }
 

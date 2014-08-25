@@ -61,107 +61,100 @@
          (map-indexed (fn [i [id]] [id (mm/madd i item-height offset)]))
          (into {}))))
 
-(defn draw-branch
-  [ctx x ypos height nodes visited branch]
-  (set! (.-strokeStyle ctx) "white")
-  (.beginPath ctx)
-  (loop [visited visited, branch branch, last nil]
+(defn svg-branch
+  [nodes visited branch x ypos height]
+  (loop [visited visited, path "", branch branch, first? true]
     (if branch
       (let [id     (first branch)
             parent (visited id)
-            pos    (ypos id)]
-        (prn :last last)
-        (if last
-          (if parent
-            (let [by1 (- (:y parent) (* height 0.3))
-                  by2 (- (:y parent) (* height 0.2))]
-              (.lineTo ctx x by1)
-              (.bezierCurveTo ctx x by2, (:x parent) by2, (:x parent) (:y parent))
-              (.stroke ctx)
-              visited)
-            (let [p' (vec2 x pos)]
-              (.lineTo ctx x pos)
-              (recur (assoc visited id p') (next branch) p')))
-          (let [p' (vec2 x pos)]
-            (.moveTo ctx x pos)
-            (recur (assoc visited id p') (next branch) p'))))
-      (do
-        (.stroke ctx)
-        visited))))
+            y      (ypos id)]
+        (if y
+          (if first?
+            (recur (assoc visited id (vec2 x y)) (str path "M" x "," y) (next branch) false)
+            (if-not parent
+              (recur (assoc visited id (vec2 x y)) (str path " L" x "," y) (next branch) false)
+              (let [[px py] parent
+                    by1 (- py (* height 0.3))
+                    by2 (- py (* height 0.2))
+                    path (str path " L" x "," by1 " C" x "," by2 "," px "," by2 "," px "," py)]
+                [visited [:path {:d path}]])))
+          [visited [:path {:d path}]]))
+      [visited [:path {:d path}]])))
 
-(defn draw-node-label
-  [ctx node-pos id {:keys [created]} radius lx]
+(defn svg-node-label
+  [node-pos id {:keys [created]} radius lx]
   (let [[x y]   (node-pos id)
         created (js/Date. created)
         date    (utils/format-date created)
         time    (utils/format-time created)]
-    (doto ctx
-      (.beginPath)
-      (.arc x y radius 0 TWO_PI true)
-      (.fill)
-      (.fillText date lx (- y 8))
-      (.fillText time lx (+ y 8)))))
+    [:g
+     [:text {:x lx :y (- y 8)} date]
+     [:text {:x lx :y (+ y 8)} time]
+     [:circle {:cx x :cy y :r radius}]]))
+
+(defn timeline-svg
+  [parent width height & body]
+  (let [svg (dom/create-ns!
+             dom/svg-ns "svg" parent
+             {:width width :height height})]
+    (dom/set-html! svg (h/render-html body))))
 
 (defn generate-timeline
   [parent graph]
-  (let [{:keys [item-height color font radius branch-width]} (-> config/app :gallery-info)
+  (let [{:keys [item-height radius branch-width label-width] :as conf} (-> config/app :gallery-info)
         heads      (map key (filter #(empty? (val %)) graph))
         num-heads  (count heads)
         nodes      (graph-nodes graph)
         branches   (sort-by (comp - count) (graph-branches graph nodes heads))
         sorted     (sort-nodes nodes)
         nodes-ypos (compute-node-positions sorted item-height)
-        width      (mm/madd num-heads branch-width 80)
+        width      (mm/madd num-heads branch-width label-width)
         height     (* (count nodes) item-height)
-        canvas     (dom/create! "canvas" parent {:width width :height height})
-        ctx        (.getContext canvas "2d")
         x          (- width radius)
         lx         (mm/madd (dec num-heads) (- branch-width) radius -2 x)
-        node-pos   (->> branches
+        [node-pos
+         paths]    (->> branches
                         (reduce
-                         (fn [[visited i] branch]
-                           (let [x (mm/madd branch-width (- i) x)]
-                             [(draw-branch ctx x nodes-ypos item-height nodes visited branch)
-                              (inc i)]))
-                         [{} 0])
-                        (first))]
-    (set! (.-fillStyle ctx) color)
-    (set! (.-strokeStyle ctx) color)
-    (set! (.-font ctx) font)
-    (set! (.-textAlign ctx) "right")
-    (set! (.-textBaseline ctx) "middle")
-    (doseq [[id n] nodes]
-      (draw-node-label ctx node-pos id n radius lx))
+                         (fn [[visited paths i] branch]
+                           (let [x (mm/madd branch-width (- i) x)
+                                 [visited path] (svg-branch nodes visited branch x nodes-ypos item-height)]
+                             [visited (conj paths path) (inc i)]))
+                         [{} () 0]))
+         labels    (map (fn [[id n]] (svg-node-label node-pos id n radius lx)) nodes)]
+    (timeline-svg parent width height paths labels)
     sorted))
+
+(defn gallery-item
+  [parent {:keys [title author tree-depth] :as item}]
+  (let [el (dom/create! "div" parent {:class "item-version"})]
+    (dom/set-html!
+     el
+     (h/render-html
+      (list [:div [:img {:src (common/item-asset-url item :preview) :width 320}]]
+            [:div
+             [:p [:span "title:"] title]
+             [:p [:span "author:"] author]
+             [:p [:span "complexity:"] tree-depth]])))))
 
 (defn generate-item-details
   [parent items]
-  (dom/set-html!
-   parent
-   (h/render-html
-    (map
-     (fn [{:keys [title author tree-depth] :as item}]
-       [:div.item-version
-        [:div [:img {:src (common/item-asset-url item :preview) :width 320}]]
-        [:div
-         [:p [:span "title:"] title]
-         [:p [:span "author:"] author]
-         [:p [:span "complexity:"] tree-depth]
-         ]])
-     items))))
+  (dorun (map #(gallery-item parent %) items)))
 
 (defn handle-refresh
   [ch bus local]
   (go
     (while true
       (let [[_ graph] (<! ch)
-            parent (->> :gallery-info-main
-                        (config/dom-component)
-                        (dom/clear!)
-                        (dom/create! "div"))
-            sorted (generate-timeline (dom/create! "div" parent) graph)]
-        ;;(debug :graph sorted)        
-        (generate-item-details (dom/create! "div" parent {:class "versions"}) (vals sorted))))))
+            parent    (->> :gallery-info-main
+                           (config/dom-component)
+                           (dom/clear!)
+                           (dom/create! "div"))
+            timeline  (dom/create! "div" parent)
+            versions  (dom/create! "div" parent {:class "versions"}) ]
+        (->> graph
+             (generate-timeline timeline)
+             (vals)
+             (generate-item-details versions))))))
 
 (defn init-button-bar
   [bus local]
