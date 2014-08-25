@@ -4,6 +4,7 @@
   (:require
    [codefactory.config :as config]
    [codefactory.common :as common]
+   [codefactory.gallery.item :as item]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
@@ -63,70 +64,13 @@
     [(config/dom-component :gallery-next) "click"
      #(handle-page-change bus local 1)]]))
 
-(defn item-listener
-  [item q evt handler]
-  [(dom/query item q) evt handler])
-
-(defn gallery-item
-  [{:keys [id title author created seed parent-id] :as obj} parent bus approve]
-  (let [{:keys [edit info download]} (-> config/app :gallery :buttons)
-        edit    (and edit (config/editable-seed? seed))
-        info    (and info (not approve))
-        img-url (common/item-asset-url obj :preview)
-        stl-url (common/item-asset-url obj :stl)
-        item    (dom/create! "div" parent {:id (str "obj-" id)})
-        buttons (cond->
-                 (list)
-                 download (conj [:input.obj-download {:type "button" :value "download 3d"}])
-                 edit     (conj [:input.obj-edit {:type "button" :value "edit"}])
-                 info     (conj [:input.obj-info {:type "button" :value "details"}])
-                 approve  (conj [:input.obj-approve {:type "button" :value "approve"}]))]
-    (-> item
-        (dom/set-html!
-         (h/render-html
-          (list
-           [:div.obj-preview
-            [:div.obj-overlay.anim buttons]]
-           [:div.credits
-            [:span (str (.toUpperCase title) " by " (.toUpperCase author))]
-            [:span (utils/format-date-time (js/Date. created))]])))
-        (dom/query ".obj-preview")
-        (dom/set-style! (clj->js {:background-image (str "url(" img-url ")")})))
-    (when (or approve edit download)
-      (dom/add-listeners
-       (cond->
-        [(item-listener
-          item ".obj-preview" "mouseover"
-          (fn [] (async/publish bus :focus-gallery-item [:on item obj])))
-         (item-listener
-          item ".obj-overlay" "mouseleave"
-          (fn [] (async/publish bus :focus-gallery-item [:off item obj])))
-         (item-listener
-          item ".obj-preview" "touchstart"
-          (fn [e] (.stopPropagation e) (async/publish bus :focus-gallery-item [:on item obj])))
-         (item-listener
-          item ".obj-overlay" "touchstart"
-          (fn [e] (.stopPropagation e) (async/publish bus :focus-gallery-item [:off item obj])))]
-        edit     (conj (item-listener
-                        item ".obj-edit" "click"
-                        (fn [e] (.stopPropagation e) (route/set-route! "objects" id))))
-        download (conj (item-listener
-                        item ".obj-download" "click"
-                        (fn [e] (.stopPropagation e) (route/set-location! stl-url))))
-        info     (conj (item-listener
-                        item ".obj-info" "click"
-                        (fn [e] (.stopPropagation e) (route/set-route! "gallery" id))))
-        approve  (conj (item-listener
-                        item ".obj-approve" "click"
-                        (fn [e] (.stopPropagation e) (async/publish bus :approve-gallery-item id)))))))))
-
 (defn build-gallery
   [objects bus token]
   (let [parent (config/dom-component :gallery-main)]
     (dom/clear! parent)
     (loop [objects (seq objects)]
       (when objects
-        (gallery-item (first objects) parent bus token)
+        (item/gallery-item (first objects) parent bus token)
         (recur (next objects))))))
 
 (defn handle-item-overlay
