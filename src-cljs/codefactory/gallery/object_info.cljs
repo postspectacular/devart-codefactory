@@ -5,6 +5,7 @@
   (:require
    [codefactory.config :as config]
    [codefactory.common :as common]
+   [codefactory.gallery.item :as item]
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
@@ -125,21 +126,21 @@
     (timeline-svg parent width height paths labels)
     sorted))
 
-(defn gallery-item
-  [parent {:keys [title author tree-depth] :as item}]
-  (let [el (dom/create! "div" parent {:class "item-version"})]
-    (dom/set-html!
-     el
-     (h/render-html
-      (list [:div [:img {:src (common/item-asset-url item :preview) :width 320}]]
-            [:div
-             [:p [:span "title:"] title]
-             [:p [:span "author:"] author]
-             [:p [:span "complexity:"] tree-depth]])))))
+(defn item-credits
+  [{:keys [title author tree-depth]}]
+  [:div
+   [:p [:span "title:"] title]
+   [:p [:span "author:"] author]
+   [:p [:span "complexity:"] tree-depth]])
 
 (defn generate-item-details
-  [parent items]
-  (dorun (map #(gallery-item parent %) items)))
+  [parent bus items]
+  (let [buttons (-> config/app :gallery-info :buttons)
+        attribs {:class "item-version"}]
+    (dorun
+     (map
+      #(item/gallery-item % buttons parent bus attribs (item-credits %))
+      items))))
 
 (defn handle-refresh
   [ch bus local]
@@ -155,7 +156,7 @@
         (->> graph
              (generate-timeline timeline)
              (vals)
-             (generate-item-details versions))))))
+             (generate-item-details versions bus))))))
 
 (defn init-button-bar
   [bus local]

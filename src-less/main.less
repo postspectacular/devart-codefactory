@@ -287,6 +287,27 @@ svg.generic {
         padding: 0;
         height: 240px;
 
+        .obj-preview {
+            width: 320px;
+            height: 240px;
+            background-size: cover;
+        }
+
+        .obj-overlay {
+            width: 320px;
+            height: 240px;
+            background: rgba(52,52,54,0.75);
+            .flex(column nowrap);
+            .flex-justify(center);
+            text-align: center;
+            visibility: hidden;
+
+            input[type=button] {
+                width: 66%;
+                margin: 10px auto;
+            }
+        }
+
         >div {
             margin: 0;
             display: inline-block;

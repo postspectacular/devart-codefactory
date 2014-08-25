@@ -66,30 +66,13 @@
 
 (defn build-gallery
   [objects bus token]
-  (let [parent (config/dom-component :gallery-main)]
+  (let [parent (config/dom-component :gallery-main)
+        buttons (assoc (-> config/app :gallery :buttons) :approve token)]
     (dom/clear! parent)
     (loop [objects (seq objects)]
       (when objects
-        (item/gallery-item (first objects) parent bus token)
+        (item/gallery-item (first objects) buttons parent bus)
         (recur (next objects))))))
-
-(defn handle-item-overlay
-  [ch bus local]
-  (let [parent (config/dom-component :gallery-main)]
-    (go
-      (while true
-        (let [[_ [cmd item obj]] (<! ch)
-              focused            (:focused @local)
-              on?                (or (= :on cmd) (not= focused item))]
-          (if focused
-            (-> (dom/query focused ".obj-overlay")
-                (dom/set-style! #js {:visibility "hidden"})
-                (dom/remove-class! "fade-in")))
-          (if on?
-            (-> (dom/query item ".obj-overlay")
-                (dom/set-style! #js {:visibility "visible"})
-                (dom/add-class! "fade-in")))
-          (swap! local assoc :focused (if on? item)))))))
 
 (defn handle-refresh
   [ch bus local]
@@ -133,13 +116,14 @@
         refresh (async/subscribe bus :gallery-loaded)
         focus   (async/subscribe bus :focus-gallery-item)
         approve (async/subscribe bus :approve-gallery-item)
+        parent  (config/dom-component :gallery-main)
         local   (atom {:focused nil :page 0})]
 
     (init-button-bar     bus local)
     (handle-refresh      refresh bus local)
-    (handle-item-overlay focus bus local)
     (handle-approval     approve bus local)
-
+    (item/handle-item-overlay focus local parent)
+    
     (go
       (while true
         (let [[_ [_ {:keys [token]}]] (<! init)]

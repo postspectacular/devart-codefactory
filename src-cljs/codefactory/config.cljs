@@ -125,8 +125,9 @@
     :object-loader true}
 
    :modules-fallback
-   {:about   true
-    :gallery true}
+   {:about         true
+    :gallery       true
+    :gallery-info  true}
 
    :min-window-size [480 600]
 
@@ -159,7 +160,9 @@
     :font        "14px \"Abel\",sans-serif"
     :radius      5
     :branch-width 20
-    :label-width  65}
+    :label-width  65
+    :buttons     {:edit     true
+                  :download true}}
    
    :about
    {:icon-size [64 64]
@@ -516,7 +519,8 @@
 
 (defn apply-fallback
   [config]
-  (->> {:gallery {:buttons {:edit false}}}
+  (->> {:gallery      {:buttons {:edit false}}
+        :gallery-info {:buttons {:edit false}}}
        (deep-merge config)
        (set! app)))
 
