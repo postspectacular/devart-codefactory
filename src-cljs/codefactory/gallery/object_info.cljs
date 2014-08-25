@@ -96,7 +96,8 @@
   [parent width height & body]
   (let [svg (dom/create-ns!
              dom/svg-ns "svg" parent
-             {:width width :height height})]
+             {:width width :height height
+              :id "branchviz"})]
     (dom/set-html! svg (h/render-html body))))
 
 (defn generate-timeline
