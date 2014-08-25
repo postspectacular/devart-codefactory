@@ -94,12 +94,21 @@
      [:circle {:cx x :cy y :r radius}]]))
 
 (defn timeline-svg
-  [parent width height & body]
+  [parent width height paths labels]
   (let [svg (dom/create-ns!
              dom/svg-ns "svg" parent
              {:width width :height height
               :id "branchviz"})]
-    (dom/set-html! svg (h/render-html body))))
+    ;; FF & Safari don't like set-html! w/ SVG content
+    (doseq [p paths]
+      (dom/create-ns! dom/svg-ns "path" svg {:d (-> p second :d)}))
+    (doseq [[_ [_ t1 date] [_ t2 time] [_ c]] labels]
+      (let [g (dom/create-ns! dom/svg-ns "g" svg)]
+        (-> (dom/create-ns! dom/svg-ns "text" g t1) (dom/set-text! date))
+        (-> (dom/create-ns! dom/svg-ns "text" g t2) (dom/set-text! time))
+        (-> (dom/create-ns! dom/svg-ns "circle" g c))))
+    ;;(dom/set-html! svg body)
+    ))
 
 (defn generate-timeline
   [parent graph]
