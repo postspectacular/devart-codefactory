@@ -22,7 +22,6 @@
    [thi.ng.cljs.dom :as dom]
    [thi.ng.cljs.detect :as detect]
    [goog.events :as events]
-   [hiccups.runtime :as h]
    [cljs.core.async :refer [<! timeout]]))
 
 (def module-initializers
@@ -117,7 +116,7 @@
           (fn []
             (dom/set-style!
              (dom/by-id "home")
-             #js {:background-image (str "url(" url ")")})
+             {:background-image (str "url(" url ")")})
             (async/publish bus :app-ready nil)))
     (set! (.-src img) url)))
 

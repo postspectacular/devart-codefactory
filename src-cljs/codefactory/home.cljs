@@ -26,7 +26,7 @@
 
 (defn show-credits
   [{:keys [title author date]}]
-  (dom/set-style! (dom/query nil "#home .credits") #js {:visibility "visible"})
+  (dom/set-style! (dom/query nil "#home .credits") {:visibility "visible"})
   (dom/set-text!  (dom/by-id "credits-title") title)
   (dom/set-text!  (dom/by-id "credits-author") author)
   (dom/set-text!  (dom/by-id "credits-date") date))

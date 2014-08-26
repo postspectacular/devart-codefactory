@@ -8,8 +8,7 @@
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
    [thi.ng.cljs.utils :as utils]
-   [thi.ng.cljs.dom :as dom]
-   [hiccups.runtime :as h]))
+   [thi.ng.cljs.dom :as dom]))
 
 (defn item-listener
   [item q evt handler]
@@ -23,25 +22,23 @@
         info    (and info (not approve))
         img-url (common/item-asset-url obj :preview)
         stl-url (common/item-asset-url obj :stl)
-        item    (dom/create! "div" parent (merge attribs {:id (str "obj-" id)}))
-        buttons (cond->
-                 (list)
-                 download (conj [:input.obj-download {:type "button" :value "download 3d"}])
-                 edit     (conj [:input.obj-edit {:type "button" :value "edit"}])
-                 info     (conj [:input.obj-info {:type "button" :value "details"}])
-                 approve  (conj [:input.obj-approve {:type "button" :value "approve"}]))]
-    (-> item
-        (dom/set-html!
-         (h/render-html
-          (list
-           [:div.obj-preview
-            [:div.obj-overlay.anim buttons]]
-           (or credits
-               [:div.credits
-                [:span (str (.toUpperCase title) " by " (.toUpperCase author))]
-                [:span (utils/format-date-time (js/Date. created))]]))))
-        (dom/query ".obj-preview")
-        (dom/set-style! (clj->js {:background-image (str "url(" img-url ")")})))
+        attribs (merge attribs {:id (str "obj-" id)})
+        item    (dom/create-dom!
+                 [:div attribs
+                  [:div.obj-preview
+                   {:style {:background-image (str "url(" img-url ")")}}
+                   [:div.obj-overlay.anim
+                    (cond->
+                     (list)
+                     download (conj [:input.obj-download {:type "button" :value "download 3d"}])
+                     edit     (conj [:input.obj-edit {:type "button" :value "edit"}])
+                     info     (conj [:input.obj-info {:type "button" :value "details"}])
+                     approve  (conj [:input.obj-approve {:type "button" :value "approve"}]))]]
+                  (or credits
+                      [:div.credits
+                       [:span (str (.toUpperCase title) " by " (.toUpperCase author))]
+                       [:span (utils/format-date-time (js/Date. created))]])]
+                 parent)]
     (when (or approve edit download)
       (dom/add-listeners
        (cond->
@@ -79,10 +76,10 @@
             on?                (or (= :on cmd) (not= focused item))]
         (if focused
           (-> (dom/query focused ".obj-overlay")
-              (dom/set-style! #js {:visibility "hidden"})
+              (dom/set-style! {:visibility "hidden"})
               (dom/remove-class! "fade-in")))
         (if on?
           (-> (dom/query item ".obj-overlay")
-              (dom/set-style! #js {:visibility "visible"})
+              (dom/set-style! {:visibility "visible"})
               (dom/add-class! "fade-in")))
         (swap! state assoc :focused (if on? item))))))

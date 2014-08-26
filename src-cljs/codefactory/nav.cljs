@@ -6,7 +6,6 @@
    [thi.ng.cljs.async :as async]
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.dom :as dom]
-   [hiccups.runtime :as h]
    [cljs.core.async :refer [<! timeout]]))
 
 (defn hide-active-section
@@ -17,7 +16,7 @@
             el (dom/by-id (str "nav-" (name id)))
             visible? (if (= id ctrl) "none" "block")]
         (if el
-          (dom/set-style! el #js {:display visible?}))
+          (dom/set-style! el {:display visible?}))
         (recur (next ids))))))
 
 (defn nav-item
@@ -41,10 +40,10 @@
         hide      (async/subscribe bus :nav-hide)]
 
     (-> nav-bt
-        (dom/set-style! #js {:visibility "visible"})
+        (dom/set-style! {:visibility "visible"})
         (dom/add-class! "fade-in"))
 
-    (dom/set-html! nav-body (h/render-html nav-items))
+    (dom/create-dom! nav-items nav-body)
     (dom/add-listeners
      [[nav-bt "click"
        (fn [e] (.preventDefault e) (async/publish bus :nav-toggle nil))]])
@@ -58,7 +57,7 @@
           (do
             (hide-active-section (-> @state :route :controller) nav-body)
             (-> nav-body
-                (dom/set-style! #js {:visibility "visible"})
+                (dom/set-style! {:visibility "visible"})
                 (dom/remove-class! "fade-out")
                 (dom/add-class! "fade-in"))
             (-> nav-bt
@@ -79,6 +78,6 @@
         (swap! state assoc :nav-active? false)
         (js/setTimeout
          #(when-not (:nav-active? @state)
-            (dom/set-style! nav-body #js {:visibility "hidden"}))
+            (dom/set-style! nav-body {:visibility "hidden"}))
          500)
         (recur)))))

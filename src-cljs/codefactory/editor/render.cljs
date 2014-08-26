@@ -79,7 +79,7 @@
         icon-size (get-in config/app [:editor :toolbar-icon-size 0])]
     (dom/set-attribs! canvas {:width w :height h})
     (dom/set-style! (config/dom-component :toolbar-label)
-                    #js {:width (->px (- w 20)) :top (->px (- h 19))})
+                    {:width (->px (- w 20)) :top (->px (- h 19))})
     (swap!
      state assoc
      :canvas-width w :canvas-height h

@@ -20,25 +20,23 @@
 
 (defn preset-separator
   [parent [w h]]
-  (let [el  (dom/create! "div" parent)
-        svg (dom/create-ns!
-             dom/svg-ns "svg" el
-             {:width w :height h :viewBox "0 0 1 1"
-              :preserveAspectRatio "none"})]
-    (dom/create-ns! dom/svg-ns "path" svg {:d "M0.5,0 L0.5,1"})
-    (dom/add-class! el "sep")
-    [w]))
+  (dom/create-dom!
+   [:div.sep
+    [:svg {:width w :height h :viewBox "0 0 1 1"
+           :preserveAspectRatio "none"}
+     [:path {:d "M0.5,0 L0.5,1"}]]]
+   parent)
+  [w])
 
 (defn preset-button
   [parent id op label icon-size width bus & [handler]]
-  (let [[el :as spec] (common/icon-button
+  (let [[l1 l2] (str/split label #"\s" 2)
+        [el :as spec] (common/icon-button
                        parent id icon-size
                        (-> config/app :operators op :paths)
-                       (str/replace label " " "<br/>")
+                       (list l1 [:br] l2)
                        (or handler #(async/publish bus :op-triggered id)))]
-    (-> el
-        (dom/add-class! (ops/op-class op))
-        (dom/add-class! "disabled"))
+    (dom/add-class! el [(ops/op-class op) "disabled"])
     [width spec]))
 
 (defn init
@@ -60,7 +58,7 @@
                               [total' (assoc specs id (conj spec total))]
                               [total' specs])))
                         [0 {}] (:op-presets config/app))]
-    (dom/set-style! tools #js {:width width})
+    (dom/set-style! tools {:width width})
     (preset-button
      (dom/create! "div" (dom/by-id "tools-left"))
      :undo :undo "undo"
@@ -113,7 +111,7 @@
         (let [{:keys [offset curr-offset]} (:tools @state)
               curr-offset (m/mix curr-offset offset (-> config/app :editor :toolbar-speed))]
           (swap! state assoc-in [:tools :curr-offset] curr-offset)
-          (dom/set-style! toolbar (clj->js {:marginLeft (->px curr-offset)}))
+          (dom/set-style! toolbar {:marginLeft (->px curr-offset)})
           (if (> (m/abs-diff curr-offset offset) 0.5)
             (when-not (:toolbar-frame @state)
               (swap!

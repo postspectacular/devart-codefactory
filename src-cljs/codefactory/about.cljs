@@ -9,7 +9,6 @@
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.route :as route]
    [thi.ng.cljs.dom :as dom]
-   [hiccups.runtime :as h]
    [cljs.core.async :refer [<! timeout]]))
 
 (defn init-icon
@@ -59,9 +58,9 @@
         (<! init)
         (swap! local assoc :active? true)
         (set! (.-scrollTop (dom/query nil "#about .body-wrapper")) 0)
-        (dom/set-html!
-         (dom/query nil "#about .img-wrapper")
-         (h/render-html [:img {:src (-> config/app :about :hero-img)}]))
+        (dom/create!
+         "img" (dom/query nil "#about .img-wrapper")
+         {:src (-> config/app :about :hero-img)})
         (go
           (alts! [cancel (timeout (config/timeout :about))])
           (when (:active? @local)

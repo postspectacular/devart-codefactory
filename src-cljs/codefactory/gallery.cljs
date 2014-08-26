@@ -11,7 +11,6 @@
    [thi.ng.cljs.utils :as utils :refer [->px]]
    [thi.ng.cljs.io :as io]
    [thi.ng.cljs.dom :as dom]
-   [hiccups.runtime :as h]
    [cljs.core.async :refer [<! timeout]]
    [clojure.string :as str]))
 
@@ -21,9 +20,9 @@
                  (-> config/app :gallery :admin-query)
                  (-> config/app :gallery :query))
         offset (* page (:limit q-conf))]
-    (dom/set-html!
-     (config/dom-component :gallery-main)
-     (common/loader-html "loading objects..."))
+    (common/loader-html
+     "loading objects..."
+     (config/dom-component :gallery-main))
     (io/request
      :uri     (config/api-route :gallery)
      :params  (assoc q-conf :offset offset)

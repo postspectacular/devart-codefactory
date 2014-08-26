@@ -3,42 +3,35 @@
    [codefactory.config :as config]
    [thi.ng.cljs.route :as route]
    [thi.ng.cljs.dom :as dom]
-   [hiccups.runtime :as h]
    [clojure.string :as str]))
 
 (defn loader-html
-  [msg]
-  (h/render-html
+  [msg parent]
+  (dom/create-dom!
    [:div.loading
     [:p msg]
-    [:img {:src "/img/loading.gif" :alt "loading"}]]))
+    [:img {:src "/img/loading.gif" :alt "loading"}]]
+   parent))
 
 (defn show-nav
   [] (dom/remove-class! (dom/query nil "nav") "hidden"))
 
 (defn icon-button
   [parent id [w h] paths label handler & classes]
-  (let [el     (dom/create! "div" parent)
-        svg    (dom/create-ns!
-                dom/svg-ns "svg" el
-                {:width w
-                 :height h
-                 :viewBox "-0.05 -0.05 1.1 1.1"
-                 :preserveAspectRatio "none"})
-        [spec] (if handler
-                 (dom/add-listeners [[el "click" handler]])
-                 [[el]])
-        attrs  {:class (apply str "tool " classes)}]
-    (dom/set-attribs! el (if id (assoc attrs :id (name id)) attrs))
-    (when label
-      (-> (dom/create! "div" el)
-          (dom/set-html! label)))
-    (loop [paths paths]
-      (when-let [p (first paths)]
-        (-> (dom/create-ns! dom/svg-ns "path" svg {:d (:d p)})
-            (dom/set-style! (clj->js (:style p))))
-        (recur (next paths))))
-    spec))
+  (let [attrs  {:class (apply str "tool " classes)}
+        el     (dom/create-dom!
+                [:div (if id (assoc attrs :id (name id)) attrs)
+                 [:svg {:width w
+                        :height h
+                        :viewBox "-0.05 -0.05 1.1 1.1"
+                        :preserveAspectRatio "none"}
+                  (map (fn [p] [:path p]) paths)]
+                 (if label [:div label])]
+                parent)]
+    (first
+     (if handler
+       (dom/add-listeners [[el "click" handler]])
+       [[el]]))))
 
 (defn next-parent-id
   [el]

@@ -14,15 +14,14 @@
    [thi.ng.cljs.dom :as dom]
    [thi.ng.common.math.core :as m :refer [TWO_PI]]
    [thi.ng.geom.core.vector :refer [vec2]]
-   [hiccups.runtime :as h]
    [cljs.core.async :refer [<! timeout]]
    [clojure.string :as str]))
 
 (defn load-graph
   [bus id]
-  (dom/set-html!
-   (config/dom-component :gallery-info-main)
-   (common/loader-html "Loading artwork details..."))
+  (common/loader-html
+   "Loading artwork details..."
+   (config/dom-component :gallery-info-main))
   (io/request
    :uri     (config/api-route :object-graph id)
    :method  :get
@@ -89,26 +88,16 @@
         date    (utils/format-date created)
         time    (utils/format-time created)]
     [:g
-     [:text {:x lx :y (- y 8)} date]
-     [:text {:x lx :y (+ y 8)} time]
+     [:text {:x lx :y (- y 4)} date]
+     [:text {:x lx :y (+ y 12)} time]
      [:circle {:cx x :cy y :r radius}]]))
 
 (defn timeline-svg
-  [parent width height paths labels]
-  (let [svg (dom/create-ns!
-             dom/svg-ns "svg" parent
-             {:width width :height height
-              :id "branchviz"})]
-    ;; FF & Safari don't like set-html! w/ SVG content
-    (doseq [p paths]
-      (dom/create-ns! dom/svg-ns "path" svg {:d (-> p second :d)}))
-    (doseq [[_ [_ t1 date] [_ t2 time] [_ c]] labels]
-      (let [g (dom/create-ns! dom/svg-ns "g" svg)]
-        (-> (dom/create-ns! dom/svg-ns "text" g t1) (dom/set-text! date))
-        (-> (dom/create-ns! dom/svg-ns "text" g t2) (dom/set-text! time))
-        (-> (dom/create-ns! dom/svg-ns "circle" g c))))
-    ;;(dom/set-html! svg body)
-    ))
+  [parent width height & body]
+  (dom/create-dom!
+   [:svg {:width width :height height :id "branchviz"}
+    body]
+   parent))
 
 (defn generate-timeline
   [parent graph]

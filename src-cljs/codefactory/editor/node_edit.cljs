@@ -61,16 +61,14 @@
         (-> config/app :editor :leaf-label))))
 
    (= :delete op)
-   (let [svg (dom/create-ns!
-              dom/svg-ns "svg" el
-              {:width "100%" :height "100%"
-               :viewBox "0 0 1 1"
-               :preserveAspectRatio "none"
-               :class "op-delete"})]
-     (dom/create-ns!
-      dom/svg-ns "path" svg {:d "M0.01,0.01 L0.99,0.99 M0.01,0.99 L0.99,0.01"})
-     (dom/create-ns!
-      dom/svg-ns "rect" svg {:x 0.01 :y 0.01 :width 0.98 :height 0.98}))
+   (dom/create-dom!
+    [:svg {:width "100%" :height "100%"
+           :viewBox "0 0 1 1"
+           :preserveAspectRatio "none"
+           :class "op-delete"}
+     [:path {:d "M0.01,0.01 L0.99,0.99 M0.01,0.99 L0.99,0.01"}]
+     [:rect {:x 0.01 :y 0.01 :width 0.98 :height 0.98}]]
+    el)
 
    :else
    (if (>= width min-width)
@@ -78,29 +76,17 @@
 
 (defn make-node
   [parent path op x y w h ox oy bus sel event?]
-  (let [el (dom/create! "div" parent)
-        id (node-id path)
-        x' (+ x ox)
-        y' (+ y oy)]
-
-    (doto el
-      (dom/set-attribs! {:id id})
-      (dom/set-style!
-       #js {:left   (->px x')
-            :top    (->px y')
-            :width  (->px w)
-            :height (->px h)}))
-
-    (dom/add-class! el (ops/op-class op))
-    (if sel
-      (if (= path sel)
-        (dom/add-class! el "selected")
-        (dom/add-class! el "deselected")))
-    ;;(if (and sel (not= path sel)) (dom/add-class! el "deselected"))
-
+  (let [id (node-id path)
+        el (dom/create-dom!
+            [:div {:id id
+                   :class (str (ops/op-class op) (if (= path sel) " selected" " deselected"))
+                   :style {:left   (->px (+ x ox))
+                           :top    (->px (+ y oy))
+                           :width  (->px w)
+                           :height (->px h)}}]
+            parent)]
     (if event?
       (dom/add-listeners [[el "click" #(async/publish bus :node-toggle id)]]))
-
     [id {:el el :x x :y y :w w :h h :path path}]))
 
 (defn reposition-branch
@@ -109,7 +95,7 @@
     [path x]
     (let [el (:el (nodes (node-id path)))
           nc (tree/num-children-at tree path)]
-      (dom/set-style! el #js {:left (->px (+ x offx))})
+      (dom/set-style! el {:left (->px (+ x offx))})
       (if (pos? nc)
         (loop [i 0, x x]
           (if (< i nc)
@@ -125,7 +111,6 @@
         min (- (layout/viewport-width) width)
         scroll (assoc scroll :x (m/clamp (:x scroll) min 0))
         offset (layout/scroll-offset scroll viz)]
-    ;;(debug :repos-scroll scroll)
     (swap! local assoc :scroll scroll)
     ((reposition-branch nodes tree layout-nodes gap offset) [] margin)))
 
@@ -198,9 +183,9 @@
                       [x (- y 4) (- w 4) (- h 4)] [x y (- w gap) h])
           cy (mm/sub y h gap)]
       (dom/set-style!
-       el #js {:left  (->px (+ x offx))
-               :top   (->px (+ (- y h) offy))
-               :width (->px w)})
+       el {:left  (->px (+ x offx))
+           :top   (->px (+ (- y h) offy))
+           :width (->px w)})
       (if (pos? nc)
         (loop [i 0, x x]
           (if (< i nc)

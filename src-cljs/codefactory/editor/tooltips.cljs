@@ -46,7 +46,7 @@
           (dom/set-html! body content)
           (add-tooltip-buttons body bus state)
           (-> tip
-              (dom/set-style! (clj->js {:display "block" :left (->px x) :top (->px y)}))
+              (dom/set-style! {:display "block" :left (->px x) :top (->px y)})
               (dom/remove-class! "hidden"))
           (when auto?
             (js/setTimeout
@@ -56,7 +56,7 @@
     (go
       (loop []
         (let [[_ id] (<! hide)]
-          (dom/set-style! (tooltip-element id) #js {:display "none"})
+          (dom/set-style! (tooltip-element id) {:display "none"})
           (recur))))))
 
 (defn handle-tooltips
