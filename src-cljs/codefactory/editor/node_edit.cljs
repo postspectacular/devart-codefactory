@@ -233,13 +233,14 @@
 
 (defn handle-resize
   [ch bus editor local]
-  (go
-    (loop []
-      (when (<! ch)
-        (resize-viz editor local)
-        (overview/regenerate editor local)
-        (async/publish bus :user-action nil)
-        (recur)))))
+  (let [ch (async/throttle ch 500)]
+    (go
+      (loop []
+        (when (<! ch)
+          (resize-viz editor local)
+          (overview/regenerate editor local)
+          (async/publish bus :user-action nil)
+          (recur))))))
 
 (defn handle-regenerate
   [ch bus editor local]
@@ -499,9 +500,7 @@
                             :regenerate-scene
                             :release-editor])
                       (assoc :window-resize
-                        (async/throttle
-                         (async/subscribe bus :window-resize (async/sliding-channel 1))
-                         500)))
+                        (async/subscribe bus :window-resize (async/sliding-channel 1))))
         m-specs   (mapv
                    #(apply async/event-channel %)
                    [[canvas "mousedown" gest/mouse-gesture-start]
