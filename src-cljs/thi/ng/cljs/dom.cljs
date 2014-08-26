@@ -1,10 +1,16 @@
 (ns thi.ng.cljs.dom
   (:require
+   [thi.ng.cljs.utils :as utils]
+   [clojure.string :as str]
    [goog.style :as style]
    [goog.dom :as dom]
    [goog.dom.classes :as classes]))
 
 (def svg-ns "http://www.w3.org/2000/svg")
+
+(def re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
+
+(def svg-tags #{"svg" "g" "path" "rect" "circle" "line" "polyline" "polygon" "text"})
 
 (defn wheel-event-type
   [] (if (.isDef js/goog (.-onwheel js/window)) "wheel" "mousewheel"))
@@ -32,17 +38,30 @@
 
 (defn add-class!
   [el name]
-  (classes/add el name) el)
+  (if (string? name)
+    (classes/add el name)
+    (dorun (map #(classes/add el %) name)))
+  el)
 
 (defn remove-class!
-  [el name] (classes/remove el name) el)
+  [el name]
+  (classes/remove el name) el)
+
+(defn set-style!
+  [el opts]
+  (style/setStyle el (clj->js opts))
+  el)
+
+(defn get-style
+  [el prop]
+  (style/getStyle el (name prop)))
 
 (defn get-attrib
   [el attr] (.getAttribute el attr))
 
 (defn get-attribs
   [el attrs]
-  (map (fn [a] (get-attrib el a)) attrs))
+  (map #(.getAttribute el %) attrs))
 
 (defn set-attribs!
   [el attribs]
@@ -50,7 +69,10 @@
     (loop [attribs attribs]
       (if attribs
         (let [[k v] (first attribs)]
-          (.setAttribute el (name k) v)
+          (if v
+            (if (= :style k)
+              (set-style! el v)
+              (.setAttribute el (name k) v)))
           (recur (next attribs))))))
   el)
 
@@ -62,15 +84,6 @@
         (.removeAttribute el (name (first attribs)))
         (recur (next attribs)))))
   el)
-
-(defn set-style!
-  [el opts]
-  (style/setStyle el opts)
-  el)
-
-(defn get-style
-  [el prop]
-  (style/getStyle el (name prop)))
 
 (defn show!
   [el] (style/setStyle el "display" "block"))
@@ -104,7 +117,9 @@
   ([type] (create! type nil nil))
   ([type parent] (create! type parent nil))
   ([type parent attribs]
-     (let [el (.createElement js/document type)]
+     (let [el (if (svg-tags type)
+                (.createElementNS js/document svg-ns type)
+                (.createElement js/document type))]
        (when parent
          (.appendChild parent el))
        (when attribs
@@ -114,10 +129,19 @@
 (defn remove!
   [el] (.removeChild (.-parentElement el) el))
 
+(defn append!
+  [parent el] (.appendChild parent el))
+
 (defn insert!
   [el parent]
   (.insertBefore parent el (.-firstChild parent))
   el)
+
+(defn create-text!
+  [txt parent]
+  (let [el (.createTextNode js/document txt)]
+    (.appendChild parent el)
+    el))
 
 (defn create-ns!
   ([ns type parent] (create-ns! ns type parent nil))
@@ -131,8 +155,8 @@
 
 (defn force-redraw!
   [el]
-  (set-style! el #js {:display "none"})
-  (set-style! el #js {:display "block"}))
+  (set-style! el {:display "none"})
+  (set-style! el {:display "block"}))
 
 (defn- update-listeners*
   [update! specs]
@@ -160,3 +184,26 @@
    (fn [el eid f _]
      (.removeEventListener el eid f))
    specs))
+
+(defn normalize-element
+  [[tag & content]]
+  (when (not (or (keyword? tag) (symbol? tag) (string? tag)))
+    (throw (str tag " is not a valid tag name")))
+  (let [[_ tag id class] (re-matches re-tag (utils/as-str tag))
+        tag-attrs        {:id id
+                          :class (if class (str/replace class "." " "))}
+        map-attrs        (first content)]
+    (if (map? map-attrs)
+      [tag (merge tag-attrs map-attrs) (next content)]
+      [tag tag-attrs content])))
+
+(defn create-dom!
+  [x parent]
+  (cond
+   (vector? x) (let [[tag attrs content] (normalize-element x)
+                     el (create! tag parent attrs)]
+                 (when content (create-dom! content el))
+                 el)
+   (seq? x)    (doall (map #(create-dom! % parent) x))
+   (nil? x)    parent
+   :else       (create-text! (utils/escape-html x) parent)))
