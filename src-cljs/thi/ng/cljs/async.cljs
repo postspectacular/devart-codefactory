@@ -5,7 +5,7 @@
    [thi.ng.cljs.log :refer [debug info warn]]
    [thi.ng.cljs.dom :as dom]
    [goog.events :as events]
-   [cljs.core.async :as async :refer [<! chan put! close!]]))
+   [cljs.core.async :as async :refer [<! >! chan put! close! timeout sliding-buffer]]))
 
 (defprotocol PubSub
   (bus [_])
@@ -71,3 +71,18 @@
   (let [handler (fn [e] (publish bus id e))]
     (.addEventListener el ev handler)
     [el ev handler]))
+
+(defn throttle
+  [c ms]
+  (let [c' (chan)]
+    (go
+      (loop []
+        (when-let [x (<! c)]
+          (>! c' x)
+          (<! (timeout ms))
+          (recur))
+        (close! c)))
+    c'))
+
+(defn sliding-channel
+  [n] (chan (sliding-buffer n)))
