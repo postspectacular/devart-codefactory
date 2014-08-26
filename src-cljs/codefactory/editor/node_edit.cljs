@@ -492,12 +492,16 @@
         viz       (config/dom-component :viz-container)
         canvas    (-> (config/dom-component :viz-map)
                       (dom/set-attribs! {:width map-width :height map-height}))
-        subs      (async/subscription-channels
-                   bus [:node-toggle :node-selected :node-deselected
-                        :commit-operator :cancel-operator
-                        :op-triggered :undo-triggered
-                        :window-resize :regenerate-scene
-                        :release-editor])
+        subs      (-> (async/subscription-channels
+                       bus [:node-toggle :node-selected :node-deselected
+                            :commit-operator :cancel-operator
+                            :op-triggered :undo-triggered
+                            :regenerate-scene
+                            :release-editor])
+                      (assoc :window-resize
+                        (async/throttle
+                         (async/subscribe bus :window-resize (async/sliding-channel 1))
+                         500)))
         m-specs   (mapv
                    #(apply async/event-channel %)
                    [[canvas "mousedown" gest/mouse-gesture-start]
