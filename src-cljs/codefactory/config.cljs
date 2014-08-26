@@ -154,16 +154,19 @@
                   :download true}}
 
    :gallery-info
-   {:width       100
-    :item-height 240
-    :color       "#ffd541"
-    :font        "14px \"Abel\",sans-serif"
-    :radius      5
+   {:width        100
+    :item-heights {[0   480] 135
+                   [481 600] 120
+                   [601 640] 180
+                   [641 1e4] 240}
+    :color        "#ffd541"
+    :font         "14px \"Abel\",sans-serif"
+    :radius       5
     :branch-width 20
     :label-width  65
-    :buttons     {:edit     true
-                  :download true}}
-   
+    :buttons      {:edit     true
+                   :download true}}
+
    :about
    {:icon-size [64 64]
     :links-clickable? true
@@ -479,7 +482,7 @@
        {:gallery {:buttons {:download false}}
 
         :home {:gallery-bt true}
-        
+
         :timeouts {:selector (* 30 1000)
                    :editor   (* 3 60 1000)
                    :thanks   (* 60 1000)

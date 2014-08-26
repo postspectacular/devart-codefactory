@@ -40,9 +40,7 @@
 
 (defn extract-branch
   [graph nodes id]
-  (debug :new-branch id)
   (loop [branch [id], parent (:parent-id (nodes id))]
-    (debug :id id :parent parent)
     (if parent
       (recur (conj branch parent) (:parent-id (nodes parent)))
       branch)))
@@ -55,11 +53,18 @@
   [nodes] (sort-by (comp - :created val) nodes))
 
 (defn compute-node-positions
-  [nodes item-height]
-  (let [offset (/ item-height 2)]
+  [nodes height]
+  (let [offset (/ height 2)]
     (->> nodes
-         (map-indexed (fn [i [id]] [id (mm/madd i item-height offset)]))
+         (map-indexed (fn [i [id]] [id (mm/madd i height offset)]))
          (into {}))))
+
+(defn compute-item-height
+  [heights]
+  (let [w (.-innerWidth js/window)]
+    (some
+     (fn [[range h]] (if (m/in-range? range w) h))
+     heights)))
 
 (defn svg-branch
   [nodes visited branch x ypos height]
@@ -101,15 +106,16 @@
 
 (defn generate-timeline
   [parent graph]
-  (let [{:keys [item-height radius branch-width label-width] :as conf} (-> config/app :gallery-info)
+  (let [{:keys [item-heights radius branch-width label-width] :as conf} (-> config/app :gallery-info)
         heads      (mapv key (filter #(empty? (val %)) graph))
         num-heads  (count heads)
         nodes      (graph-nodes graph)
         branches   (sort-by (comp - count) (graph-branches graph nodes heads))
         sorted     (sort-nodes nodes)
-        nodes-ypos (compute-node-positions sorted item-height)
+        ih         (compute-item-height item-heights)
+        nodes-ypos (compute-node-positions sorted ih)
         width      (mm/madd num-heads branch-width label-width)
-        height     (* (count nodes) item-height)
+        height     (* (count nodes) ih)
         x          (- width radius)
         lx         (mm/madd (dec num-heads) (- branch-width) radius -2 x)
         [node-pos
@@ -117,7 +123,7 @@
                         (reduce
                          (fn [[visited paths i] branch]
                            (let [x (mm/madd branch-width (- i) x)
-                                 [visited path] (svg-branch nodes visited branch x nodes-ypos item-height)]
+                                 [visited path] (svg-branch nodes visited branch x nodes-ypos ih)]
                              [visited (conj paths path) (inc i)]))
                          [{} () 0]))
          labels    (map (fn [[id n]] (svg-node-label node-pos id n radius lx)) nodes)]
@@ -140,21 +146,34 @@
       #(item/gallery-item % buttons parent bus attribs (item-credits %))
       items))))
 
-(defn handle-refresh
+(defn redraw-all
+  [graph bus]
+  (let [parent   (->> :gallery-info-main
+                      (config/dom-component)
+                      (dom/clear!)
+                      (dom/create! "div"))
+        timeline (dom/create! "div" parent)
+        versions (dom/create! "div" parent {:class "versions"})]
+    (->> graph
+         (generate-timeline timeline)
+         (vals)
+         (generate-item-details versions bus))))
+
+(defn handle-loaded
   [ch bus local]
   (go
     (while true
-      (let [[_ graph] (<! ch)
-            parent    (->> :gallery-info-main
-                           (config/dom-component)
-                           (dom/clear!)
-                           (dom/create! "div"))
-            timeline  (dom/create! "div" parent)
-            versions  (dom/create! "div" parent {:class "versions"}) ]
-        (->> graph
-             (generate-timeline timeline)
-             (vals)
-             (generate-item-details versions bus))))))
+      (let [[_ graph] (<! ch)]
+        (swap! local assoc :graph graph)
+        (redraw-all graph bus)))))
+
+(defn handle-resize
+  [ch bus local]
+  (go
+    (while true
+      (<! ch)
+      (when-let [graph (:graph @local)]
+        (redraw-all graph bus)))))
 
 (defn init-button-bar
   [bus local]
@@ -165,17 +184,21 @@
 (defn init
   [bus]
   (let [init    (async/subscribe bus :init-gallery-info)
-        refresh (async/subscribe bus :gallery-info-loaded)
+        loaded  (async/subscribe bus :gallery-info-loaded)
+        resize  (async/throttle
+                 (async/subscribe bus :window-resize (async/sliding-channel 1))
+                 500)
         local   (atom {})]
 
     (init-button-bar bus local)
-    (handle-refresh refresh bus local)
+    (handle-loaded   loaded bus local)
+    (handle-resize   resize bus local)
 
     (go
       (while true
         (let [[_ [_ {:keys [id]}]] (<! init)]
           (swap!
            local assoc
-           :id       id
-           :loading? true)
+           :id    id
+           :graph nil)
           (load-graph bus id))))))
