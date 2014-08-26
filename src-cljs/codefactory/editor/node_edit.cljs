@@ -71,8 +71,10 @@
     el)
 
    :else
-   (if (>= width min-width)
-     (dom/set-html! el (str "<span>" (-> config/app :operators op :label) "</span>")))))
+   (dom/create-dom!
+    [:span
+     (if (>= width min-width) (-> config/app :operators op :label) "\u00A0")]
+    el)))
 
 (defn make-node
   [parent path op x y w h ox oy bus sel event?]
