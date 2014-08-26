@@ -7,11 +7,12 @@
 
 (defn loader-html
   [msg parent]
-  (dom/create-dom!
-   [:div.loading
-    [:p msg]
-    [:img {:src "/img/loading.gif" :alt "loading"}]]
-   parent))
+  (->> parent
+       (dom/clear!)
+       (dom/create-dom!
+        [:div.loading
+         [:p msg]
+         [:img {:src "/img/loading.gif" :alt "loading"}]])))
 
 (defn show-nav
   [] (dom/remove-class! (dom/query nil "nav") "hidden"))
