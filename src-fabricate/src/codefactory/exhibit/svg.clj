@@ -16,7 +16,7 @@
 
 (defelem path
   [points]
-  (let [coords (map (fn [[x y]] (format "%1.5f,%1.5f" (double x) (double y))) points)
+  (let [coords (mapv (fn [[x y]] (format "%1.5f,%1.5f" (double x) (double y))) points)
         coords (apply str (concat "M" (interpose " L" coords) "Z"))]
     [:path {:d coords}]))
 

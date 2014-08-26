@@ -290,7 +290,7 @@
                   (-> el
                       (dom/set-html! (-> config/app :editor :ftu-label-sel))
                       (dom/remove-class! "op-root")))
-                (highlight-selected-node el (->> @local :nodes vals (map :el)))
+                (highlight-selected-node el (->> @local :nodes vals (mapv :el)))
                 (tools/enable-presets (:specs tools))
                 (debug :sel-node node)
                 (if-not (#{:leaf :delete} op)
@@ -314,7 +314,7 @@
           (when id
             (swap! local assoc :selected-id nil)
             (swap! editor assoc :selection nil :sel-type nil)
-            (unhighlight-selected-node el (->> @local :nodes vals (map :el)))
+            (unhighlight-selected-node el (->> @local :nodes vals (mapv :el)))
             (if (= op :leaf)
               (if (seq selection)
                 (if (< tree-depth 3)

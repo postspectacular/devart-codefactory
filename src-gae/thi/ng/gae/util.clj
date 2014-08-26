@@ -26,7 +26,7 @@
   "Creates a new array of given type and fills it with the elements of
   given coll, each passed through f. Returns array."
   [type f xs]
-  (->> xs (map f) (into-array type)))
+  (->> xs (mapv f) (into-array type)))
 
 (defn is-array*
   [t] (let [t (type (t []))] (fn [x] (instance? t x))))
@@ -58,4 +58,4 @@
   (let [md (MessageDigest/getInstance "SHA-256")]
     (.update md (.getBytes input))
     (let [digest (.digest md)]
-      (apply str (map #(format "%02x" (bit-and % 0xff)) digest)))))
+      (apply str (mapv #(format "%02x" (bit-and % 0xff)) digest)))))

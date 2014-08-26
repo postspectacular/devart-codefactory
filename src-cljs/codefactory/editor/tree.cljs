@@ -83,7 +83,7 @@
 
 (defn compute-tree-depth
   [nodes]
-  (->> nodes keys (map count) (reduce max) (inc)))
+  (->> nodes keys (mapv count) (reduce max) (inc)))
 
 (defn compute-densest-branch
   [tree path w min-w max-p]

@@ -194,7 +194,7 @@
                                  (clojure.core/filter :preview-uri)
                                  (mapv #(model/public-entity % :public-codetree-keys)))
                     objects (if-not include-ast
-                              (map #(dissoc % :tree) objects)
+                              (mapv #(dissoc % :tree) objects)
                               objects)]
                 (api-response req objects 200))
               (api-response req err 400)))

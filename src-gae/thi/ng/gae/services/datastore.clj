@@ -100,8 +100,7 @@
   [kind & ids]
   (prn :info "deleting entities" kind ids)
   (->> ids
-       (map (fn [id] (generate-key kind id)))
-       (into-array Key)
+       (util/array-of Key (fn [id] (generate-key kind id)))
        (.delete (datastore-service))))
 
 (defmacro defentity
@@ -111,7 +110,7 @@
         props     (vec props)
         clj-props (->> props
                        (filter #(contains? (meta %) :clj))
-                       (map keyword)
+                       (mapv keyword)
                        (set))
         arglist   '[args & {k :key p :parent}]
         ->name    (symbol (str "->" kind))

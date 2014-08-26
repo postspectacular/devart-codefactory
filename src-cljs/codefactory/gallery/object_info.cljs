@@ -102,7 +102,7 @@
 (defn generate-timeline
   [parent graph]
   (let [{:keys [item-height radius branch-width label-width] :as conf} (-> config/app :gallery-info)
-        heads      (map key (filter #(empty? (val %)) graph))
+        heads      (mapv key (filter #(empty? (val %)) graph))
         num-heads  (count heads)
         nodes      (graph-nodes graph)
         branches   (sort-by (comp - count) (graph-branches graph nodes heads))

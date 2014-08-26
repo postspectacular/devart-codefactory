@@ -66,7 +66,7 @@
                       (filter (comp :user? val))
                       keys
                       (mapv #(-> % name dom/by-id (dom/query "svg"))))
-        channels (fn [ev] (set (map #(first (async/event-channel % ev)) tips)))
+        channels (fn [ev] (set (mapv #(first (async/event-channel % ev)) tips)))
         on       (channels "mouseenter")
         off      (channels "mouseleave")
         touch    (channels "touchstart")

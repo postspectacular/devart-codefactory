@@ -13,7 +13,7 @@
   [params]
   (when params
     (->> params
-         (map (fn [[k v]] (str (name k) "=" v "&")))
+         (mapv (fn [[k v]] (str (name k) "=" v "&")))
          (apply str "?"))))
 
 (defn ->request-data

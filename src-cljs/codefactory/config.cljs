@@ -329,10 +329,10 @@
      :bindings {:id {:validate [(v/uuid4)]}}
      :controller :object-loader}
     {:match ["objects" "edit" :seed-id]
-     :bindings {:seed-id {:validate [(v/member-of (set (map name (keys seeds))))]}}
+     :bindings {:seed-id {:validate [(v/member-of (set (mapv name (keys seeds))))]}}
      :controller :editor}
     {:match ["select" :seed-id]
-     :bindings {:seed-id {:validate [(v/member-of (set (map name (keys seeds))))]}}
+     :bindings {:seed-id {:validate [(v/member-of (set (mapv name (keys seeds))))]}}
      :controller :selector}
     {:match ["select"] :controller :selector}
     {:match ["objects" "submit"] :controller :submit-form}

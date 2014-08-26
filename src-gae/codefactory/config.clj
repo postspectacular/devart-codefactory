@@ -57,7 +57,7 @@
                         (v/max-length 16 (fn [_ v] (subs v 0 16)))]
             "author"   [(v/min-length 3 (constantly "Anonymous"))
                         (v/max-length 16 (fn [_ v] (subs v 0 16)))]
-            "seed"     [(v/member-of (set (map name (keys geom/seeds))))]
+	    "seed"     [(v/member-of (set (mapv name (keys geom/seeds))))]
             "location" [(v/optional (v/max-length 16))]
             "parent"   [(v/optional (v/uuid4))]}
 
