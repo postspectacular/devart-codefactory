@@ -51,10 +51,10 @@
                  ;; CLJS
                  [thi.ng/geom-webgl "0.3.0-SNAPSHOT"]]
 
-  :profiles {:dev {:dependencies [[org.clojure/clojurescript "0.0-2280"]
+  :profiles {:dev {:dependencies [[org.clojure/clojurescript "0.0-2322"]
                                   [clj-http "1.0.0"]]
                    :plugins [[lein-cljsbuild "1.0.3"]]}}
-
+  
   :cljsbuild {:builds
               [{:source-paths ["src-cljs"]
                 :id "dev"
